@@ -12,8 +12,8 @@ import {
 
 const benefits = [
   {
-    title: "Controle Automatizado",
-    description: "Gestão financeira e legislativa integrada com automação de processos repetitivos.",
+    title: "Gestão Digital",
+    description: "Gestão de vereadores e vereadoras, votação e sessões legislativas.",
     icon: PieChart,
   },
   {
