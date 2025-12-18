@@ -98,7 +98,7 @@ export function Hero() {
                 initial={{ opacity: 0, x: 50, rotateY: -10 }}
                 animate={{ opacity: 1, x: 0, rotateY: -5 }}
                 transition={{ duration: 1, delay: 0.4, ease: "easeOut" }}
-                className="relative perspective-[2000px] group"
+                className="hidden min-[480px]:block relative perspective-[2000px] group"
             >
                  {/* Decorative Glow Behind Laptop */}
                  <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[120%] h-[120%] bg-blue-500/10 blur-[80px] rounded-full -z-10" />
