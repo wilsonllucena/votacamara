@@ -6,6 +6,8 @@ import { z } from "zod"
 
 const registerSchema = z.object({
   camara_nome: z.string().min(3, "Nome da câmara deve ter no mínimo 3 caracteres"),
+  cnpj: z.string().length(14, "CNPJ deve ter 14 dígitos"),
+  telefone: z.string().min(10, "Telefone deve ter no mínimo 10 dígitos").max(11, "Telefone deve ter no máximo 11 dígitos"),
   cidade: z.string().min(2, "Cidade obrigatória"),
   uf: z.string().length(2, "UF deve ter 2 caracteres"),
   admin_nome: z.string().min(2, "Nome do admin obrigatório"),
@@ -82,6 +84,8 @@ export async function registerAction(prevState: any, formData: FormData) {
 
     const rawData = {
         camara_nome: formData.get("camara_nome") as string,
+        cnpj: (formData.get("cnpj") as string || "").replace(/\D/g, ""),
+        telefone: (formData.get("telefone") as string || "").replace(/\D/g, ""),
         cidade: formData.get("cidade") as string,
         uf: formData.get("uf") as string,
         admin_nome: formData.get("admin_nome") as string,
@@ -124,6 +128,8 @@ export async function registerAction(prevState: any, formData: FormData) {
         .from('camaras')
         .insert({
             nome: rawData.camara_nome,
+            cnpj: rawData.cnpj,
+            telefone: rawData.telefone,
             cidade: rawData.cidade,
             uf: rawData.uf.toUpperCase(),
             slug: slug

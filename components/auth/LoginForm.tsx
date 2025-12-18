@@ -1,23 +1,45 @@
 "use client"
 
-import { useActionState } from "react"
-import { useFormStatus } from "react-dom"
+import { useActionState, useEffect, startTransition } from "react"
 import { loginAction } from "@/app/(auth)/_actions"
 import { Button } from "@/components/ui/button"
 import Link from "next/link"
 import { Loader2 } from "lucide-react"
+import { useForm } from "react-hook-form"
+import { zodResolver } from "@hookform/resolvers/zod"
+import { z } from "zod"
 
-function SubmitButton() {
-  const { pending } = useFormStatus()
-  return (
-    <Button type="submit" className="w-full bg-blue-600 hover:bg-blue-500" disabled={pending}>
-      {pending ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Entrando...</> : "Entrar na Plataforma"}
-    </Button>
-  )
-}
+const loginSchema = z.object({
+  email: z.string().min(1, "Email é obrigatório").email("Email inválido"),
+  password: z.string().min(1, "Senha é obrigatória"),
+})
+
+type LoginInputs = z.infer<typeof loginSchema>
 
 export function LoginForm() {
-  const [state, formAction] = useActionState(loginAction, null)
+  const [state, formAction, isPending] = useActionState(loginAction, null)
+  
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<LoginInputs>({
+    resolver: zodResolver(loginSchema),
+    defaultValues: {
+      email: "",
+      password: "",
+    }
+  })
+
+  // Submit via action
+  const onSubmit = (data: LoginInputs) => {
+    const formData = new FormData()
+    formData.append("email", data.email)
+    formData.append("password", data.password)
+    startTransition(() => {
+      formAction(formData)
+    })
+  }
 
   return (
     <div className="bg-slate-950/50 backdrop-blur-xl border border-slate-800 p-8 rounded-2xl shadow-2xl">
@@ -27,7 +49,7 @@ export function LoginForm() {
         <p className="text-slate-400 mt-2">Acesse o painel da sua Câmara</p>
       </div>
 
-      <form action={formAction} className="space-y-4">
+      <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
         {state?.error && (
             <div className="p-3 bg-red-500/10 border border-red-500/20 rounded text-red-500 text-sm text-center">
                 {state.error}
@@ -37,31 +59,36 @@ export function LoginForm() {
         <div className="space-y-2">
           <label className="text-sm font-medium text-slate-300" htmlFor="email">Email Corporativo</label>
           <input 
+            {...register("email")}
             id="email"
-            name="email"
             type="email" 
-            required
-            className="w-full bg-slate-900/50 border border-slate-700 rounded-lg px-4 py-3 text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all"
+            className={`w-full bg-slate-900/50 border ${errors.email ? 'border-red-500' : 'border-slate-700'} rounded-lg px-4 py-3 text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all`}
             placeholder="seu@email.com"
           />
+          {errors.email && (
+            <p className="text-xs text-red-500 mt-1">{errors.email.message}</p>
+          )}
         </div>
 
         <div className="space-y-2">
           <div className="flex justify-between">
             <label className="text-sm font-medium text-slate-300" htmlFor="password">Senha</label>
-            {/* <Link href="#" className="text-xs text-blue-400 hover:text-blue-300">Esqueceu a senha?</Link> */}
           </div>
           <input 
+            {...register("password")}
             id="password" 
-            name="password"
             type="password" 
-            required
-            className="w-full bg-slate-900/50 border border-slate-700 rounded-lg px-4 py-3 text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all"
+            className={`w-full bg-slate-900/50 border ${errors.password ? 'border-red-500' : 'border-slate-700'} rounded-lg px-4 py-3 text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all`}
             placeholder="••••••••"
           />
+          {errors.password && (
+            <p className="text-xs text-red-500 mt-1">{errors.password.message}</p>
+          )}
         </div>
 
-        <SubmitButton />
+        <Button type="submit" className="w-full bg-blue-600 hover:bg-blue-500" disabled={isPending}>
+          {isPending ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Entrando...</> : "Entrar na Plataforma"}
+        </Button>
       </form>
 
       <div className="mt-6 text-center text-sm text-slate-400">
@@ -70,3 +97,4 @@ export function LoginForm() {
     </div>
   )
 }
+
