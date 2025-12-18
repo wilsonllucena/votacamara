@@ -20,7 +20,7 @@ export default async function VereadoresPage({ params }: { params: Promise<{ slu
       <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
          <div>
             <h2 className="text-3xl font-bold tracking-tight text-white">Vereadores</h2>
-            <p className="text-slate-400">Gerencie os parlamentares da legislatura atual.</p>
+            <p className="text-zinc-400">Gerencie os parlamentares da legislatura atual.</p>
          </div>
          <Button className="bg-blue-600 hover:bg-blue-500 text-white shadow-[0_0_15px_rgba(37,99,235,0.3)] border border-blue-500/50">
             <Plus className="mr-2 h-4 w-4" /> Novo Vereador
@@ -28,25 +28,25 @@ export default async function VereadoresPage({ params }: { params: Promise<{ slu
       </div>
 
       {/* Filters */}
-        <div className="flex items-center gap-4 bg-slate-900/50 p-4 rounded-xl border border-slate-800">
+        <div className="flex items-center gap-4 bg-zinc-900/50 p-4 rounded-xl border border-zinc-800">
             <div className="relative flex-1">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500" />
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-500" />
                 <input 
                     type="text" 
                     placeholder="Buscar por nome ou partido..." 
-                    className="w-full bg-slate-950 border border-slate-800 rounded-lg pl-10 pr-4 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-blue-500/50"
+                    className="w-full bg-zinc-950 border border-zinc-800 rounded-lg pl-10 pr-4 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-blue-500/50"
                 />
             </div>
-            <Button variant="outline" className="border-slate-800 text-slate-400 hover:text-white hover:bg-slate-800">
+            <Button variant="outline" className="border-zinc-800 text-zinc-400 hover:text-white hover:bg-zinc-800">
                 <Filter className="mr-2 h-4 w-4" /> Filtros
             </Button>
         </div>
 
       {/* List */}
-      <div className="bg-slate-900 border border-slate-800 rounded-xl overflow-hidden shadow-lg shadow-blue-900/5">
+      <div className="bg-zinc-900/50 border border-zinc-800 rounded-xl overflow-hidden shadow-lg shadow-black/20">
         <div className="overflow-x-auto">
             <table className="w-full text-sm text-left">
-                <thead className="text-xs text-slate-400 uppercase bg-slate-950 border-b border-slate-800">
+                <thead className="text-xs text-zinc-400 uppercase bg-zinc-950 border-b border-zinc-800">
                     <tr>
                         <th className="px-6 py-4">Parlamentar</th>
                         <th className="px-6 py-4">Partido</th>
@@ -54,17 +54,17 @@ export default async function VereadoresPage({ params }: { params: Promise<{ slu
                         <th className="px-6 py-4 text-right">Ações</th>
                     </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-800">
+                <tbody className="divide-y divide-zinc-800">
                     {vereadores.map((vereador) => (
-                        <tr key={vereador.id} className="hover:bg-slate-800/50 transition-colors">
+                        <tr key={vereador.id} className="hover:bg-zinc-900/80 transition-colors">
                             <td className="px-6 py-4 font-medium text-white flex items-center gap-3">
                                 <div className={`h-10 w-10 rounded-full flex items-center justify-center font-bold text-xs ${vereador.foto}`}>
                                     {vereador.nome.substring(0,2).toUpperCase()}
                                 </div>
                                 {vereador.nome}
                             </td>
-                            <td className="px-6 py-4 text-slate-300">
-                                <span className="px-2 py-1 rounded bg-slate-800 border border-slate-700 text-xs font-bold">
+                            <td className="px-6 py-4 text-zinc-300">
+                                <span className="px-2 py-1 rounded bg-zinc-800 border border-zinc-700 text-xs font-bold">
                                     {vereador.partido}
                                 </span>
                             </td>
@@ -78,7 +78,7 @@ export default async function VereadoresPage({ params }: { params: Promise<{ slu
                                 </Badge>
                             </td>
                             <td className="px-6 py-4 text-right">
-                                <Button size="icon" variant="ghost" className="h-8 w-8 text-slate-400 hover:text-white">
+                                <Button size="icon" variant="ghost" className="h-8 w-8 text-zinc-400 hover:text-white">
                                     <MoreVertical className="h-4 w-4" />
                                 </Button>
                             </td>

@@ -19,7 +19,7 @@ export function Hero() {
       <div className="container mx-auto relative z-10 px-4 md:px-6 flex flex-col items-center text-center">
         
         {/* Premium Badge */}
-        <motion.div
+        {/* <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, ease: "easeOut" }}
@@ -30,7 +30,7 @@ export function Hero() {
             <Sparkles className="h-4 w-4 text-amber-400" />
             <span className="font-medium tracking-wide">Nova Versão 2025 Disponível</span>
           </div>
-        </motion.div>
+        </motion.div> */}
 
         {/* Main Title */}
         <motion.div

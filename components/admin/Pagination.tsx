@@ -26,11 +26,11 @@ export function Pagination({ totalPages, currentPage }: PaginationProps) {
                 size="icon"
                 onClick={() => handlePageChange(currentPage - 1)}
                 disabled={currentPage <= 1}
-                className="border-slate-800 bg-slate-900 text-white hover:bg-slate-800 disabled:opacity-50"
+                className="border-zinc-800 bg-zinc-900/50 text-white hover:bg-zinc-800 disabled:opacity-50"
             >
                 <ChevronLeft className="h-4 w-4" />
             </Button>
-            <span className="text-sm text-slate-400">
+            <span className="text-sm text-zinc-400">
                 Página <span className="text-white font-medium">{currentPage}</span> de <span className="text-white font-medium">{totalPages}</span>
             </span>
              <Button
@@ -38,7 +38,7 @@ export function Pagination({ totalPages, currentPage }: PaginationProps) {
                 size="icon"
                 onClick={() => handlePageChange(currentPage + 1)}
                 disabled={currentPage >= totalPages}
-                className="border-slate-800 bg-slate-900 text-white hover:bg-slate-800 disabled:opacity-50"
+                className="border-zinc-800 bg-zinc-900/50 text-white hover:bg-zinc-800 disabled:opacity-50"
             >
                 <ChevronRight className="h-4 w-4" />
             </Button>

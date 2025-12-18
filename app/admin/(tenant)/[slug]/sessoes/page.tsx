@@ -15,10 +15,10 @@ export default async function SessoesPage({
     searchParams 
 }: { 
     params: Promise<{ slug: string }> 
-    searchParams: Promise<{ [key: string]: string | string[] | undefined }> // Updated type for Next.js 15+
+    searchParams: Promise<{ [key: string]: string | string[] | undefined }> 
 }) {
   const { slug } = await params
-  const { page = "1", data: dataFilter } = await searchParams // Await searchParams
+  const { page = "1", data: dataFilter } = await searchParams
 
   const supabase = await createClient()
 
@@ -41,8 +41,6 @@ export default async function SessoesPage({
     .order("iniciou_em", { ascending: false })
 
   if (dataFilter && typeof dataFilter === "string") {
-      // Filter by day (ignoring time)
-      // Range: dataFilter 00:00:00 to dataFilter 23:59:59
       query = query
         .gte("iniciou_em", `${dataFilter}T00:00:00`)
         .lte("iniciou_em", `${dataFilter}T23:59:59`)
@@ -63,7 +61,7 @@ export default async function SessoesPage({
       <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
          <div>
             <h2 className="text-3xl font-bold tracking-tight text-white">Sessões Plenárias</h2>
-            <p className="text-slate-400">Gerencie e inicie as sessões de votação.</p>
+            <p className="text-zinc-400">Gerencie e inicie as sessões de votação.</p>
          </div>
          <div className="flex gap-3 w-full md:w-auto">
              <SessoesFilter />
@@ -75,7 +73,7 @@ export default async function SessoesPage({
 
       {/* Grid */}
       {!sessoes || sessoes.length === 0 ? (
-          <div className="text-center py-20 bg-slate-900/50 rounded-xl border border-slate-800 text-slate-500">
+          <div className="text-center py-20 bg-zinc-900/50 rounded-xl border border-zinc-800 text-zinc-500">
               Nenhuma sessão encontrada.
           </div>
       ) : (
@@ -86,24 +84,24 @@ export default async function SessoesPage({
                 const formattedTime = format(date, "HH:mm", { locale: ptBR })
 
                 return (
-                <div key={sessao.id} className="group relative bg-slate-900 border border-slate-800 rounded-xl p-5 hover:border-blue-500/50 transition-all shadow-lg shadow-blue-900/5">
+                <div key={sessao.id} className="group relative bg-zinc-900/50 border border-zinc-800 rounded-xl p-5 hover:bg-zinc-900/80 transition-all shadow-lg shadow-black/20">
                     <div className="flex items-start justify-between mb-4">
-                        <div className="h-10 w-10 rounded-lg bg-slate-800 flex items-center justify-center text-blue-500 group-hover:text-white group-hover:bg-blue-500 transition-colors">
+                        <div className="h-10 w-10 rounded-lg bg-zinc-800 flex items-center justify-center text-blue-500 group-hover:text-white group-hover:bg-blue-500 transition-colors">
                             <Gavel className="h-5 w-5" />
                         </div>
                         <Badge variant={sessao.status === "agendada" ? "default" : "secondary"} className={
                             sessao.status === "agendada" 
                             ? "bg-blue-500/10 text-blue-500 border-blue-500/20" 
-                            : "bg-slate-500/10 text-slate-500 border-slate-500/20 uppercase"
+                            : "bg-zinc-500/10 text-zinc-500 border-zinc-500/20 uppercase"
                         }>
                             {sessao.status}
                         </Badge>
                     </div>
                     
                     <h3 className="text-lg font-bold text-white mb-1 group-hover:text-blue-400 transition-colors">{sessao.titulo}</h3>
-                    <p className="text-sm text-slate-400 mb-4 capitalize">{sessao.tipo}</p>
+                    <p className="text-sm text-zinc-400 mb-4 capitalize">{sessao.tipo}</p>
 
-                    <div className="space-y-2 text-sm text-slate-500 mb-6">
+                    <div className="space-y-2 text-sm text-zinc-500 mb-6">
                         <div className="flex items-center">
                             <Calendar className="mr-2 h-4 w-4" />
                             {formattedDate}
@@ -116,7 +114,7 @@ export default async function SessoesPage({
 
                     <div className="flex gap-2">
                         <Link href={`/admin/${slug}/sessoes/${sessao.id}/pauta`} className="w-full">
-                            <Button className="w-full bg-slate-950 border border-slate-700 hover:bg-slate-800 text-white">
+                            <Button className="w-full bg-zinc-950 border border-zinc-700 hover:bg-zinc-800 text-white">
                                 Pauta
                             </Button>
                         </Link>

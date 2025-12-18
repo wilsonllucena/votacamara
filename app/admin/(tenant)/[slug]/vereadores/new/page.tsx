@@ -10,13 +10,13 @@ export default async function NewVereadorPage({ params }: { params: Promise<{ sl
     <div className="space-y-6">
         <div className="flex items-center gap-4">
             <Link href={`/admin/${slug}/vereadores`}>
-                <Button variant="ghost" size="icon" className="text-slate-400 hover:text-white">
+                <Button variant="ghost" size="icon" className="text-zinc-400 hover:text-white">
                     <ArrowLeft className="h-5 w-5" />
                 </Button>
             </Link>
             <div>
                 <h2 className="text-3xl font-bold tracking-tight text-white">Novo Vereador</h2>
-                <p className="text-slate-400">Cadastre um novo parlamentar.</p>
+                <p className="text-zinc-400">Cadastre um novo parlamentar.</p>
             </div>
         </div>
 

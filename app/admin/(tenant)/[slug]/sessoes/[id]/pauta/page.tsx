@@ -61,13 +61,13 @@ export default async function PautaPage({
     <div className="space-y-6">
          <div className="flex items-center gap-4">
             <Link href={`/admin/${slug}/sessoes`}>
-                <Button variant="ghost" size="icon" className="text-slate-400 hover:text-white">
+                <Button variant="ghost" size="icon" className="text-zinc-400 hover:text-white">
                     <ArrowLeft className="h-5 w-5" />
                 </Button>
             </Link>
             <div>
                 <h2 className="text-3xl font-bold tracking-tight text-white">Pauta da Sessão</h2>
-                <p className="text-slate-400">{sessao.titulo}</p>
+                <p className="text-zinc-400">{sessao.titulo}</p>
             </div>
         </div>
 
@@ -77,9 +77,9 @@ export default async function PautaPage({
                 <h3 className="text-xl font-semibold text-white">Itens da Pauta</h3>
                 <div className="space-y-2">
                     {pautaItens?.map((item: any) => (
-                        <div key={item.id} className="flex items-center justify-between bg-slate-900 border border-slate-800 p-3 rounded-lg">
+                        <div key={item.id} className="flex items-center justify-between bg-zinc-900/50 border border-zinc-800 p-3 rounded-lg">
                             <div className="flex items-center gap-3">
-                                <span className="flex h-6 w-6 items-center justify-center rounded-full bg-slate-800 text-xs text-slate-400 font-mono">
+                                <span className="flex h-6 w-6 items-center justify-center rounded-full bg-zinc-800 text-xs text-zinc-400 font-mono">
                                     {item.ordem}
                                 </span>
                                 <div>
@@ -97,7 +97,7 @@ export default async function PautaPage({
                         </div>
                     ))}
                     {(!pautaItens || pautaItens.length === 0) && (
-                        <p className="text-slate-500 text-sm italic">Nenhum item na pauta.</p>
+                        <p className="text-zinc-500 text-sm italic">Nenhum item na pauta.</p>
                     )}
                 </div>
             </div>
@@ -107,10 +107,10 @@ export default async function PautaPage({
                 <h3 className="text-xl font-semibold text-white">Projetos Disponíveis</h3>
                 <div className="space-y-2">
                      {availableProjects?.map((projeto) => (
-                        <div key={projeto.id} className="flex items-center justify-between bg-slate-950 border border-slate-800 p-3 rounded-lg hover:border-blue-500/30">
+                        <div key={projeto.id} className="flex items-center justify-between bg-zinc-950 border border-zinc-800 p-3 rounded-lg hover:border-blue-500/30">
                             <div>
                                 <h4 className="font-medium text-white text-sm">{projeto.numero || "S/N"}</h4>
-                                <p className="text-xs text-slate-500 line-clamp-1">{projeto.titulo}</p>
+                                <p className="text-xs text-zinc-500 line-clamp-1">{projeto.titulo}</p>
                             </div>
                             <form action={async () => {
                                 "use server"
@@ -123,7 +123,7 @@ export default async function PautaPage({
                         </div>
                     ))}
                      {(!availableProjects || availableProjects.length === 0) && (
-                        <p className="text-slate-500 text-sm italic">Nenhum projeto disponível.</p>
+                        <p className="text-zinc-500 text-sm italic">Nenhum projeto disponível.</p>
                     )}
                 </div>
             </div>

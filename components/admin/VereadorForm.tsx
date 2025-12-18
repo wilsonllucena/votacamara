@@ -49,7 +49,7 @@ export function VereadorForm({ slug }: VereadorFormProps) {
   }
 
   return (
-    <Card className="bg-slate-900 border-slate-800 text-white max-w-2xl">
+    <Card className="bg-zinc-900/50 border-zinc-800 text-white max-w-2xl">
         <CardContent className="pt-6">
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
                 
@@ -59,7 +59,7 @@ export function VereadorForm({ slug }: VereadorFormProps) {
                         <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">Nome Completo</label>
                         <input
                             {...form.register("nome")}
-                            className="flex h-10 w-full rounded-md border border-slate-800 bg-slate-950 px-3 py-2 text-sm placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/50 disabled:cursor-not-allowed disabled:opacity-50 text-white"
+                            className="flex h-10 w-full rounded-md border border-zinc-800 bg-zinc-950 px-3 py-2 text-sm placeholder:text-zinc-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 disabled:cursor-not-allowed disabled:opacity-50 text-white"
                             placeholder="Ex: Carlos Silva"
                         />
                         {form.formState.errors.nome && (
@@ -72,7 +72,7 @@ export function VereadorForm({ slug }: VereadorFormProps) {
                         <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">Partido</label>
                          <input
                             {...form.register("partido")}
-                            className="flex h-10 w-full rounded-md border border-slate-800 bg-slate-950 px-3 py-2 text-sm placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/50 disabled:cursor-not-allowed disabled:opacity-50 text-white"
+                            className="flex h-10 w-full rounded-md border border-zinc-800 bg-zinc-950 px-3 py-2 text-sm placeholder:text-zinc-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 disabled:cursor-not-allowed disabled:opacity-50 text-white"
                             placeholder="Ex: PSD"
                         />
                          {form.formState.errors.partido && (
@@ -85,7 +85,7 @@ export function VereadorForm({ slug }: VereadorFormProps) {
                         <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">Status</label>
                          <select
                             {...form.register("status")}
-                            className="flex h-10 w-full rounded-md border border-slate-800 bg-slate-950 px-3 py-2 text-sm placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/50 disabled:cursor-not-allowed disabled:opacity-50 text-white"
+                            className="flex h-10 w-full rounded-md border border-zinc-800 bg-zinc-950 px-3 py-2 text-sm placeholder:text-zinc-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 disabled:cursor-not-allowed disabled:opacity-50 text-white"
                         >
                             <option value="Ativo">Ativo</option>
                             <option value="Licenciado">Licenciado</option>
@@ -96,7 +96,7 @@ export function VereadorForm({ slug }: VereadorFormProps) {
                     {/* Foto Upload Mockup */}
                     <div className="space-y-2">
                         <label className="text-sm font-medium leading-none">Foto Oficial</label>
-                        <div className="border-2 border-dashed border-slate-800 rounded-lg p-6 flex flex-col items-center justify-center text-slate-400 hover:bg-slate-900/50 transition cursor-pointer">
+                        <div className="border-2 border-dashed border-zinc-800 rounded-lg p-6 flex flex-col items-center justify-center text-zinc-500 hover:bg-zinc-900/50 transition cursor-pointer">
                             <span className="text-xs">Clique para fazer upload</span>
                         </div>
                     </div>
@@ -104,7 +104,7 @@ export function VereadorForm({ slug }: VereadorFormProps) {
                 </div>
 
                 <div className="flex justify-end gap-3 pt-4">
-                    <Button type="button" variant="ghost" className="text-slate-400 hover:text-white hover:bg-slate-800">Cancelar</Button>
+                    <Button type="button" variant="ghost" className="text-zinc-400 hover:text-white hover:bg-zinc-800">Cancelar</Button>
                     <Button type="submit" className="bg-blue-600 hover:bg-blue-500 text-white">Salvar Vereador</Button>
                 </div>
             </form>
