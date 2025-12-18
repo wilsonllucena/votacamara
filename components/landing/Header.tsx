@@ -78,9 +78,9 @@ export function Header() {
 
         {/* Actions */}
         <div className="hidden md:flex items-center gap-4">
-            <Button variant="ghost" className="text-slate-300 hover:text-white">
+            {/* <Button variant="ghost" className="text-slate-300 hover:text-white">
                 Entrar
-            </Button>
+            </Button> */}
             <Button variant="neon" size="sm" className="rounded-full px-6">
                 Começar
             </Button>
