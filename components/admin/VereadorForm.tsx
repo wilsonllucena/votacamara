@@ -7,17 +7,11 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { createVereador } from "@/app/admin/_actions/vereadores"
 import { useTransition } from "react"
-import { Loader2 } from "lucide-react"
-
-// If Form components don't exist, I'll fallback to raw HTML/Tailwind in this file for speed
-// But standard Shadcn usually has them. Let's assume I need to handle it manually if they aren't there.
-// I saw `components/ui` only has badge, button, card. So I DO NOT have Form/Input/Label.
-// I will create simple versions inline or use raw HTML.
 
 const formSchema = z.object({
   nome: z.string().min(2, "Nome deve ter pelo menos 2 caracteres"),
-  partido: z.string().min(1, "Partido é obrigatório"),
-  email: z.string().email("Email inválido").optional().or(z.literal("")),
+  partido: z.string().min(2, "Partido deve ter pelo menos 2 caracteres"),
+  email: z.email({ message: "Email inválido" }).optional(),
   status: z.enum(["Ativo", "Licenciado", "Inativo"]),
 })
 
