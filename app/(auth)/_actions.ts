@@ -32,7 +32,7 @@ export async function loginAction(prevState: any, formData: FormData) {
     return { error: validated.error.message }
   }
 
-  const { error } = await supabase.auth.signInWithPassword({
+  const { data: authData, error } = await supabase.auth.signInWithPassword({
     email: data.email,
     password: data.password,
   })
@@ -41,24 +41,25 @@ export async function loginAction(prevState: any, formData: FormData) {
     return { error: "Email ou senha incorretos." }
   }
 
-  // Auth successful, now find the user's camara to redirect
-  const { data: { user } } = await supabase.auth.getUser()
-  
-  if (!user) {
-    return { error: "Erro ao recuperar usuário." }
+  if (!authData.user) {
+      return { error: "Erro ao autenticar usuário." }
   }
 
-  const { data: profile } = await supabase
+  // Auth successful. Use Admin client to find the user's camara to redirect 
+  // ensuring we don't hit RLS issues during routing lookup.
+  const supabaseAdmin = createAdminClient()
+
+  const { data: profile } = await supabaseAdmin
     .from('profiles')
     .select('camara_id')
-    .eq('user_id', user.id)
+    .eq('user_id', authData.user.id)
     .single()
 
   if (!profile || !profile.camara_id) {
     return { error: "Perfil de usuário incompleto." }
   }
 
-  const { data: camara } = await supabase
+  const { data: camara } = await supabaseAdmin
     .from('camaras')
     .select('slug')
     .eq('id', profile.camara_id)
@@ -94,9 +95,6 @@ export async function registerAction(prevState: any, formData: FormData) {
         return { error: validated.error.message }
     }
 
-    // 1. Sign Up User (Use standard client to handle session cookies automatically if possible, 
-    // but typically Server Actions + simple signUp might not set cookies for subsequent requests immediately 
-    // unless we use the properly configured createClient from server.ts which we ARE doing).
     const { data: authData, error: authError } = await supabase.auth.signUp({
         email: rawData.email,
         password: rawData.password,

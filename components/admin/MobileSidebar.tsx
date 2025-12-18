@@ -6,9 +6,13 @@ import { Sidebar } from "@/components/admin/Sidebar"
 
 interface MobileSidebarProps {
     slug: string
+    userProfile?: {
+        name: string
+        role: string
+    }
 }
 
-export function MobileSidebar({ slug }: MobileSidebarProps) {
+export function MobileSidebar({ slug, userProfile }: MobileSidebarProps) {
     return (
         <Sheet>
             <SheetTrigger asChild>
@@ -18,7 +22,7 @@ export function MobileSidebar({ slug }: MobileSidebarProps) {
             </SheetTrigger>
             <SheetContent side="left" className="p-0 bg-black border-zinc-900 w-72">
                 <SheetTitle className="sr-only">Menu de Navegação</SheetTitle>
-                <Sidebar slug={slug} />
+                <Sidebar slug={slug} userProfile={userProfile} />
             </SheetContent>
         </Sheet>
     )

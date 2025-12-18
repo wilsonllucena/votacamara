@@ -59,9 +59,9 @@ O sistema é **multi-tenant**, onde cada **Câmara Municipal é um tenant**, com
 
 | Role        | Permissões |
 |------------|-----------|
-| ADMIN      | Gerenciar usuários, vereadores, projetos |
-| PRESIDENTE | Criar sessões, abrir/encerrar votações |
-| VEREADOR   | Visualizar pauta e votar |
+| ADMIN      | Gerenciar usuários, vereadores, projetos, visualizar painel público |
+| PRESIDENTE | Criar sessões, abrir/encerrar votações, visualizar painel público |
+| VEREADOR   | Visualizar pauta e votar , visualizar painel público|
 | PUBLICO    | Visualizar painel público (read-only) |
 
 ---
@@ -235,12 +235,12 @@ Constraint obrigatória:
 ## 10. Estrutura de Rotas (Next.js)
 
 /(auth)/login
-/(tenant)/[slug]/dashboard
-/(tenant)/[slug]/vereadores
-/(tenant)/[slug]/projetos
-/(tenant)/[slug]/sessoes
-/(tenant)/[slug]/votacoes/[id]
-/(tenant)/[slug]/painel/[id]
+admin/(tenant)/[slug]/
+admin/(tenant)/[slug]/vereadores
+admin/(tenant)/[slug]/projetos
+admin/(tenant)/[slug]/sessoes
+admin/(tenant)/[slug]/votacoes/[id]
+admin/(tenant)/[slug]/painel/[id]
 
 ---
 

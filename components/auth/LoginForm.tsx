@@ -49,7 +49,7 @@ export function LoginForm() {
         <div className="space-y-2">
           <div className="flex justify-between">
             <label className="text-sm font-medium text-slate-300" htmlFor="password">Senha</label>
-            <Link href="#" className="text-xs text-blue-400 hover:text-blue-300">Esqueceu a senha?</Link>
+            {/* <Link href="#" className="text-xs text-blue-400 hover:text-blue-300">Esqueceu a senha?</Link> */}
           </div>
           <input 
             id="password" 
@@ -65,7 +65,7 @@ export function LoginForm() {
       </form>
 
       <div className="mt-6 text-center text-sm text-slate-400">
-        Ainda não tem conta? <Link href="/register" className="text-blue-400 hover:text-blue-300 font-medium">Criar nova Câmara</Link>
+        Ainda não tem conta? <Link href="/register" className="text-blue-400 hover:text-blue-300 font-medium">Criar nova conta</Link>
       </div>
     </div>
   )

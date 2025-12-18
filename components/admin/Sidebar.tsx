@@ -16,9 +16,13 @@ import {
 
 interface SidebarProps {
   slug: string
+  userProfile?: {
+      name: string
+      role: string
+  }
 }
 
-export function Sidebar({ slug }: SidebarProps) {
+export function Sidebar({ slug, userProfile }: SidebarProps) {
   const pathname = usePathname()
 
   const routes = [
@@ -60,6 +64,15 @@ export function Sidebar({ slug }: SidebarProps) {
     },
   ]
 
+  const getInitials = (name: string) => {
+      return name
+          .split(' ')
+          .map(n => n[0])
+          .slice(0, 2)
+          .join('')
+          .toUpperCase()
+  }
+
   return (
     <div className="flex flex-col h-full bg-black text-zinc-400">
       {/* Brand / Switcher Area */}
@@ -97,11 +110,16 @@ export function Sidebar({ slug }: SidebarProps) {
       {/* User Profile */}
       <div className="p-4 border-t border-zinc-900">
          <div className="flex items-center gap-3 px-2 py-2 hover:bg-zinc-900 rounded-md cursor-pointer transition-colors group">
-             <div className="w-6 h-6 rounded-full bg-zinc-800 flex items-center justify-center text-xs font-medium text-zinc-400 group-hover:text-zinc-100">
-                 W
+             <div className="w-8 h-8 rounded-full bg-zinc-800 flex items-center justify-center text-xs font-medium text-zinc-400 group-hover:text-zinc-100 border border-zinc-700">
+                 {userProfile ? getInitials(userProfile.name) : 'U'}
              </div>
              <div className="flex-1 min-w-0">
-                 <p className="text-sm font-medium text-zinc-400 group-hover:text-zinc-100 truncate">Wilson Lucena</p>
+                 <p className="text-sm font-medium text-zinc-200 group-hover:text-white truncate">
+                    {userProfile?.name || 'Carregando...'}
+                 </p>
+                 <p className="text-xs text-zinc-500 truncate capitalize">
+                    {userProfile?.role?.toLowerCase() || 'Membro'}
+                 </p>
              </div>
              <MoreHorizontal className="w-4 h-4 text-zinc-500 group-hover:text-zinc-300" />
          </div>
