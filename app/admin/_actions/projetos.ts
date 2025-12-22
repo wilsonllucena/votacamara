@@ -2,7 +2,6 @@
 
 import { createClient } from "@/utils/supabase/server"
 import { revalidatePath } from "next/cache"
-import { redirect } from "next/navigation"
 import { z } from "zod"
 
 const projetoSchema = z.object({
@@ -11,10 +10,10 @@ const projetoSchema = z.object({
   ementa: z.string().min(10, "Ementa deve ser detalhada"),
   autor: z.string().min(2, "Autor é obrigatório"),
   texto_url: z.string().url("URL do texto deve ser válida").optional().or(z.literal("")),
-  status: z.enum(["Rascunho", "Em Pauta", "Votado", "Aprovado", "Rejeitado"]),
+  status: z.enum(["Rascunho", "Em Pauta", "Votado"]),
 })
 
-export async function createProjeto(slug: string, prevState: any, formData: FormData) {
+export async function createProjeto(slug: string, prevState: unknown, formData: FormData) {
   const supabase = await createClient()
 
   const { data: camara } = await supabase
@@ -49,18 +48,75 @@ export async function createProjeto(slug: string, prevState: any, formData: Form
     ementa,
     autor,
     texto_url: texto_url || null,
-    status: status.toLowerCase().replace(" ", "_"), // Map UI status to DB enum if needed
-    // Checking DOCUMENTO.md schema for status: rascunho | em_pauta | votado
-    // I added Aprovado/Rejeitado to Schema in Zod but DB only has rascunho/em_pauta/votado?
-    // DOCUMENTO.md says: status (rascunho | em_pauta | votado)
-    // So I should stick to those or migrate.
-    // For now I will map "Rascunho" -> "rascunho", "Em Pauta" -> "em_pauta", "Votado" -> "votado".
+    status: status === "Em Pauta" ? "em_pauta" : status.toLowerCase()
   })
 
   if (error) {
-    return { message: "Erro ao criar projeto: " + error.message }
+    return { error: "Erro ao criar projeto: " + error.message }
   }
 
   revalidatePath(`/admin/${slug}/projetos`)
-  redirect(`/admin/${slug}/projetos`)
+  return { success: true }
+}
+
+export async function updateProjeto(slug: string, id: string, data: z.infer<typeof projetoSchema>) {
+    const supabase = await createClient()
+
+    const validatedFields = projetoSchema.safeParse(data)
+
+    if (!validatedFields.success) {
+        return { error: validatedFields.error.message }
+    }
+
+    const { numero, titulo, ementa, autor, texto_url, status } = validatedFields.data
+
+    const { error } = await supabase
+        .from("projetos")
+        .update({
+            numero,
+            titulo,
+            ementa,
+            autor,
+            texto_url: texto_url || null,
+            status: status === "Em Pauta" ? "em_pauta" : status.toLowerCase()
+        })
+        .eq("id", id)
+
+    if (error) {
+        return { error: "Erro ao atualizar projeto: " + error.message }
+    }
+
+    revalidatePath(`/admin/${slug}/projetos`)
+    return { success: true }
+}
+
+export async function deleteProjeto(slug: string, id: string) {
+    const supabase = await createClient()
+
+    // Check if linked to pauta_itens (sessions)
+    const { data: pautaItems, error: pautaError } = await supabase
+        .from("pauta_itens")
+        .select("id")
+        .eq("projeto_id", id)
+        .limit(1)
+
+    if (pautaError) {
+        return { error: "Erro ao verificar vínculos: " + pautaError.message }
+    }
+
+    if (pautaItems && pautaItems.length > 0) {
+        return { error: "Não é possível excluir um projeto que está vinculado a uma sessão (pauta)." }
+    }
+
+    const { error } = await supabase
+        .from("projetos")
+        .delete()
+        .eq("id", id)
+
+    if (error) {
+        return { error: "Erro ao excluir projeto: " + error.message }
+    }
+
+    revalidatePath(`/admin/${slug}/projetos`)
+    return { success: true }
 }

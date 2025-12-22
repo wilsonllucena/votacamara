@@ -37,13 +37,12 @@ export default async function VereadoresPage({
     .select("*", { count: "exact" })
     .eq("camara_id", camara.id)
     .order("nome", { ascending: true })
-    .range(from, to)
 
   if (search) {
     query = query.ilike("nome", `%${search}%`)
   }
 
-  const { data: councilors, count, error: queryError } = await query
+  const { data: councilors, count, error: queryError } = await query.range(from, to)
   
   const totalPages = count ? Math.ceil(count / ITEMS_PER_PAGE) : 1
 
@@ -54,7 +53,7 @@ export default async function VereadoresPage({
         slug={slug} 
       />
 
-      {totalPages > 1 && (
+      {totalPages >= 1 && councilors && councilors.length > 0 && (
         <Pagination totalPages={totalPages} currentPage={currentPage} />
       )}
     </div>

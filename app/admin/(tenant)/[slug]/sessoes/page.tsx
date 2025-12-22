@@ -1,12 +1,7 @@
-import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
-import { Plus, Gavel, Calendar, Clock, MonitorPlay } from "lucide-react"
 import { createClient } from "@/utils/supabase/server"
-import { SessoesFilter } from "@/components/admin/SessoesFilter"
 import { Pagination } from "@/components/admin/Pagination"
-import { format } from "date-fns"
-import { ptBR } from "date-fns/locale"
-import Link from "next/link"
+import { SessoesClient } from "@/components/admin/sessoes/SessoesClient"
+import { Suspense } from "react"
 
 const ITEMS_PER_PAGE = 10
 
@@ -18,7 +13,7 @@ export default async function SessoesPage({
     searchParams: Promise<{ [key: string]: string | string[] | undefined }> 
 }) {
   const { slug } = await params
-  const { page = "1", data: dataFilter } = await searchParams
+  const { page = "1", search = "", data: dataFilter } = await searchParams
 
   const supabase = await createClient()
 
@@ -30,15 +25,19 @@ export default async function SessoesPage({
     .single()
 
   if (!camara) {
-      return <div className="text-white">Câmara não encontrada</div>
+      return <div className="text-white p-6">Câmara não encontrada</div>
   }
 
   // 2. Build Query
   let query = supabase
     .from("sessoes")
-    .select("*", { count: "exact" })
+    .select("*, pauta_itens(projeto_id)", { count: "exact" })
     .eq("camara_id", camara.id)
     .order("iniciou_em", { ascending: false })
+
+  if (search) {
+      query = query.ilike("titulo", `%${search}%`)
+  }
 
   if (dataFilter && typeof dataFilter === "string") {
       query = query
@@ -55,83 +54,36 @@ export default async function SessoesPage({
 
   const totalPages = count ? Math.ceil(count / ITEMS_PER_PAGE) : 1
 
+  // 4. Get projects for association (status em_pauta or votado)
+  const { data: availableProjects } = await supabase
+    .from("projetos")
+    .select("id, titulo, numero")
+    .eq("camara_id", camara.id)
+    .in("status", ["em_pauta", "votado"])
+    .order("numero", { ascending: true })
+
+  // 5. Get projects already in other "active" sessions (agendada or aberta)
+  const { data: busyProjects } = await supabase
+    .from("pauta_itens")
+    .select("projeto_id, sessao_id, sessoes!inner(status)")
+    .in("sessoes.status", ["agendada", "aberta"])
+    .eq("camara_id", camara.id)
+
   return (
-    <div className="space-y-6">
-       {/* Actions Bar */}
-      <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
-         <div>
-            <h2 className="text-3xl font-bold tracking-tight text-white">Sessões Plenárias</h2>
-            <p className="text-zinc-400">Gerencie e inicie as sessões de votação.</p>
-         </div>
-         <div className="flex gap-3 w-full md:w-auto">
-             <SessoesFilter />
-             <Button className="bg-blue-600 hover:bg-blue-500 text-white shadow-[0_0_15px_rgba(37,99,235,0.3)] border border-blue-500/50 flex-1 md:flex-none">
-                <Plus className="mr-2 h-4 w-4" /> Nova Sessão
-            </Button>
-         </div>
-      </div>
-
-      {/* Grid */}
-      {!sessoes || sessoes.length === 0 ? (
-          <div className="text-center py-20 bg-zinc-900/50 rounded-xl border border-zinc-800 text-zinc-500">
-              Nenhuma sessão encontrada.
-          </div>
-      ) : (
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-            {sessoes.map((sessao) => {
-                const date = new Date(sessao.iniciou_em)
-                const formattedDate = format(date, "dd/MM/yyyy", { locale: ptBR })
-                const formattedTime = format(date, "HH:mm", { locale: ptBR })
-
-                return (
-                <div key={sessao.id} className="group relative bg-zinc-900/50 border border-zinc-800 rounded-xl p-5 hover:bg-zinc-900/80 transition-all shadow-lg shadow-black/20">
-                    <div className="flex items-start justify-between mb-4">
-                        <div className="h-10 w-10 rounded-lg bg-zinc-800 flex items-center justify-center text-blue-500 group-hover:text-white group-hover:bg-blue-500 transition-colors">
-                            <Gavel className="h-5 w-5" />
-                        </div>
-                        <Badge variant={sessao.status === "agendada" ? "default" : "secondary"} className={
-                            sessao.status === "agendada" 
-                            ? "bg-blue-500/10 text-blue-500 border-blue-500/20" 
-                            : "bg-zinc-500/10 text-zinc-500 border-zinc-500/20 uppercase"
-                        }>
-                            {sessao.status}
-                        </Badge>
-                    </div>
-                    
-                    <h3 className="text-lg font-bold text-white mb-1 group-hover:text-blue-400 transition-colors">{sessao.titulo}</h3>
-                    <p className="text-sm text-zinc-400 mb-4 capitalize">{sessao.tipo}</p>
-
-                    <div className="space-y-2 text-sm text-zinc-500 mb-6">
-                        <div className="flex items-center">
-                            <Calendar className="mr-2 h-4 w-4" />
-                            {formattedDate}
-                        </div>
-                        <div className="flex items-center">
-                            <Clock className="mr-2 h-4 w-4" />
-                            {formattedTime}
-                        </div>
-                    </div>
-
-                    <div className="flex gap-2">
-                        <Link href={`/admin/${slug}/sessoes/${sessao.id}/pauta`} className="w-full">
-                            <Button className="w-full bg-zinc-950 border border-zinc-700 hover:bg-zinc-800 text-white">
-                                Pauta
-                            </Button>
-                        </Link>
-                        {sessao.status === "agendada" && (
-                            <Button className="w-full bg-green-600 hover:bg-green-500 text-white border border-green-500/50 shadow-[0_0_10px_rgba(34,197,94,0.3)]">
-                                <MonitorPlay className="mr-2 h-4 w-4" /> Iniciar
-                            </Button>
-                        )}
-                    </div>
-                </div>
-                )
-            })}
-        </div>
-      )}
+    <div className="py-6 space-y-6">
+      <Suspense fallback={<div className="text-white">Carregando sessões...</div>}>
+          <SessoesClient 
+            sessoes={sessoes || []} 
+            slug={slug} 
+            availableProjects={availableProjects || []}
+            busyProjects={busyProjects?.map(bp => ({ projeto_id: bp.projeto_id, sessao_id: bp.sessao_id })) || []}
+          />
+      </Suspense>
       
-      {totalPages > 1 && (
-          <Pagination totalPages={totalPages} currentPage={currentPage} />
+      {totalPages >= 1 && sessoes && sessoes.length > 0 && (
+          <div className="pt-4">
+              <Pagination totalPages={totalPages} currentPage={currentPage} />
+          </div>
       )}
     </div>
   )

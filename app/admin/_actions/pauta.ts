@@ -13,7 +13,17 @@ const pautaItemSchema = z.object({
 export async function addProjectToPauta(slug: string, sessaoId: string, projetoId: string) {
   const supabase = await createClient()
 
-  // 1. Get current max order
+  // 1. Get current max order and camara_id
+  const { data: sessao } = await supabase
+    .from("sessoes")
+    .select("camara_id")
+    .eq("id", sessaoId)
+    .single()
+
+  if (!sessao) {
+      return { message: "Sessão não encontrada." }
+  }
+
   const { data: existingItems } = await supabase
     .from("pauta_itens")
     .select("ordem")
@@ -25,10 +35,10 @@ export async function addProjectToPauta(slug: string, sessaoId: string, projetoI
 
   // 2. Insert
   const { error } = await supabase.from("pauta_itens").insert({
+    camara_id: sessao.camara_id,
     sessao_id: sessaoId,
     projeto_id: projetoId,
     ordem: nextOrder,
-    // status? Maybe 'em_pauta'
   })
 
   if (error) {
