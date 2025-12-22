@@ -161,3 +161,9 @@ export async function registerAction(prevState: any, formData: FormData) {
     // Redirect to dashboard
     redirect(`/admin/${slug}/dashboard`)
 }
+
+export async function signOutAction() {
+    const supabase = await createClient()
+    await supabase.auth.signOut()
+    redirect("/login")
+}

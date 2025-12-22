@@ -10,9 +10,10 @@ import {
   Gavel,
   Vote,
   Settings,
-  MoreHorizontal,
-  ChevronsUpDown
+  ChevronsUpDown,
+  LogOut
 } from "lucide-react"
+import { signOutAction } from "@/app/(auth)/_actions"
 
 interface SidebarProps {
   slug: string
@@ -121,7 +122,15 @@ export function Sidebar({ slug, userProfile }: SidebarProps) {
                     {userProfile?.role?.toLowerCase() || 'Membro'}
                  </p>
              </div>
-             <MoreHorizontal className="w-4 h-4 text-zinc-500 group-hover:text-zinc-300" />
+             <form action={signOutAction}>
+                <button 
+                    type="submit"
+                    className="p-1.5 hover:bg-zinc-800 rounded-md transition-colors text-zinc-500 hover:text-red-400"
+                    title="Sair"
+                >
+                    <LogOut className="w-4 h-4" />
+                </button>
+             </form>
          </div>
       </div>
     </div>
