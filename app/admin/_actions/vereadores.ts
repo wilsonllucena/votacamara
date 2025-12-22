@@ -1,69 +1,160 @@
 'use server'
 
 import { createClient } from "@/utils/supabase/server"
+import { createAdminClient } from "@/utils/supabase/admin"
 import { revalidatePath } from "next/cache"
-import { redirect } from "next/navigation"
-import { z } from "zod"
 
-const vereadorSchema = z.object({
-  nome: z.string().min(2),
-  partido: z.string().min(1),
-  status: z.enum(["Ativo", "Licenciado", "Inativo"]),
-  // foto_url will be handled separately or added later
-})
+const councilorActionSchema = {
+  nome: (val: any) => typeof val === 'string' && val.length >= 3,
+  partido: (val: any) => typeof val === 'string' && val.length >= 1,
+  cpf: (val: any) => typeof val === 'string' && val.replace(/\D/g, '').length === 11,
+  email: (val: any) => typeof val === 'string' && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val),
+  telefone: (val: any) => typeof val === 'string' && val.replace(/\D/g, '').length >= 10,
+}
 
 export async function createVereador(slug: string, prevState: any, formData: FormData) {
   const supabase = await createClient()
+  const adminClient = createAdminClient()
+
+  const nome = formData.get("nome") as string
+  const partido = formData.get("partido") as string
+  const cpf = formData.get("cpf") as string
+  const email = formData.get("email") as string
+  const telefone = formData.get("telefone") as string
+  const ativo = formData.get("ativo") === "on" || formData.get("ativo") === "true"
+
+
+  // Simple validation
+  if (!councilorActionSchema.nome(nome)) return { error: "Nome inválido" }
+  if (!councilorActionSchema.partido(partido)) return { error: "Partido inválido" }
+  if (!councilorActionSchema.cpf(cpf)) return { error: "CPF inválido" }
+  if (!councilorActionSchema.email(email)) return { error: "Email inválido" }
+  if (!councilorActionSchema.telefone(telefone)) return { error: "Telefone inválido" }
+
+  const cleanCpf = cpf.replace(/\D/g, '')
+  const password = cleanCpf.substring(0, 6)
 
   // 1. Get Tenant
-  const { data: camara } = await supabase
+  const { data: camara, error: camaraError } = await supabase
     .from("camaras")
     .select("id")
     .eq("slug", slug)
     .single()
 
-  if (!camara) {
-      return { message: "Câmara não encontrada" }
+  if (camaraError || !camara) {
+    return { error: "Câmara não encontrada" }
   }
 
-  // 2. Validate
-  const validatedFields = vereadorSchema.safeParse({
-    nome: formData.get("nome"),
-    partido: formData.get("partido"),
-    status: formData.get("status"),
+  // 2. Create Auth User
+  const { data: authUser, error: authError } = await adminClient.auth.admin.createUser({
+    email,
+    password,
+    email_confirm: true,
+    user_metadata: { nome }
   })
 
-  if (!validatedFields.success) {
-    return { errors: validatedFields.error.flatten().fieldErrors }
+  if (authError) {
+    return { error: "Erro ao criar usuário: " + authError.message }
   }
 
-  // 3. Insert
-  const { nome, partido, status } = validatedFields.data
-
-  const { error } = await supabase.from("vereadores").insert({
+  // 3. Create Profile
+  const { error: profileError } = await adminClient.from("profiles").insert({
+    user_id: authUser.user.id,
     camara_id: camara.id,
     nome,
-    partido,
-    ativo: status === "Ativo", // Map enum to boolean if schema uses boolean, or string if enum
-    // Schema in DOCUMENTO.md says: ativo (boolean?) Let's check schema.
-    // DOCUMENTO.md: ativo. Usually boolean.
-    // But my List view used "Ativo/Licenciado". 
-    // Let's assume the database column `ativo` is boolean for now (true=Ativo, false=Inativo).
-    // What about "Licenciado"? Maybe `ativo` is not enough, or `status` column exists.
-    // Checking schema dump... I don't have a dump of `vereadores`.
-    // Let's list tables again to be sure or just assume `ativo` boolean for MVP.
-    // Actually, I'll assume `ativo` is boolean. "Licenciado" might need another field or just be false.
-    // Wait, the DOCUMENTO.md says:
-    // ### vereadores
-    // - ativo
-    
-    // I will write `ativo` based on status === 'Ativo'.
+    role: 'VEREADOR',
+    email,
+    telefone
   })
 
-  if (error) {
-    return { message: "Erro ao criar vereador: " + error.message }
+  if (profileError) {
+    // Cleanup auth user if profile fails
+    await adminClient.auth.admin.deleteUser(authUser.user.id)
+    return { error: "Erro ao criar perfil: " + profileError.message }
+  }
+
+  // 4. Create Councilor
+  const { error: councilorError } = await adminClient.from("vereadores").insert({
+    camara_id: camara.id,
+    user_id: authUser.user.id,
+    nome,
+    partido,
+    cpf: cleanCpf,
+    ativo,
+  })
+
+  if (councilorError) {
+    // Cleanup
+    await adminClient.auth.admin.deleteUser(authUser.user.id)
+    return { error: "Erro ao criar vereador: " + councilorError.message }
   }
 
   revalidatePath(`/admin/${slug}/vereadores`)
-  redirect(`/admin/${slug}/vereadores`)
+  return { success: true }
+}
+
+export async function updateVereador(slug: string, id: string, data: any) {
+  const adminClient = createAdminClient()
+
+
+  // 1. Get user_id from vereadores
+  const { data: vereador, error: fetchError } = await adminClient
+    .from("vereadores")
+    .select("user_id")
+    .eq("id", id)
+    .single()
+
+  if (fetchError) return { error: fetchError.message }
+
+  // 2. Update Councilor
+  const { error: councilorError } = await adminClient
+    .from("vereadores")
+    .update({
+      nome: data.nome,
+      partido: data.partido,
+      cpf: data.cpf.replace(/\D/g, ''),
+      ativo: data.ativo,
+    })
+    .eq("id", id)
+
+  if (councilorError) {
+    return { error: councilorError.message }
+  }
+
+  // 3. Update Profile
+  if (vereador?.user_id) {
+    const { error: profileError } = await adminClient
+      .from("profiles")
+      .update({
+        nome: data.nome,
+        email: data.email,
+        telefone: data.telefone
+      })
+      .eq("user_id", vereador.user_id)
+    
+    if (profileError) {
+      // We don't necessarily return error here if the councilor was updated, 
+      // but it's good to know.
+    }
+  }
+
+  revalidatePath(`/admin/${slug}/vereadores`)
+  return { success: true }
+}
+
+export async function toggleVereadorStatus(slug: string, id: string, currentStatus: boolean) {
+  const adminClient = createAdminClient()
+
+
+  const { error } = await adminClient
+    .from("vereadores")
+    .update({ ativo: !currentStatus })
+    .eq("id", id)
+
+  if (error) {
+    return { error: error.message }
+  }
+
+  revalidatePath(`/admin/${slug}/vereadores`)
+  return { success: true }
 }
