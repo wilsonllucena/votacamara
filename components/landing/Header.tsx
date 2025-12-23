@@ -81,9 +81,11 @@ export function Header() {
             {/* <Button variant="ghost" className="text-slate-300 hover:text-white">
                 Entrar
             </Button> */}
-            <Button variant="neon" size="sm" className="rounded-full px-6">
-                Começar
-            </Button>
+            <Link target="_blank" href="https://w.app/votacamara">
+                <Button variant="neon" size="sm" className="rounded-full px-6">
+                    Fale conosco
+                </Button>
+            </Link>
         </div>
 
         {/* Mobile Menu Toggle */}

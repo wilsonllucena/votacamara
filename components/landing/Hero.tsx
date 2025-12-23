@@ -2,7 +2,8 @@
 
 import { motion } from "framer-motion"
 import { Button } from "@/components/ui/button"
-import { ArrowRight, PlayCircle } from "lucide-react"
+import { ArrowRight } from "lucide-react"
+import Link from "next/link"
 
 export function Hero() {
   return (
@@ -64,10 +65,12 @@ export function Hero() {
                   transition={{ duration: 0.5, delay: 0.5 }}
                   className="flex flex-col sm:flex-row gap-4 w-full sm:w-auto"
                 >
+                  <Link target="_blank" href="https://w.app/votacamara">
                   <Button size="lg" className="h-14 px-8 text-base rounded-full bg-blue-600 hover:bg-blue-500 shadow-lg shadow-blue-900/20 transition-all hover:scale-105">
-                    Fale com Consultor
+                    Solicitar orçamento
                     <ArrowRight className="ml-2 h-4 w-4" />
                   </Button>
+                  </Link>
                   {/* <Button size="lg" variant="outline" className="h-14 px-8 text-base rounded-full border-slate-700 bg-transparent hover:bg-slate-800 text-white transition-all">
                     <PlayCircle className="mr-2 h-4 w-4" />
                     Ver Demonstração

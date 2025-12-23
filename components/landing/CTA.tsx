@@ -3,6 +3,7 @@
 import { motion } from "framer-motion"
 import { Button } from "@/components/ui/button"
 import { ArrowRight } from "lucide-react"
+import Link from "next/link"
 
 export function CTA() {
   return (
@@ -29,13 +30,16 @@ export function CTA() {
           </p>
           
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center pt-8">
+            <Link target="_blank" href="https://w.app/votacamara">
             <Button size="lg" variant="neon" className="h-16 px-10 text-lg w-full sm:w-auto">
-              Solicitar Demonstração
+              Falar com Especialista
               <ArrowRight className="ml-2 h-5 w-5" />
             </Button>
-            <Button size="lg" variant="outline" className="h-16 px-10 text-lg w-full sm:w-auto bg-transparent border-slate-700 hover:bg-slate-800 text-white">
+            </Link>
+            
+            {/* <Button size="lg" variant="outline" className="h-16 px-10 text-lg w-full sm:w-auto bg-transparent border-slate-700 hover:bg-slate-800 text-white">
               Falar com Especialista
-            </Button>
+            </Button> */}
           </div>
         </motion.div>
       </div>
