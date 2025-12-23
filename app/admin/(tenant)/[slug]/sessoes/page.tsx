@@ -69,11 +69,22 @@ export default async function SessoesPage({
     .in("sessoes.status", ["agendada", "aberta"])
     .eq("camara_id", camara.id)
 
+  const mappedSessoes = sessoes?.map(s => {
+      const d = new Date(s.iniciou_em)
+      return {
+          ...s,
+          // Extract date and time in a way that respects the stored timestamp
+          data: s.iniciou_em.split('T')[0],
+          hora: s.iniciou_em.split('T')[1].substring(0, 5),
+          projeto_ids: s.pauta_itens?.map((p: any) => p.projeto_id) || []
+      }
+  })
+
   return (
     <div className="py-6 space-y-6">
-      <Suspense fallback={<div className="text-white">Carregando sessões...</div>}>
+      <Suspense fallback={<div className="text-foreground">Carregando sessões...</div>}>
           <SessoesClient 
-            sessoes={sessoes || []} 
+            sessoes={mappedSessoes || []} 
             slug={slug} 
             availableProjects={availableProjects || []}
             busyProjects={busyProjects?.map(bp => ({ projeto_id: bp.projeto_id, sessao_id: bp.sessao_id })) || []}

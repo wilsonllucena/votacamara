@@ -82,17 +82,17 @@ export function Sidebar({ slug, userProfile }: SidebarProps) {
   }
 
   return (
-    <div className="flex flex-col h-full bg-black text-zinc-400">
+    <div className="flex flex-col h-full bg-card text-muted-foreground">
       {/* Brand / Switcher Area */}
       <div className="p-4">
-        <div className="flex items-center justify-between px-2 py-1.5 transition-colors rounded-md hover:bg-zinc-900 cursor-pointer text-zinc-100">
+        <div className="flex items-center justify-between px-2 py-1.5 transition-colors rounded-md hover:bg-accent cursor-pointer text-foreground">
             <div className="flex items-center gap-2">
                 <div className="w-5 h-5 rounded-full bg-indigo-500 flex items-center justify-center text-[10px] font-bold text-white">
                     V
                 </div>
                 <span className="text-sm font-medium">Vota Câmara</span>
             </div>
-            <ChevronsUpDown className="w-4 h-4 text-zinc-500" />
+            <ChevronsUpDown className="w-4 h-4 text-muted-foreground" />
         </div>
       </div>
 
@@ -105,8 +105,8 @@ export function Sidebar({ slug, userProfile }: SidebarProps) {
             className={cn(
               "flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-md transition-colors",
               route.active 
-                ? "text-zinc-100 bg-zinc-900" 
-                : "text-zinc-400 hover:text-zinc-100 hover:bg-zinc-900/50"
+                ? "text-foreground bg-accent" 
+                : "text-muted-foreground hover:text-foreground hover:bg-accent/50"
             )}
           >
             <route.icon className="w-4 h-4" />
@@ -116,23 +116,23 @@ export function Sidebar({ slug, userProfile }: SidebarProps) {
       </div>
 
       {/* User Profile */}
-      <div className="p-4 border-t border-zinc-900">
-         <div className="flex items-center gap-3 px-2 py-2 hover:bg-zinc-900 rounded-md cursor-pointer transition-colors group">
-             <div className="w-8 h-8 rounded-full bg-zinc-800 flex items-center justify-center text-xs font-medium text-zinc-400 group-hover:text-zinc-100 border border-zinc-700">
+      <div className="p-4 border-t border-border">
+         <div className="flex items-center gap-3 px-2 py-2 hover:bg-accent rounded-md cursor-pointer transition-colors group">
+             <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center text-xs font-medium text-muted-foreground group-hover:text-foreground border border-border">
                  {userProfile ? getInitials(userProfile.name) : 'U'}
              </div>
              <div className="flex-1 min-w-0">
-                 <p className="text-sm font-medium text-zinc-200 group-hover:text-white truncate">
+                 <p className="text-sm font-medium text-foreground truncate">
                     {userProfile?.name || 'Carregando...'}
                  </p>
-                 <p className="text-xs text-zinc-500 truncate capitalize">
+                 <p className="text-xs text-muted-foreground truncate capitalize">
                     {userProfile?.role?.toLowerCase() || 'Membro'}
                  </p>
              </div>
              <form action={signOutAction}>
                 <button 
                     type="submit"
-                    className="p-1.5 hover:bg-zinc-800 rounded-md transition-colors text-zinc-500 hover:text-red-400"
+                    className="p-1.5 hover:bg-muted rounded-md transition-colors text-muted-foreground hover:text-red-400"
                     title="Sair"
                 >
                     <LogOut className="w-4 h-4" />

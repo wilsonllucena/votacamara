@@ -94,7 +94,7 @@ export function ProjetosClient({ projetos, slug }: ProjetosClientProps) {
     switch (status) {
       case "em_pauta": return "bg-blue-500/10 text-blue-500 border-blue-500/20"
       case "votado": return "bg-purple-500/10 text-purple-500 border-purple-500/20"
-      default: return "bg-zinc-500/10 text-zinc-400 border-zinc-700/50"
+      default: return "bg-muted text-muted-foreground border-border"
     }
   }
 
@@ -103,61 +103,61 @@ export function ProjetosClient({ projetos, slug }: ProjetosClientProps) {
        {/* Actions Bar */}
       <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
          <div>
-            <h2 className="text-3xl font-bold tracking-tight text-white">Projetos de Lei</h2>
-            <p className="text-zinc-400">Gerencie as proposituras legislativas.</p>
+            <h2 className="text-3xl font-bold tracking-tight text-foreground">Projetos de Lei</h2>
+            <p className="text-muted-foreground">Gerencie as proposituras legislativas.</p>
          </div>
          <Button 
             onClick={() => {
               setEditingProjeto(null)
               setIsModalOpen(true)
             }}
-            className="bg-blue-600 hover:bg-blue-500 text-white shadow-[0_0_15px_rgba(37,99,235,0.3)] border border-blue-500/50"
+            className="bg-primary hover:bg-primary/90 text-primary-foreground shadow-sm"
           >
             <Plus className="mr-2 h-4 w-4" /> Novo Projeto
          </Button>
       </div>
 
       {/* Filters */}
-        <form onSubmit={handleSearch} className="flex items-center gap-4 bg-zinc-900/50 p-4 rounded-xl border border-zinc-800">
+        <form onSubmit={handleSearch} className="flex items-center gap-4 bg-card/50 p-4 rounded-xl border border-border">
             <div className="relative flex-1">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-500" />
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <input 
                     type="text" 
                     placeholder="Buscar por título ou número..." 
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
-                    className="w-full bg-zinc-950 border border-zinc-800 rounded-lg pl-10 pr-4 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-blue-500/50"
+                    className="w-full bg-background border border-border rounded-lg pl-10 pr-4 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
                 />
             </div>
-            <Button type="submit" variant="outline" className="border-zinc-800 text-zinc-400 hover:text-white hover:bg-zinc-800 hidden sm:flex">
+            <Button type="submit" variant="outline" className="border-border text-muted-foreground hover:text-foreground hover:bg-muted hidden sm:flex">
                 Buscar
             </Button>
         </form>
 
       {/* List */}
       {!projetos || projetos.length === 0 ? (
-          <div className="text-center py-20 bg-zinc-900/50 rounded-xl border border-zinc-800 text-zinc-500">
+          <div className="text-center py-20 bg-card/50 rounded-xl border border-border text-muted-foreground">
               Nenhum projeto encontrado.
           </div>
       ) : (
           <div className="space-y-4">
               {projetos.map((projeto) => (
-                  <div key={projeto.id} className="flex flex-col md:flex-row gap-4 items-start md:items-center justify-between bg-zinc-900/50 border border-zinc-800 p-4 rounded-xl hover:bg-zinc-900/80 transition-colors group">
+                  <div key={projeto.id} className="flex flex-col md:flex-row gap-4 items-start md:items-center justify-between bg-card/50 border border-border p-4 rounded-xl hover:bg-muted/50 transition-colors group shadow-sm">
                       <div className="flex gap-4 items-start">
-                          <div className="h-12 w-12 rounded-lg bg-zinc-800 flex flex-shrink-0 items-center justify-center text-blue-500 group-hover:bg-zinc-700 transition-colors">
+                          <div className="h-12 w-12 rounded-lg bg-muted flex flex-shrink-0 items-center justify-center text-primary group-hover:bg-accent transition-colors">
                               <FileText className="h-6 w-6" />
                           </div>
                           <div>
                               <div className="flex items-center gap-2 mb-1">
-                                  <h3 className="font-bold text-white text-lg">{projeto.numero || "S/N"}</h3>
+                                  <h3 className="font-bold text-foreground text-lg">{projeto.numero || "S/N"}</h3>
                                   <Badge variant="outline" className={`capitalize ${getStatusColor(projeto.status)}`}>
                                       {formatStatus(projeto.status)}
                                   </Badge>
                               </div>
-                              <h4 className="text-zinc-200 font-medium mb-1">{projeto.titulo}</h4>
-                              <p className="text-sm text-zinc-500 line-clamp-2 max-w-2xl">{projeto.ementa}</p>
+                              <h4 className="text-foreground/90 font-medium mb-1">{projeto.titulo}</h4>
+                              <p className="text-sm text-muted-foreground line-clamp-2 max-w-2xl">{projeto.ementa}</p>
                               
-                              <div className="flex items-center gap-4 mt-3 text-sm text-zinc-500">
+                              <div className="flex items-center gap-4 mt-3 text-sm text-muted-foreground">
                                   <div className="flex items-center gap-1">
                                       <User className="h-3 w-3" />
                                       {projeto.autor}
@@ -165,7 +165,7 @@ export function ProjetosClient({ projetos, slug }: ProjetosClientProps) {
                                   {projeto.texto_url && (
                                     <div className="flex items-center gap-1">
                                         <ScrollText className="h-3 w-3" />
-                                        <a href={projeto.texto_url} target="_blank" className="hover:text-blue-400 hover:underline">Texto Original</a>
+                                        <a href={projeto.texto_url} target="_blank" className="hover:text-primary hover:underline">Texto Original</a>
                                     </div>
                                   )}
                               </div>
@@ -187,7 +187,7 @@ export function ProjetosClient({ projetos, slug }: ProjetosClientProps) {
                                 setIsModalOpen(true)
                               }}
                               variant="outline" 
-                              className="border-zinc-700 bg-zinc-900 text-white hover:bg-zinc-800 flex-1 md:flex-none"
+                              className="border-border bg-background text-foreground hover:bg-muted flex-1 md:flex-none font-medium"
                             >
                                <Edit2 className="h-4 w-4 mr-2" />
                                Editar
@@ -195,7 +195,7 @@ export function ProjetosClient({ projetos, slug }: ProjetosClientProps) {
                           <Button 
                               onClick={() => handleDelete(projeto.id, projeto.titulo)}
                               variant="ghost" 
-                              className="text-zinc-500 hover:text-red-500 hover:bg-red-500/10 flex-1 md:flex-none"
+                              className="text-muted-foreground hover:text-red-500 hover:bg-red-500/10 flex-1 md:flex-none"
                             >
                                <Trash2 className="h-4 w-4" />
                           </Button>

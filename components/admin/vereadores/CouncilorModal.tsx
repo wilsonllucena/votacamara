@@ -19,9 +19,9 @@ interface CouncilorModalProps {
 export function CouncilorModal({ isOpen, onClose, onSubmit, editingCouncilor, isPending }: CouncilorModalProps) {
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[500px] border-zinc-800 bg-zinc-950">
+      <DialogContent className="sm:max-w-[500px] border-border bg-card">
         <DialogHeader>
-          <DialogTitle className="text-xl font-bold text-white">
+          <DialogTitle className="text-xl font-bold text-foreground">
             {editingCouncilor ? "Editar Vereador" : "Novo Vereador"}
           </DialogTitle>
         </DialogHeader>

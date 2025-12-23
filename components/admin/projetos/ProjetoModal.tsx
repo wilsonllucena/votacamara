@@ -12,31 +12,27 @@ interface ProjetoModalProps {
   isOpen: boolean
   onClose: () => void
   onSubmit: (data: ProjetoInputs) => void
-  editingProjeto?: ProjetoInputs & { id: string } | null
+  editingProjeto?: (ProjetoInputs & { id: string }) | null
   isPending?: boolean
 }
 
-export function ProjetoModal({
-  isOpen,
-  onClose,
-  onSubmit,
-  editingProjeto,
-  isPending,
-}: ProjetoModalProps) {
+export function ProjetoModal({ isOpen, onClose, onSubmit, editingProjeto, isPending }: ProjetoModalProps) {
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[700px] bg-zinc-950 border-zinc-800 text-white">
+      <DialogContent className="sm:max-w-[600px] border-border bg-card">
         <DialogHeader>
-          <DialogTitle className="text-2xl font-bold">
+          <DialogTitle className="text-xl font-bold text-foreground">
             {editingProjeto ? "Editar Projeto" : "Novo Projeto"}
           </DialogTitle>
         </DialogHeader>
-        <div className="py-4">
+        <div className="mt-4">
           <ProjetoForm 
             defaultValues={editingProjeto || undefined}
-            onSubmit={onSubmit}
-            onCancel={onClose}
             isPending={isPending}
+            onSubmit={(data) => {
+              onSubmit(data)
+            }}
+            onCancel={onClose}
           />
         </div>
       </DialogContent>

@@ -45,24 +45,24 @@ export function ProjetoForm({ defaultValues, onSubmit, onCancel, isPending }: Pr
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <div className="space-y-2 col-span-1">
-            <label className="text-sm font-medium text-zinc-300" htmlFor="numero">Número</label>
+            <label className="text-sm font-medium text-muted-foreground" htmlFor="numero">Número</label>
             <input 
               {...register("numero")}
               id="numero"
               type="text" 
-              className={`w-full bg-zinc-900 border ${errors.numero ? 'border-red-500' : 'border-zinc-800'} rounded-lg px-4 py-2 text-white placeholder:text-zinc-600 focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all`}
+              className={`w-full bg-background border ${errors.numero ? 'border-red-500' : 'border-border'} rounded-lg px-4 py-2 text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all`}
               placeholder="Ex: 001/2024"
             />
             {errors.numero && <p className="text-xs text-red-500 mt-1">{errors.numero.message}</p>}
         </div>
 
         <div className="space-y-2 col-span-3">
-            <label className="text-sm font-medium text-zinc-300" htmlFor="titulo">Título Curto</label>
+            <label className="text-sm font-medium text-muted-foreground" htmlFor="titulo">Título Curto</label>
             <input 
               {...register("titulo")}
               id="titulo"
               type="text" 
-              className={`w-full bg-zinc-900 border ${errors.titulo ? 'border-red-500' : 'border-zinc-800'} rounded-lg px-4 py-2 text-white placeholder:text-zinc-600 focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all`}
+              className={`w-full bg-background border ${errors.titulo ? 'border-red-500' : 'border-border'} rounded-lg px-4 py-2 text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all`}
               placeholder="Ex: Projeto de Lei da Saúde"
             />
             {errors.titulo && <p className="text-xs text-red-500 mt-1">{errors.titulo.message}</p>}
@@ -70,12 +70,12 @@ export function ProjetoForm({ defaultValues, onSubmit, onCancel, isPending }: Pr
       </div>
 
       <div className="space-y-2">
-        <label className="text-sm font-medium text-zinc-300" htmlFor="ementa">Ementa Completa</label>
+        <label className="text-sm font-medium text-muted-foreground" htmlFor="ementa">Ementa Completa</label>
         <textarea 
           {...register("ementa")}
           id="ementa"
           rows={4}
-          className={`w-full bg-zinc-900 border ${errors.ementa ? 'border-red-500' : 'border-zinc-800'} rounded-lg px-4 py-2 text-white placeholder:text-zinc-600 focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all resize-none`}
+          className={`w-full bg-background border ${errors.ementa ? 'border-red-500' : 'border-border'} rounded-lg px-4 py-2 text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all resize-none`}
           placeholder="Descreva o projeto detalhadamente..."
         />
         {errors.ementa && <p className="text-xs text-red-500 mt-1">{errors.ementa.message}</p>}
@@ -83,23 +83,23 @@ export function ProjetoForm({ defaultValues, onSubmit, onCancel, isPending }: Pr
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="space-y-2">
-            <label className="text-sm font-medium text-zinc-300" htmlFor="autor">Autor</label>
+            <label className="text-sm font-medium text-muted-foreground" htmlFor="autor">Autor</label>
             <input 
               {...register("autor")}
               id="autor"
               type="text" 
-              className={`w-full bg-zinc-900 border ${errors.autor ? 'border-red-500' : 'border-zinc-800'} rounded-lg px-4 py-2 text-white placeholder:text-zinc-600 focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all`}
+              className={`w-full bg-background border ${errors.autor ? 'border-red-500' : 'border-border'} rounded-lg px-4 py-2 text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all`}
               placeholder="Ex: Vereador João Silva ou Executivo"
             />
             {errors.autor && <p className="text-xs text-red-500 mt-1">{errors.autor.message}</p>}
         </div>
 
         <div className="space-y-2">
-            <label className="text-sm font-medium text-zinc-300" htmlFor="status">Status</label>
+            <label className="text-sm font-medium text-muted-foreground" htmlFor="status">Status</label>
             <select 
               {...register("status")}
               id="status"
-              className={`w-full bg-zinc-900 border ${errors.status ? 'border-red-500' : 'border-zinc-800'} rounded-lg px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all`}
+              className={`w-full bg-background border ${errors.status ? 'border-red-500' : 'border-border'} rounded-lg px-4 py-2 text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all`}
             >
               <option value="Rascunho">Rascunho</option>
               <option value="Em Pauta">Em Pauta</option>
@@ -110,12 +110,12 @@ export function ProjetoForm({ defaultValues, onSubmit, onCancel, isPending }: Pr
       </div>
 
       <div className="space-y-2">
-        <label className="text-sm font-medium text-zinc-300" htmlFor="texto_url">Link para Texto Integral (URL)</label>
+        <label className="text-sm font-medium text-muted-foreground" htmlFor="texto_url">Link para Texto Integral (URL)</label>
         <input 
           {...register("texto_url")}
           id="texto_url"
           type="text" 
-          className={`w-full bg-zinc-900 border ${errors.texto_url ? 'border-red-500' : 'border-zinc-800'} rounded-lg px-4 py-2 text-white placeholder:text-zinc-600 focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all`}
+          className={`w-full bg-background border ${errors.texto_url ? 'border-red-500' : 'border-border'} rounded-lg px-4 py-2 text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all`}
           placeholder="https://example.com/projeto.pdf"
         />
         {errors.texto_url && <p className="text-xs text-red-500 mt-1">{errors.texto_url.message}</p>}
@@ -126,14 +126,14 @@ export function ProjetoForm({ defaultValues, onSubmit, onCancel, isPending }: Pr
           type="button" 
           variant="outline" 
           onClick={onCancel}
-          className="border-zinc-800 text-zinc-400 hover:text-white hover:bg-zinc-800"
+          className="border-border text-muted-foreground hover:text-foreground hover:bg-muted"
         >
           Cancelar
         </Button>
         <Button 
           type="submit" 
           disabled={isPending}
-          className="bg-blue-600 hover:bg-blue-500 text-white shadow-[0_0_15px_rgba(37,99,235,0.3)] border border-blue-500/50 min-w-[120px]"
+          className="bg-primary hover:bg-primary/90 text-primary-foreground shadow-sm"
         >
           {isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : "Salvar"}
         </Button>

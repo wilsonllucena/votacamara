@@ -9,33 +9,45 @@ import {
 import { SessaoForm } from "./SessaoForm"
 import { SessaoInputs } from "@/app/admin/_actions/sessoes"
 
+interface Sessao {
+    id: string
+    titulo: string
+    tipo: string
+    status: string
+    data: string
+    hora: string
+    projeto_ids?: string[]
+}
+
 interface SessaoModalProps {
   isOpen: boolean
   onClose: () => void
   onSubmit: (data: SessaoInputs) => void
-  availableProjects?: { id: string; titulo: string; numero: string }[]
-  busyProjects?: { projeto_id: string; sessao_id: string }[]
-  editingSessao?: (SessaoInputs & { id: string }) | null
+  editingSessao?: Sessao | null
   isPending?: boolean
+  availableProjects: any[]
+  busyProjects: any[]
 }
 
-export function SessaoModal({ isOpen, onClose, onSubmit, availableProjects = [], busyProjects = [], editingSessao, isPending }: SessaoModalProps) {
+export function SessaoModal({ isOpen, onClose, onSubmit, editingSessao, isPending, availableProjects, busyProjects }: SessaoModalProps) {
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="bg-black border-zinc-800 text-white sm:max-w-[500px]">
+      <DialogContent className="sm:max-w-[600px] border-border bg-card max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle className="text-2xl font-bold bg-gradient-to-r from-white to-zinc-400 bg-clip-text text-transparent">
+          <DialogTitle className="text-xl font-bold text-foreground">
             {editingSessao ? "Editar Sessão" : "Nova Sessão"}
           </DialogTitle>
         </DialogHeader>
-        <div className="py-4">
+        <div className="mt-4">
           <SessaoForm 
             defaultValues={editingSessao || undefined}
+            isPending={isPending}
             availableProjects={availableProjects}
             busyProjects={busyProjects}
-            onSubmit={onSubmit}
+            onSubmit={(data) => {
+              onSubmit(data)
+            }}
             onCancel={onClose}
-            isPending={isPending}
           />
         </div>
       </DialogContent>

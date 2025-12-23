@@ -24,7 +24,7 @@ export default async function VereadoresPage({
     .single()
 
   if (!camara) {
-      return <div className="text-white p-8">Câmara não encontrada</div>
+      return <div className="text-foreground p-8">Câmara não encontrada</div>
   }
 
   // 2. Query
@@ -54,7 +54,10 @@ export default async function VereadoresPage({
       />
 
       {totalPages >= 1 && councilors && councilors.length > 0 && (
-        <Pagination totalPages={totalPages} currentPage={currentPage} />
+        <Pagination 
+          totalPages={totalPages} 
+          currentPage={currentPage}
+        />
       )}
     </div>
   )

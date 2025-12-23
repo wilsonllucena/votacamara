@@ -1,5 +1,6 @@
 import { Sidebar } from "@/components/admin/Sidebar"
 import { Header } from "@/components/admin/Header"
+import { AdminThemeProvider } from "@/components/admin/AdminThemeProvider"
 import { createClient } from "@/utils/supabase/server"
 import { redirect } from "next/navigation"
 
@@ -33,16 +34,18 @@ export default async function DashboardLayout({
   }
 
   return (
-    <div className="h-full relative bg-black">
-      <div className="hidden h-full md:flex md:w-64 md:flex-col md:fixed md:inset-y-0 z-80 bg-black border-r border-zinc-900">
-        <Sidebar slug={slug} userProfile={userProfile} />
-      </div>
-      <main className="md:pl-64 h-full">
-        <Header slug={slug} userProfile={userProfile} />
-        <div className="px-8 pb-8 h-full bg-black min-h-[calc(100vh-56px)]">
-            {children}
+    <AdminThemeProvider>
+        <div className="h-full relative bg-background">
+          <div className="hidden h-full md:flex md:w-64 md:flex-col md:fixed md:inset-y-0 z-80 bg-card border-r border-border">
+            <Sidebar slug={slug} userProfile={userProfile} />
+          </div>
+          <main className="md:pl-64 h-full">
+            <Header slug={slug} userProfile={userProfile} />
+            <div className="px-8 pb-8 h-full bg-background min-h-[calc(100vh-56px)]">
+                {children}
+            </div>
+          </main>
         </div>
-      </main>
-    </div>
+    </AdminThemeProvider>
   )
 }

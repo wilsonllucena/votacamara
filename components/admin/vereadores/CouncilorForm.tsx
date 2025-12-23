@@ -79,12 +79,12 @@ export function CouncilorForm({ defaultValues, onSubmit, onCancel, isPending }: 
   return (
     <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-4">
       <div className="space-y-2">
-        <label className="text-sm font-medium text-zinc-300" htmlFor="nome">Nome Completo</label>
+        <label className="text-sm font-medium text-muted-foreground" htmlFor="nome">Nome Completo</label>
         <input 
           {...register("nome")}
           id="nome"
           type="text" 
-          className={`w-full bg-zinc-900 border ${errors.nome ? 'border-red-500' : 'border-zinc-800'} rounded-lg px-4 py-2 text-white placeholder:text-zinc-600 focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all`}
+          className={`w-full bg-background border ${errors.nome ? 'border-red-500' : 'border-border'} rounded-lg px-4 py-2 text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all`}
           placeholder="Ex: João Silva"
         />
         {errors.nome && <p className="text-xs text-red-500 mt-1">{errors.nome.message}</p>}
@@ -92,19 +92,19 @@ export function CouncilorForm({ defaultValues, onSubmit, onCancel, isPending }: 
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="space-y-2">
-          <label className="text-sm font-medium text-zinc-300" htmlFor="partido">Partido</label>
+          <label className="text-sm font-medium text-muted-foreground" htmlFor="partido">Partido</label>
           <input 
             {...register("partido")}
             id="partido"
             type="text" 
-            className={`w-full bg-zinc-900 border ${errors.partido ? 'border-red-500' : 'border-zinc-800'} rounded-lg px-4 py-2 text-white placeholder:text-zinc-600 focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all`}
+            className={`w-full bg-background border ${errors.partido ? 'border-red-500' : 'border-border'} rounded-lg px-4 py-2 text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all`}
             placeholder="Ex: PSD"
           />
           {errors.partido && <p className="text-xs text-red-500 mt-1">{errors.partido.message}</p>}
         </div>
 
         <div className="space-y-2">
-          <label className="text-sm font-medium text-zinc-300" htmlFor="cpf">CPF</label>
+          <label className="text-sm font-medium text-muted-foreground" htmlFor="cpf">CPF</label>
           <input 
             id="cpf"
             type="text" 
@@ -114,7 +114,7 @@ export function CouncilorForm({ defaultValues, onSubmit, onCancel, isPending }: 
               setCpfDisplay(masked)
               setValue("cpf", masked, { shouldValidate: true })
             }}
-            className={`w-full bg-zinc-900 border ${errors.cpf ? 'border-red-500' : 'border-zinc-800'} rounded-lg px-4 py-2 text-white placeholder:text-zinc-600 focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all`}
+            className={`w-full bg-background border ${errors.cpf ? 'border-red-500' : 'border-border'} rounded-lg px-4 py-2 text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all`}
             placeholder="000.000.000-00"
           />
           {errors.cpf && <p className="text-xs text-red-500 mt-1">{errors.cpf.message}</p>}
@@ -122,19 +122,19 @@ export function CouncilorForm({ defaultValues, onSubmit, onCancel, isPending }: 
       </div>
 
       <div className="space-y-2">
-        <label className="text-sm font-medium text-zinc-300" htmlFor="email">Email</label>
+        <label className="text-sm font-medium text-muted-foreground" htmlFor="email">Email</label>
         <input 
           {...register("email")}
           id="email"
           type="email" 
-          className={`w-full bg-zinc-900 border ${errors.email ? 'border-red-500' : 'border-zinc-800'} rounded-lg px-4 py-2 text-white placeholder:text-zinc-600 focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all`}
+          className={`w-full bg-background border ${errors.email ? 'border-red-500' : 'border-border'} rounded-lg px-4 py-2 text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all`}
           placeholder="joao@camara.leg.br"
         />
         {errors.email && <p className="text-xs text-red-500 mt-1">{errors.email.message}</p>}
       </div>
 
       <div className="space-y-2">
-        <label className="text-sm font-medium text-zinc-300" htmlFor="telefone">Telefone</label>
+        <label className="text-sm font-medium text-muted-foreground" htmlFor="telefone">Telefone</label>
         <input 
           id="telefone"
           type="text" 
@@ -144,7 +144,7 @@ export function CouncilorForm({ defaultValues, onSubmit, onCancel, isPending }: 
             setTelefoneDisplay(masked)
             setValue("telefone", masked, { shouldValidate: true })
           }}
-          className={`w-full bg-zinc-900 border ${errors.telefone ? 'border-red-500' : 'border-zinc-800'} rounded-lg px-4 py-2 text-white placeholder:text-zinc-600 focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all`}
+          className={`w-full bg-background border ${errors.telefone ? 'border-red-500' : 'border-border'} rounded-lg px-4 py-2 text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all`}
           placeholder="(00) 00000-0000"
         />
         {errors.telefone && <p className="text-xs text-red-500 mt-1">{errors.telefone.message}</p>}
@@ -156,9 +156,9 @@ export function CouncilorForm({ defaultValues, onSubmit, onCancel, isPending }: 
             {...register("ativo")}
             id="ativo"
             type="checkbox"
-            className="h-4 w-4 rounded border-zinc-800 bg-zinc-900 text-blue-600 focus:ring-blue-500/50"
+            className="h-4 w-4 rounded border-border bg-background text-primary focus:ring-primary/50"
           />
-          <label htmlFor="ativo" className="text-sm font-medium text-zinc-300 cursor-pointer">
+          <label htmlFor="ativo" className="text-sm font-medium text-muted-foreground cursor-pointer">
             Vereador Ativo
           </label>
         </div>
@@ -168,11 +168,11 @@ export function CouncilorForm({ defaultValues, onSubmit, onCancel, isPending }: 
             {...register("isPresidente")}
             id="isPresidente"
             type="checkbox"
-            className="h-4 w-4 rounded border-zinc-800 bg-zinc-900 text-blue-600 focus:ring-blue-500/50"
+            className="h-4 w-4 rounded border-border bg-background text-primary focus:ring-primary/50"
           />
-          <label htmlFor="isPresidente" className="group flex items-center gap-2 text-sm font-medium text-zinc-300 cursor-pointer">
+          <label htmlFor="isPresidente" className="group flex items-center gap-2 text-sm font-medium text-muted-foreground cursor-pointer">
             Presidente da Câmara
-            <span className="text-[10px] bg-blue-500/10 text-blue-500 px-1.5 py-0.5 rounded border border-blue-500/20 group-hover:bg-blue-500/20 transition-colors uppercase font-bold tracking-wider">Presidente</span>
+            <span className="text-[10px] bg-primary/10 text-primary px-1.5 py-0.5 rounded border border-primary/20 group-hover:bg-primary/20 transition-colors uppercase font-bold tracking-wider">Presidente</span>
           </label>
         </div>
       </div>
@@ -182,14 +182,14 @@ export function CouncilorForm({ defaultValues, onSubmit, onCancel, isPending }: 
           type="button" 
           variant="outline" 
           onClick={onCancel}
-          className="border-zinc-800 text-zinc-400 hover:text-white hover:bg-zinc-800"
+          className="border-border text-muted-foreground hover:text-foreground hover:bg-muted"
         >
           Cancelar
         </Button>
         <Button 
           type="submit" 
           disabled={isPending}
-          className="bg-blue-600 hover:bg-blue-500 text-white shadow-[0_0_15px_rgba(37,99,235,0.3)] border border-blue-500/50 min-w-[120px]"
+          className="bg-primary hover:bg-primary/90 text-primary-foreground shadow-sm border border-primary/50 min-w-[120px]"
         >
           {isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : "Salvar"}
         </Button>
