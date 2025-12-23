@@ -14,6 +14,7 @@ const councilorSchema = z.object({
   email: z.string().min(1, "Email é obrigatório").email("Email inválido"),
   telefone: z.string().min(1, "Telefone é obrigatório").transform(v => v.replace(/\D/g, "")).pipe(z.string().min(10, "Mínimo 10 dígitos").max(11, "Máximo 11 dígitos")),
   ativo: z.boolean(),
+  isPresidente: z.boolean(),
 })
 
 export type CouncilorInputs = z.infer<typeof councilorSchema>
@@ -40,6 +41,7 @@ export function CouncilorForm({ defaultValues, onSubmit, onCancel, isPending }: 
       email: defaultValues?.email || "",
       telefone: defaultValues?.telefone || "",
       ativo: defaultValues?.ativo ?? true,
+      isPresidente: defaultValues?.isPresidente ?? false,
     }
   })
 
@@ -148,16 +150,31 @@ export function CouncilorForm({ defaultValues, onSubmit, onCancel, isPending }: 
         {errors.telefone && <p className="text-xs text-red-500 mt-1">{errors.telefone.message}</p>}
       </div>
 
-      <div className="flex items-center space-x-2 py-2">
-        <input
-          {...register("ativo")}
-          id="ativo"
-          type="checkbox"
-          className="h-4 w-4 rounded border-zinc-800 bg-zinc-900 text-blue-600 focus:ring-blue-500/50"
-        />
-        <label htmlFor="ativo" className="text-sm font-medium text-zinc-300 cursor-pointer">
-          Vereador Ativo
-        </label>
+      <div className="flex flex-col gap-4 py-2">
+        <div className="flex items-center space-x-2">
+          <input
+            {...register("ativo")}
+            id="ativo"
+            type="checkbox"
+            className="h-4 w-4 rounded border-zinc-800 bg-zinc-900 text-blue-600 focus:ring-blue-500/50"
+          />
+          <label htmlFor="ativo" className="text-sm font-medium text-zinc-300 cursor-pointer">
+            Vereador Ativo
+          </label>
+        </div>
+
+        <div className="flex items-center space-x-2">
+          <input
+            {...register("isPresidente")}
+            id="isPresidente"
+            type="checkbox"
+            className="h-4 w-4 rounded border-zinc-800 bg-zinc-900 text-blue-600 focus:ring-blue-500/50"
+          />
+          <label htmlFor="isPresidente" className="group flex items-center gap-2 text-sm font-medium text-zinc-300 cursor-pointer">
+            Presidente da Câmara
+            <span className="text-[10px] bg-blue-500/10 text-blue-500 px-1.5 py-0.5 rounded border border-blue-500/20 group-hover:bg-blue-500/20 transition-colors uppercase font-bold tracking-wider">Presidente</span>
+          </label>
+        </div>
       </div>
 
       <div className="flex justify-end gap-3 pt-4">

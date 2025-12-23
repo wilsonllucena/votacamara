@@ -125,7 +125,12 @@ export function CouncilorsClient({ councilors, slug }: CouncilorsClientProps) {
                                       <User className="h-5 w-5" />
                                   </div>
                                   <div className="flex flex-col">
-                                    <span>{vereador.nome}</span>
+                                    <div className="flex items-center gap-2">
+                                        <span>{vereador.nome}</span>
+                                        {vereador.is_presidente && (
+                                            <span className="text-[10px] bg-blue-500/10 text-blue-500 px-1.5 py-0.5 rounded border border-blue-500/20 uppercase font-bold tracking-wider">Presidente</span>
+                                        )}
+                                    </div>
                                     <span className="text-zinc-500 text-xs md:hidden">{vereador.partido}</span>
                                   </div>
                                 </div>
@@ -153,7 +158,8 @@ export function CouncilorsClient({ councilors, slug }: CouncilorsClientProps) {
                                       const flatVereador = {
                                         ...vereador,
                                         email: vereador.profile_email,
-                                        telefone: vereador.profile_telefone
+                                        telefone: vereador.profile_telefone,
+                                        isPresidente: vereador.is_presidente
                                       }
                                       setEditingCouncilor(flatVereador)
                                       setIsModalOpen(true)

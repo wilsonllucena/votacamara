@@ -11,7 +11,8 @@ import {
   Vote,
   Settings,
   ChevronsUpDown,
-  LogOut
+  LogOut,
+  Calendar
 } from "lucide-react"
 import { signOutAction } from "@/app/(auth)/_actions"
 
@@ -38,6 +39,12 @@ export function Sidebar({ slug, userProfile }: SidebarProps) {
       icon: Gavel,
       href: `/admin/${slug}/sessoes`,
       active: pathname.startsWith(`/admin/${slug}/sessoes`),
+    },
+    {
+      label: "Agenda",
+      icon: Calendar,
+      href: `/admin/${slug}/agenda`,
+      active: pathname.startsWith(`/admin/${slug}/agenda`),
     },
     {
       label: "Pauta & Projetos",

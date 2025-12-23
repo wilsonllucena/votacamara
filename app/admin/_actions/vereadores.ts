@@ -22,6 +22,7 @@ export async function createVereador(slug: string, prevState: any, formData: For
   const email = formData.get("email") as string
   const telefone = formData.get("telefone") as string
   const ativo = formData.get("ativo") === "on" || formData.get("ativo") === "true"
+  const isPresidente = formData.get("isPresidente") === "on" || formData.get("isPresidente") === "true"
 
 
   // Simple validation
@@ -45,6 +46,20 @@ export async function createVereador(slug: string, prevState: any, formData: For
     return { error: "Câmara não encontrada" }
   }
 
+  // 2. Check for existing president if this one is intended to be president
+  if (isPresidente) {
+    const { data: existingPresident } = await supabase
+      .from("profiles")
+      .select("id")
+      .eq("camara_id", camara.id)
+      .eq("role", "PRESIDENTE")
+      .single()
+    
+    if (existingPresident) {
+      return { error: "Já existe um presidente cadastrado para esta Câmara. Desative o cargo do atual antes de promover outro." }
+    }
+  }
+
   // 2. Create Auth User
   const { data: authUser, error: authError } = await adminClient.auth.admin.createUser({
     email,
@@ -62,7 +77,7 @@ export async function createVereador(slug: string, prevState: any, formData: For
     user_id: authUser.user.id,
     camara_id: camara.id,
     nome,
-    role: 'VEREADOR',
+    role: isPresidente ? 'PRESIDENTE' : 'VEREADOR',
     email,
     telefone
   })
@@ -81,6 +96,7 @@ export async function createVereador(slug: string, prevState: any, formData: For
     partido,
     cpf: cleanCpf,
     ativo,
+    is_presidente: isPresidente,
   })
 
   if (councilorError) {
@@ -106,7 +122,29 @@ export async function updateVereador(slug: string, id: string, data: any) {
 
   if (fetchError) return { error: fetchError.message }
 
-  // 2. Update Councilor
+  // 2. Check for existing president if promoting to president
+  if (data.isPresidente) {
+    const { data: currentProfile } = await adminClient
+      .from("profiles")
+      .select("id, role, camara_id")
+      .eq("user_id", vereador.user_id)
+      .single()
+
+    if (currentProfile?.role !== 'PRESIDENTE') {
+      const { data: existingPresident } = await adminClient
+        .from("profiles")
+        .select("id")
+        .eq("camara_id", currentProfile?.camara_id)
+        .eq("role", "PRESIDENTE")
+        .single()
+      
+      if (existingPresident) {
+        return { error: "Já existe um presidente cadastrado para esta Câmara. Remova o cargo do atual antes de promover este vereador." }
+      }
+    }
+  }
+
+  // 3. Update Councilor
   const { error: councilorError } = await adminClient
     .from("vereadores")
     .update({
@@ -114,6 +152,7 @@ export async function updateVereador(slug: string, id: string, data: any) {
       partido: data.partido,
       cpf: data.cpf.replace(/\D/g, ''),
       ativo: data.ativo,
+      is_presidente: data.isPresidente,
     })
     .eq("id", id)
 
@@ -128,7 +167,8 @@ export async function updateVereador(slug: string, id: string, data: any) {
       .update({
         nome: data.nome,
         email: data.email,
-        telefone: data.telefone
+        telefone: data.telefone,
+        role: data.isPresidente ? 'PRESIDENTE' : 'VEREADOR'
       })
       .eq("user_id", vereador.user_id)
     
