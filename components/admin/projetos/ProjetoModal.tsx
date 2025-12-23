@@ -14,9 +14,10 @@ interface ProjetoModalProps {
   onSubmit: (data: ProjetoInputs) => void
   editingProjeto?: (ProjetoInputs & { id: string }) | null
   isPending?: boolean
+  vereadores: { id: string, nome: string }[]
 }
 
-export function ProjetoModal({ isOpen, onClose, onSubmit, editingProjeto, isPending }: ProjetoModalProps) {
+export function ProjetoModal({ isOpen, onClose, onSubmit, editingProjeto, isPending, vereadores }: ProjetoModalProps) {
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-[600px] border-border bg-card">
@@ -29,6 +30,7 @@ export function ProjetoModal({ isOpen, onClose, onSubmit, editingProjeto, isPend
           <ProjetoForm 
             defaultValues={editingProjeto || undefined}
             isPending={isPending}
+            vereadores={vereadores}
             onSubmit={(data) => {
               onSubmit(data)
             }}

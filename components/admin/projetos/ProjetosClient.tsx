@@ -1,7 +1,8 @@
 "use client"
 
-import { useState, useTransition } from "react"
+import { useState, useEffect, useTransition } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
+import { createClient } from "@/utils/supabase/client"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Plus, Search, Edit2, Trash2, FileText, User, ScrollText } from "lucide-react"
@@ -15,6 +16,7 @@ interface Projeto {
   titulo: string
   ementa: string
   autor: string
+  autor_id?: string | null
   texto_url?: string | null
   status: string
   created_at: string
@@ -27,9 +29,24 @@ interface ProjetosClientProps {
 
 export function ProjetosClient({ projetos, slug }: ProjetosClientProps) {
   const router = useRouter()
+  const supabase = createClient()
   const [isPending, startTransition] = useTransition()
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [editingProjeto, setEditingProjeto] = useState<(ProjetoInputs & { id: string }) | null>(null)
+  const [vereadores, setVereadores] = useState<{ id: string, nome: string }[]>([])
+
+  // Fetch vereadores for the modal dropdown
+  useEffect(() => {
+    const fetchVereadores = async () => {
+        const { data } = await supabase
+            .from("vereadores")
+            .select("id, nome")
+            .order("nome")
+        
+        if (data) setVereadores(data)
+    }
+    fetchVereadores()
+  }, [supabase])
   const searchParams = useSearchParams()
   const [searchTerm, setSearchTerm] = useState(searchParams.get("search") || "")
 
@@ -181,6 +198,7 @@ export function ProjetosClient({ projetos, slug }: ProjetosClientProps) {
                                   titulo: projeto.titulo,
                                   ementa: projeto.ementa,
                                   autor: projeto.autor,
+                                  autor_id: projeto.autor_id || undefined,
                                   texto_url: projeto.texto_url || undefined,
                                   status: formatStatus(projeto.status) as ProjetoInputs["status"]
                                 })
@@ -211,6 +229,7 @@ export function ProjetosClient({ projetos, slug }: ProjetosClientProps) {
         onSubmit={handleCreateOrUpdate}
         editingProjeto={editingProjeto}
         isPending={isPending}
+        vereadores={vereadores}
       />
     </div>
   )

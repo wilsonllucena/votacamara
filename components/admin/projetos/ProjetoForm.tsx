@@ -11,6 +11,7 @@ const projetoSchema = z.object({
   titulo: z.string().min(3, "Título deve ter pelo menos 3 caracteres"),
   ementa: z.string().min(10, "Ementa deve ser detalhada"),
   autor: z.string().min(2, "Autor é obrigatório"),
+  autor_id: z.string().uuid("Vereador selecionado inválido").optional().or(z.literal("")),
   texto_url: z.string().url("URL do texto deve ser válida").optional().or(z.literal("")),
   status: z.enum(["Rascunho", "Em Pauta", "Votado"]),
 })
@@ -22,12 +23,15 @@ interface ProjetoFormProps {
   onSubmit: (data: ProjetoInputs) => void
   onCancel: () => void
   isPending?: boolean
+  vereadores: { id: string, nome: string }[]
 }
 
-export function ProjetoForm({ defaultValues, onSubmit, onCancel, isPending }: ProjetoFormProps) {
+export function ProjetoForm({ defaultValues, onSubmit, onCancel, isPending, vereadores }: ProjetoFormProps) {
   const {
     register,
     handleSubmit,
+    setValue,
+    watch,
     formState: { errors },
   } = useForm<ProjetoInputs>({
     resolver: zodResolver(projetoSchema),
@@ -36,6 +40,7 @@ export function ProjetoForm({ defaultValues, onSubmit, onCancel, isPending }: Pr
       titulo: defaultValues?.titulo || "",
       ementa: defaultValues?.ementa || "",
       autor: defaultValues?.autor || "",
+      autor_id: defaultValues?.autor_id || "",
       texto_url: defaultValues?.texto_url || "",
       status: (defaultValues?.status as ProjetoInputs["status"]) || "Rascunho",
     }
@@ -83,15 +88,25 @@ export function ProjetoForm({ defaultValues, onSubmit, onCancel, isPending }: Pr
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="space-y-2">
-            <label className="text-sm font-medium text-muted-foreground" htmlFor="autor">Autor</label>
-            <input 
-              {...register("autor")}
-              id="autor"
-              type="text" 
-              className={`w-full bg-background border ${errors.autor ? 'border-red-500' : 'border-border'} rounded-lg px-4 py-2 text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all`}
-              placeholder="Ex: Vereador João Silva ou Executivo"
-            />
-            {errors.autor && <p className="text-xs text-red-500 mt-1">{errors.autor.message}</p>}
+            <label className="text-sm font-medium text-muted-foreground" htmlFor="autor_id">Autor (Vereador)</label>
+            <select 
+              {...register("autor_id")}
+              id="autor_id"
+              className={`w-full bg-background border ${errors.autor_id ? 'border-red-500' : 'border-border'} rounded-lg px-4 py-2 text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all`}
+              onChange={(e) => {
+                const selected = vereadores.find(v => v.id === e.target.value)
+                if (selected) {
+                    setValue("autor", selected.nome)
+                }
+              }}
+            >
+              <option value="">Selecione um Vereador</option>
+              {vereadores.map(v => (
+                <option key={v.id} value={v.id}>{v.nome}</option>
+              ))}
+            </select>
+            <input type="hidden" {...register("autor")} />
+            {errors.autor_id && <p className="text-xs text-red-500 mt-1">{errors.autor_id.message}</p>}
         </div>
 
         <div className="space-y-2">
