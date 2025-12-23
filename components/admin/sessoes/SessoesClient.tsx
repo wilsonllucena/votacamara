@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from "react"
 import { useRouter } from "next/navigation"
+import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Plus, Search, Edit2, Calendar, Clock, FileText, Trash2 } from "lucide-react"
@@ -183,6 +184,11 @@ export function SessoesClient({ sessoes, slug, availableProjects, busyProjects }
                             </td>
                             <td className="px-6 py-4 text-right">
                                 <div className="flex justify-end gap-2">
+                                    <Link href={`/admin/${slug}/sessoes/${sessao.id}/manager`}>
+                                        <Button variant="outline" size="sm" className="bg-primary/5 text-primary border-primary/20 hover:bg-primary/10">
+                                            Gerenciar
+                                        </Button>
+                                    </Link>
                                     <button 
                                         type="button"
                                         onClick={() => {

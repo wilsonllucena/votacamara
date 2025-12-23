@@ -59,6 +59,12 @@ export function Sidebar({ slug, userProfile }: SidebarProps) {
       active: pathname.startsWith(`/admin/${slug}/vereadores`),
     },
     {
+      label: "Votação Realtime",
+      icon: Vote,
+      href: `/admin/${slug}/votar`,
+      active: pathname.startsWith(`/admin/${slug}/votar`),
+    },
+    {
       label: "Votações",
       icon: Vote,
       href: `/admin/${slug}/votacoes`,
