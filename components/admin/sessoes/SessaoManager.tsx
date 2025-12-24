@@ -26,6 +26,7 @@ import {
 import { cn } from "@/lib/utils"
 
 import { usePresenceStore } from "@/store/use-presence-store"
+import { useSessionStore } from "@/store/use-session-store"
 
 interface SessaoManagerProps {
     sessao: any
@@ -39,108 +40,61 @@ export function SessaoManager({ sessao, councilors, pautaItems, activeVoting: in
     const router = useRouter()
     const supabase = createClient()
     const [isPending, startTransition] = useTransition()
-    const [activeVoting, setActiveVoting] = useState(initialActiveVoting)
-    const [votes, setVotes] = useState<any[]>([])
+    
+    // Zustand Stores
     const { onlineUsers } = usePresenceStore()
+    const { 
+        votes, 
+        activeVoting, 
+        sessaoStatus, 
+        initialize: initSession, 
+        cleanup: cleanupSession,
+        setActiveVoting
+    } = useSessionStore()
+
     const [selectedProjectId, setSelectedProjectId] = useState<string>("")
     const [useTimer, setUseTimer] = useState(false)
     const [timerValue, setTimerValue] = useState(60) // Default 60 seconds
     const [timeLeft, setTimeLeft] = useState<number | null>(null)
 
-    // 0. Sync Local State with Prop Changes (from server revalidations)
+    // Initialize Global Session Store
     useEffect(() => {
-        setActiveVoting(initialActiveVoting)
-    }, [initialActiveVoting])
+        initSession(sessao.id, sessao.camara_id, {
+            votes: [], // Will be fetched below
+            activeVoting: initialActiveVoting,
+            sessaoStatus: sessao.status
+        })
 
-    // Subscription for Realtime Votes and Voting Status
-    useEffect(() => {
-        if (!activeVoting) {
-            setVotes([])
-            setTimeLeft(null)
-            return
-        }
-
-        // Fetch initial votes for this voting
-        const fetchVotes = async () => {
-            const { data } = await supabase
+        // Initial fetch for votes if there's an active voting
+        if (initialActiveVoting) {
+            supabase
                 .from("votos")
                 .select("*")
-                .eq("votacao_id", activeVoting.id)
-            setVotes(data || [])
-        }
-        fetchVotes()
-
-        // Subscribe to NEW votes
-        const votesChannel = supabase
-            .channel(`votes-manager-${activeVoting.id}`)
-            .on('postgres_changes', { 
-                event: 'INSERT', 
-                schema: 'public', 
-                table: 'votos',
-                filter: `votacao_id=eq.${activeVoting.id}`
-            }, (payload) => {
-                setVotes(prev => {
-                    const exists = prev.some(v => v.id === payload.new.id)
-                    if (exists) return prev
-                    return [...prev, payload.new]
+                .eq("votacao_id", initialActiveVoting.id)
+                .then(({ data }) => {
+                    useSessionStore.getState().setVotes(data || [])
                 })
-            })
-            .on('postgres_changes', { 
-                event: 'UPDATE', 
-                schema: 'public', 
-                table: 'votos',
-                filter: `votacao_id=eq.${activeVoting.id}`
-            }, (payload) => {
-                setVotes(prev => prev.map(v => v.id === payload.new.id ? payload.new : v))
-            })
-            .on('postgres_changes', {
-                event: 'DELETE',
-                schema: 'public',
-                table: 'votos',
-                filter: `votacao_id=eq.${activeVoting.id}`
-            }, (payload) => {
-                setVotes(prev => prev.filter(v => v.id === (payload.old as any).id))
-            })
-            .subscribe()
+        }
 
         return () => {
-            supabase.removeChannel(votesChannel)
+            cleanupSession()
         }
-    }, [activeVoting?.id, supabase])
+    }, [sessao.id, sessao.camara_id, initialActiveVoting, sessao.status, initSession, cleanupSession, supabase])
 
-    // Subscription for Voting status (case another admin closes it)
+    // Sync Local State with Prop Changes (for activeVoting specifically if revalidated)
     useEffect(() => {
-        const votingChannel = supabase
-            .channel(`voting-status-${sessao.id}`)
-            .on('postgres_changes', {
-                event: 'UPDATE',
-                schema: 'public',
-                table: 'votacoes',
-                filter: `sessao_id=eq.${sessao.id}`
-            }, (payload) => {
-                const updated = payload.new as any
-                if (updated.status === 'encerrada') {
-                    setActiveVoting(null)
-                    router.refresh()
-                } else if (updated.status === 'aberta') {
-                    // Force refresh to get full details including projects
-                    router.refresh()
-                }
-            })
-            .subscribe()
-        
-        return () => {
-            supabase.removeChannel(votingChannel)
+        if (initialActiveVoting) {
+            setActiveVoting(initialActiveVoting)
         }
-    }, [sessao.id, supabase, router])
+    }, [initialActiveVoting, setActiveVoting])
 
+    // Subscription for Voting status (case another admin closes it) - This is now partly in store, 
+    // but we might still want router.refresh() for some server-side sync if needed.
+    // However, the store should handle the data sync.
+    
     // 2. Timer Logic
     useEffect(() => {
         if (timeLeft === null || timeLeft <= 0) {
-            if (timeLeft === 0 && activeVoting) {
-                // Auto close? Or just alert?
-                // alert("Tempo esgotado!")
-            }
             return
         }
 

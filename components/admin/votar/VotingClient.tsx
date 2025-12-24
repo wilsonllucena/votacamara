@@ -18,6 +18,8 @@ import {
 import { registrarVoto } from "@/app/admin/_actions/sessao_control"
 import { cn } from "@/lib/utils"
 
+import { useSessionStore } from "@/store/use-session-store"
+
 interface VotingClientProps {
     vereador: any
     slug: string
@@ -30,16 +32,37 @@ export function VotingClient({ vereador, slug, initialActiveVoting, camaraId, in
     const router = useRouter()
     const supabase = createClient()
     const [isPending, startTransition] = useTransition()
-    const [activeVoting, setActiveVoting] = useState(initialActiveVoting)
-    const [sessaoStatus, setSessaoStatus] = useState<string>(initialSessaoStatus || "agendada")
+    
+    // Zustand Store
+    const { 
+        activeVoting, 
+        sessaoStatus, 
+        initialize: initSession, 
+        cleanup: cleanupSession 
+    } = useSessionStore()
+
     const [myVote, setMyVote] = useState<string | null>(null)
     const [timeLeft, setTimeLeft] = useState<number | null>(null)
 
-    // 1. Monitor Active Voting Changes and My Vote
+    // 1. Initialize Global Session Store
     useEffect(() => {
-        // Find if I already voted for this voting
+        initSession(initialActiveVoting?.sessao_id || "global", camaraId, {
+            activeVoting: initialActiveVoting,
+            sessaoStatus: initialSessaoStatus || "agendada"
+        })
+
+        return () => {
+            cleanupSession()
+        }
+    }, [camaraId, initialActiveVoting, initialSessaoStatus, initSession, cleanupSession])
+
+    // 2. Monitor My Vote for Current Active Voting
+    useEffect(() => {
         const checkMyVote = async () => {
-            if (!activeVoting || !vereador?.id) return
+            if (!activeVoting || !vereador?.id) {
+                setMyVote(null)
+                return
+            }
             const { data } = await supabase
                 .from("votos")
                 .select("valor")
@@ -51,58 +74,7 @@ export function VotingClient({ vereador, slug, initialActiveVoting, camaraId, in
             else setMyVote(null)
         }
         checkMyVote()
-
-        if (!vereador?.camara_id) return
-
-        // Subscribe to changes in votacoes for this chamber/slug
-        const votingChannel = supabase
-            .channel(`voting-sync-${slug}`)
-            .on('postgres_changes', { 
-                event: '*', 
-                schema: 'public', 
-                table: 'votacoes',
-                filter: `camara_id=eq.${vereador?.camara_id || camaraId}`
-            }, (payload) => {
-                const updated = payload.new as any
-                if (updated && updated.status === 'aberta') {
-                    supabase.from("votacoes")
-                        .select("*, projetos(*)")
-                        .eq("id", updated.id)
-                        .single()
-                        .then(({ data }) => setActiveVoting(data))
-                } else {
-                    setActiveVoting(null)
-                    setMyVote(null)
-                    // Se a votação foi encerrada, recarregar para limpar estado
-                    router.refresh()
-                }
-            })
-            .subscribe()
-
-        // Subscribe to Session status changes
-        const sessaoChannel = supabase
-            .channel(`sessao-sync-${slug}`)
-            .on('postgres_changes', {
-                event: 'UPDATE',
-                schema: 'public',
-                table: 'sessoes',
-                filter: `camara_id=eq.${vereador?.camara_id || camaraId}`
-            }, (payload) => {
-                const updated = payload.new as any
-                setSessaoStatus(updated.status)
-                if (updated.status === 'encerrada') {
-                    setActiveVoting(null)
-                    setMyVote(null)
-                }
-                router.refresh()
-            })
-            .subscribe()
-
-        return () => {
-            supabase.removeChannel(votingChannel)
-            supabase.removeChannel(sessaoChannel)
-        }
-    }, [activeVoting?.id, supabase, vereador?.camara_id, vereador?.id, slug, router])
+    }, [activeVoting?.id, vereador?.id, supabase])
 
     // 2. Track Presence
     useEffect(() => {
