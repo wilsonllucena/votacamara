@@ -12,8 +12,8 @@ import { SessaoInputs } from "@/app/admin/_actions/sessoes"
 interface Sessao {
     id: string
     titulo: string
-    tipo: string
-    status: string
+    tipo: "ordinaria" | "extraordinaria"
+    status: "agendada" | "aberta" | "encerrada"
     data: string
     hora: string
     projeto_ids?: string[]

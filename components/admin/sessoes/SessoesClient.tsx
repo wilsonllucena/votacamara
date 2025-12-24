@@ -15,8 +15,8 @@ import { ptBR } from "date-fns/locale"
 interface Sessao {
   id: string
   titulo: string
-  tipo: string
-  status: string
+  tipo: "ordinaria" | "extraordinaria"
+  status: "agendada" | "aberta" | "encerrada"
   data: string
   hora: string
   camara_id: string
