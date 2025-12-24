@@ -104,6 +104,32 @@ export function VotingClient({ vereador, slug, initialActiveVoting, camaraId, in
         }
     }, [activeVoting?.id, supabase, vereador?.camara_id, vereador?.id, slug, router])
 
+    // 2. Track Presence
+    useEffect(() => {
+        if (!vereador?.user_id || !camaraId) return
+
+        const presenceChannel = supabase.channel(`presence-${camaraId}`, {
+            config: {
+                presence: {
+                    key: vereador.user_id,
+                },
+            },
+        })
+
+        presenceChannel
+            .subscribe(async (status) => {
+                if (status === 'SUBSCRIBED') {
+                    await presenceChannel.track({
+                        online_at: new Date().toISOString(),
+                    })
+                }
+            })
+
+        return () => {
+            supabase.removeChannel(presenceChannel)
+        }
+    }, [supabase, vereador?.user_id, camaraId])
+
     // Timer Logic (Simulated sync for now, ideal is to have 'expires_at' in DB)
     useEffect(() => {
         if (!activeVoting) return

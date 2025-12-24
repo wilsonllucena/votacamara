@@ -25,6 +25,8 @@ import {
 } from "@/app/admin/_actions/sessao_control"
 import { cn } from "@/lib/utils"
 
+import { usePresenceStore } from "@/store/use-presence-store"
+
 interface SessaoManagerProps {
     sessao: any
     councilors: any[]
@@ -39,6 +41,7 @@ export function SessaoManager({ sessao, councilors, pautaItems, activeVoting: in
     const [isPending, startTransition] = useTransition()
     const [activeVoting, setActiveVoting] = useState(initialActiveVoting)
     const [votes, setVotes] = useState<any[]>([])
+    const { onlineUsers } = usePresenceStore()
     const [selectedProjectId, setSelectedProjectId] = useState<string>("")
     const [useTimer, setUseTimer] = useState(false)
     const [timerValue, setTimerValue] = useState(60) // Default 60 seconds
@@ -49,7 +52,7 @@ export function SessaoManager({ sessao, councilors, pautaItems, activeVoting: in
         setActiveVoting(initialActiveVoting)
     }, [initialActiveVoting])
 
-    // 1. Subscribe to Realtime Votes and Voting Status
+    // Subscription for Realtime Votes and Voting Status
     useEffect(() => {
         if (!activeVoting) {
             setVotes([])
@@ -397,11 +400,19 @@ export function SessaoManager({ sessao, councilors, pautaItems, activeVoting: in
                     <div className="space-y-3">
                         {councilors.map((vereador) => {
                             const voto = votes.find(v => v.vereador_id === vereador.id)
+                            const isOnline = !!onlineUsers[vereador.user_id]
+                            
                             return (
                                 <div key={vereador.id} className="flex items-center justify-between p-3 rounded-xl bg-muted/30 border border-border hover:bg-muted/50 transition-colors">
                                     <div className="flex items-center gap-3">
-                                        <div className="w-8 h-8 rounded-full bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center text-indigo-500 font-bold text-[10px]">
-                                            {vereador.nome.substring(0, 2).toUpperCase()}
+                                        <div className="relative">
+                                            <div className="w-8 h-8 rounded-full bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center text-indigo-500 font-bold text-[10px]">
+                                                {vereador.nome.substring(0, 2).toUpperCase()}
+                                            </div>
+                                            <div className={cn(
+                                                "absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full border-2 border-[#09090b]",
+                                                isOnline ? "bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.5)]" : "bg-red-500"
+                                            )} />
                                         </div>
                                         <div>
                                             <p className="text-sm font-bold text-foreground line-clamp-1 leading-none mb-1">{vereador.nome}</p>

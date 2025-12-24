@@ -3,6 +3,7 @@ import { Header } from "@/components/admin/Header"
 import { AdminThemeProvider } from "@/components/admin/AdminThemeProvider"
 import { SidebarProvider } from "@/components/admin/SidebarProvider"
 import { AdminLayoutWrapper } from "@/components/admin/AdminLayoutWrapper"
+import { GlobalPresence } from "@/components/admin/GlobalPresence"
 import { createClient } from "@/utils/supabase/server"
 import { redirect } from "next/navigation"
 
@@ -22,10 +23,10 @@ export default async function DashboardLayout({
       redirect("/login")
   }
 
-  // Fetch profile to get name and role
+  // Fetch profile to get name, role and camara_id
   const { data: profile } = await supabase
       .from("profiles")
-      .select("nome, role")
+      .select("nome, role, camara_id")
       .eq("user_id", user.id)
       .single()
 
@@ -35,9 +36,12 @@ export default async function DashboardLayout({
       role: profile?.role || "MEMBRO"
   }
 
+  const camaraId = profile?.camara_id || ""
+
   return (
     <AdminThemeProvider>
       <SidebarProvider>
+        <GlobalPresence userId={user.id} camaraId={camaraId} />
         <AdminLayoutWrapper
           sidebar={<Sidebar slug={slug} userProfile={userProfile} />}
           header={<Header slug={slug} userProfile={userProfile} />}

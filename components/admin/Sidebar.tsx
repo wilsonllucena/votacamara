@@ -44,14 +44,14 @@ export function Sidebar({ slug, userProfile }: SidebarProps) {
       href: `/admin/${slug}/sessoes`,
       active: pathname.startsWith(`/admin/${slug}/sessoes`),
     },
+    // {
+    //   label: "Agenda",
+    //   icon: Calendar,
+    //   href: `/admin/${slug}/agenda`,
+    //   active: pathname.startsWith(`/admin/${slug}/agenda`),
+    // },
     {
-      label: "Agenda",
-      icon: Calendar,
-      href: `/admin/${slug}/agenda`,
-      active: pathname.startsWith(`/admin/${slug}/agenda`),
-    },
-    {
-      label: "Pauta & Projetos",
+      label: "Projetos",
       icon: FileText,
       href: `/admin/${slug}/projetos`,
       active: pathname.startsWith(`/admin/${slug}/projetos`),
@@ -68,12 +68,12 @@ export function Sidebar({ slug, userProfile }: SidebarProps) {
       href: `/admin/${slug}/votar`,
       active: pathname.startsWith(`/admin/${slug}/votar`),
     },
-    {
-      label: "Configurações",
-      icon: Settings,
-      href: `/admin/${slug}/configuracoes`,
-      active: pathname.startsWith(`/admin/${slug}/configuracoes`),
-    },
+    // {
+    //   label: "Configurações",
+    //   icon: Settings,
+    //   href: `/admin/${slug}/configuracoes`,
+    //   active: pathname.startsWith(`/admin/${slug}/configuracoes`),
+    // },
   ]
 
   const getInitials = (name: string) => {
