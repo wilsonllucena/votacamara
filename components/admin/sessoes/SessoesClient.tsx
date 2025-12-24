@@ -5,8 +5,9 @@ import { useRouter } from "next/navigation"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { Plus, Search, Edit2, Calendar, Clock, FileText, Trash2 } from "lucide-react"
+import { Plus, Edit2, Calendar, Clock, FileText, Trash2 } from "lucide-react"
 import { SessaoModal } from "./SessaoModal"
+import { ResourceList } from "../ResourceList"
 import { createSessao, updateSessao, deleteSessao, SessaoInputs } from "@/app/admin/_actions/sessoes"
 import { format } from "date-fns"
 import { ptBR } from "date-fns/locale"
@@ -28,9 +29,13 @@ interface SessoesClientProps {
   slug: string
   availableProjects: any[]
   busyProjects: any[]
+  pagination: {
+    currentPage: number
+    totalPages: number
+  }
 }
 
-export function SessoesClient({ sessoes, slug, availableProjects, busyProjects }: SessoesClientProps) {
+export function SessoesClient({ sessoes, slug, availableProjects, busyProjects, pagination }: SessoesClientProps) {
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
   const [isModalOpen, setIsModalOpen] = useState(false)
@@ -94,7 +99,7 @@ export function SessoesClient({ sessoes, slug, availableProjects, busyProjects }
       case "agendada":
         return <Badge variant="outline" className="border-blue-500/20 text-blue-500 bg-blue-500/5">Agendada</Badge>
       case "aberta":
-        return <Badge variant="default" className="bg-green-600 hover:bg-green-500 text-white">Aberta</Badge>
+        return <Badge variant="default" className="bg-green-600 hover:bg-green-500 text-white shadow-sm shadow-green-600/20 border-none">Aberta</Badge>
       case "encerrada":
         return <Badge variant="secondary" className="bg-muted text-muted-foreground">Encerrada</Badge>
       default:
@@ -103,129 +108,106 @@ export function SessoesClient({ sessoes, slug, availableProjects, busyProjects }
   }
 
   return (
-    <div className="space-y-6">
-       {/* Actions Bar */}
-      <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
-         <div>
-            <h2 className="text-3xl font-bold tracking-tight text-foreground">Sessões</h2>
-            <p className="text-muted-foreground">Gerencie as sessões ordinárias e extraordinárias.</p>
-         </div>
-         <Button 
-            onClick={() => {
-              setEditingSessao(null)
-              setIsModalOpen(true)
-            }}
-            className="bg-primary hover:bg-primary/90 text-primary-foreground shadow-sm"
-          >
-            <Plus className="mr-2 h-4 w-4" /> Nova Sessão
-         </Button>
-      </div>
-
-       {/* Filters */}
-       <form onSubmit={handleSearch} className="flex items-center gap-4 bg-card/50 p-4 rounded-xl border border-border">
-            <div className="relative flex-1">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <input 
-                    type="text" 
-                    placeholder="Buscar por título..." 
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="w-full bg-background border border-border rounded-lg pl-10 pr-4 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
-                />
-            </div>
-            <Button type="submit" variant="outline" className="border-border text-muted-foreground hover:text-foreground hidden sm:flex">
-                Buscar
-            </Button>
-        </form>
-
-      {/* List */}
-      <div className="bg-card/50 border border-border rounded-xl overflow-hidden shadow-sm">
-        <div className="overflow-x-auto">
+    <>
+      <ResourceList
+        title="Sessões"
+        description="Gerencie as sessões ordinárias e extraordinárias."
+        primaryAction={{
+          label: "Nova Sessão",
+          onClick: () => {
+            setEditingSessao(null)
+            setIsModalOpen(true)
+          }
+        }}
+        search={{
+          value: searchTerm,
+          onChange: setSearchTerm,
+          onSubmit: handleSearch,
+          placeholder: "Buscar por título..."
+        }}
+        pagination={pagination}
+        isEmpty={sessoes.length === 0}
+        emptyMessage="Nenhuma sessão encontrada."
+        emptyIcon={<Calendar className="h-10 w-10 opacity-20" />}
+      >
+        <div className="bg-card/50 border border-border rounded-xl overflow-hidden shadow-sm">
+          <div className="overflow-x-auto">
             <table className="w-full text-sm text-left">
-                <thead className="text-xs text-muted-foreground uppercase bg-background border-b border-border">
-                    <tr>
-                        <th className="px-6 py-4">Sessão</th>
-                        <th className="px-6 py-4 hidden md:table-cell">Tipo</th>
-                        <th className="px-6 py-4">Data / Hora</th>
-                        <th className="px-6 py-4 hidden sm:table-cell">Status</th>
-                        <th className="px-6 py-4 text-right">Ações</th>
-                    </tr>
-                </thead>
-                <tbody className="divide-y divide-border">
-                    {sessoes.map((sessao) => (
-                        <tr key={sessao.id} className="hover:bg-muted/50 transition-colors">
-                            <td className="px-6 py-4 font-medium text-foreground">
-                                <div className="flex flex-col">
-                                    <span className="font-bold text-base">{sessao.titulo}</span>
-                                    <span className="text-xs text-muted-foreground md:hidden">{sessao.tipo}</span>
-                                </div>
-                            </td>
-                            <td className="px-6 py-4 hidden md:table-cell">
-                                <Badge variant="outline" className="border-border text-muted-foreground capitalize">
-                                    {sessao.tipo}
-                                </Badge>
-                            </td>
-                            <td className="px-6 py-4 text-muted-foreground">
-                                <div className="flex flex-col gap-1">
-                                    <div className="flex items-center gap-2">
-                                        <Calendar className="h-3.5 w-3.5 text-primary/70" />
-                                        <span className="text-xs">
-                                            {sessao.data ? format(new Date(sessao.data + 'T00:00:00'), "dd/MM/yyyy", { locale: ptBR }) : 'Data não informada'}
-                                        </span>
-                                    </div>
-                                    <div className="flex items-center gap-2">
-                                        <Clock className="h-3.5 w-3.5 text-primary/70" />
-                                        <span className="text-xs">{sessao.hora}h</span>
-                                    </div>
-                                </div>
-                            </td>
-                            <td className="px-6 py-4 hidden sm:table-cell">
-                                {getStatusBadge(sessao.status)}
-                            </td>
-                            <td className="px-6 py-4 text-right">
-                                <div className="flex justify-end gap-2">
-                                    <Link href={`/admin/${slug}/sessoes/${sessao.id}/manager`}>
-                                        <Button variant="outline" size="sm" className="bg-primary/5 text-primary border-primary/20 hover:bg-primary/10">
-                                            Gerenciar
-                                        </Button>
-                                    </Link>
-                                    <button 
-                                        type="button"
-                                        onClick={() => {
-                                            setEditingSessao(sessao)
-                                            setIsModalOpen(true)
-                                        }}
-                                        className="p-2 text-muted-foreground hover:text-primary transition-colors hover:bg-muted rounded-md"
-                                        title="Editar"
-                                    >
-                                        <Edit2 className="h-4 w-4" />
-                                    </button>
-                                    <button 
-                                        type="button"
-                                        onClick={() => handleDelete(sessao.id)}
-                                        className="p-2 text-muted-foreground hover:text-red-500 transition-colors hover:bg-red-500/10 rounded-md"
-                                        title="Excluir"
-                                    >
-                                        <Trash2 className="h-4 w-4" />
-                                    </button>
-                                </div>
-                            </td>
-                        </tr>
-                    ))}
-                    {sessoes.length === 0 && (
-                        <tr>
-                            <td colSpan={5} className="px-6 py-10 text-center text-muted-foreground font-medium">
-                                <div className="flex flex-col items-center justify-center gap-2">
-                                    <Calendar className="h-10 w-10 opacity-20" />
-                                    <p>Nenhuma sessão cadastrada.</p>
-                                </div>
-                            </td>
-                        </tr>
-                    )}
-                </tbody>
+              <thead className="text-xs text-muted-foreground uppercase bg-background border-b border-border">
+                <tr>
+                  <th className="px-6 py-4">Sessão</th>
+                  <th className="px-6 py-4 hidden md:table-cell">Tipo</th>
+                  <th className="px-6 py-4">Data / Hora</th>
+                  <th className="px-6 py-4 hidden sm:table-cell">Status</th>
+                  <th className="px-6 py-4 text-right">Ações</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-border">
+                {sessoes.map((sessao) => (
+                  <tr key={sessao.id} className="hover:bg-muted/50 transition-colors">
+                    <td className="px-6 py-4 font-medium text-foreground">
+                      <div className="flex flex-col">
+                        <span className="font-bold text-base">{sessao.titulo}</span>
+                        <span className="text-xs text-muted-foreground md:hidden">{sessao.tipo}</span>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 hidden md:table-cell">
+                      <Badge variant="outline" className="border-border text-muted-foreground capitalize">
+                        {sessao.tipo}
+                      </Badge>
+                    </td>
+                    <td className="px-6 py-4 text-muted-foreground">
+                      <div className="flex flex-col gap-1">
+                        <div className="flex items-center gap-2">
+                          <Calendar className="h-3.5 w-3.5 text-primary/70" />
+                          <span className="text-xs">
+                            {sessao.data ? format(new Date(sessao.data + 'T00:00:00'), "dd/MM/yyyy", { locale: ptBR }) : 'Data não informada'}
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Clock className="h-3.5 w-3.5 text-primary/70" />
+                          <span className="text-xs">{sessao.hora}h</span>
+                        </div>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 hidden sm:table-cell">
+                      {getStatusBadge(sessao.status)}
+                    </td>
+                    <td className="px-6 py-4 text-right">
+                      <div className="flex justify-end gap-2">
+                        <Link href={`/admin/${slug}/sessoes/${sessao.id}/manager`}>
+                          <Button variant="outline" size="sm" className="bg-primary/5 text-primary border-primary/20 hover:bg-primary/10 h-8">
+                            Gerenciar
+                          </Button>
+                        </Link>
+                        <button 
+                          type="button"
+                          onClick={() => {
+                            setEditingSessao(sessao)
+                            setIsModalOpen(true)
+                          }}
+                          className="p-2 text-muted-foreground hover:text-primary transition-colors hover:bg-muted rounded-md"
+                          title="Editar"
+                        >
+                          <Edit2 className="h-4 w-4" />
+                        </button>
+                        <button 
+                          type="button"
+                          onClick={() => handleDelete(sessao.id)}
+                          className="p-2 text-muted-foreground hover:text-red-500 transition-colors hover:bg-red-500/10 rounded-md"
+                          title="Excluir"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
             </table>
+          </div>
         </div>
-      </div>
+      </ResourceList>
 
       <SessaoModal 
         isOpen={isModalOpen}
@@ -236,6 +218,6 @@ export function SessoesClient({ sessoes, slug, availableProjects, busyProjects }
         availableProjects={availableProjects}
         busyProjects={busyProjects}
       />
-    </div>
+    </>
   )
 }

@@ -88,14 +88,12 @@ export default async function SessoesPage({
             slug={slug} 
             availableProjects={availableProjects || []}
             busyProjects={busyProjects?.map(bp => ({ projeto_id: bp.projeto_id, sessao_id: bp.sessao_id })) || []}
+            pagination={{
+                currentPage,
+                totalPages
+            }}
           />
       </Suspense>
-      
-      {totalPages >= 1 && sessoes && sessoes.length > 0 && (
-          <div className="pt-4">
-              <Pagination totalPages={totalPages} currentPage={currentPage} />
-          </div>
-      )}
     </div>
   )
 }

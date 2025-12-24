@@ -51,14 +51,11 @@ export default async function VereadoresPage({
       <CouncilorsClient 
         councilors={councilors || []} 
         slug={slug} 
+        pagination={{
+            currentPage,
+            totalPages
+        }}
       />
-
-      {totalPages >= 1 && councilors && councilors.length > 0 && (
-        <Pagination 
-          totalPages={totalPages} 
-          currentPage={currentPage}
-        />
-      )}
     </div>
   )
 }

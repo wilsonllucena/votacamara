@@ -53,14 +53,12 @@ export default async function ProjetosPage({
           <ProjetosClient 
             projetos={projetos || []} 
             slug={slug} 
+            pagination={{
+                currentPage,
+                totalPages
+            }}
           />
       </Suspense>
-
-      {totalPages >= 1 && projetos && projetos.length > 0 && (
-          <div className="mt-8">
-              <Pagination totalPages={totalPages} currentPage={currentPage} />
-          </div>
-      )}
     </div>
   )
 }
