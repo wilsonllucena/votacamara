@@ -112,10 +112,6 @@ export function SessaoManager({ sessao, councilors, pautaItems, activeVoting: in
             setActiveVoting(initialActiveVoting)
         }
     }, [initialActiveVoting, setActiveVoting])
-
-    // Subscription for Voting status (case another admin closes it) - This is now partly in store, 
-    // but we might still want router.refresh() for some server-side sync if needed.
-    // However, the store should handle the data sync.
     
     // 2. Timer Logic
     useEffect(() => {
@@ -284,7 +280,7 @@ export function SessaoManager({ sessao, councilors, pautaItems, activeVoting: in
                                         disabled={!selectedProjectId || isPending} 
                                         className="w-full md:w-auto bg-primary text-primary-foreground font-semibold px-8 h-11"
                                     >
-                                        ABRIR VotaÇÃO
+                                        ABRIR VOTAÇÃO
                                     </Button>
                                 </div>
                             ) : (
