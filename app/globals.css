@@ -106,6 +106,8 @@
   --border: #e2e8f0;
   --input: #e2e8f0;
   --ring: #2563eb;
+  --destructive: #ef4444;
+  --destructive-foreground: #ffffff;
 }
 
 .admin-dark {
@@ -126,6 +128,8 @@
   --border: #27272a;
   --input: #27272a;
   --ring: #d4d4d8;
+  --destructive: #ef4444;
+  --destructive-foreground: #fafafa;
 }
 
 body {

@@ -11,6 +11,7 @@ import { ResourceList } from "../ResourceList"
 import { createSessao, updateSessao, deleteSessao, SessaoInputs } from "@/app/admin/_actions/sessoes"
 import { format } from "date-fns"
 import { ptBR } from "date-fns/locale"
+import { ConfirmDialog } from "@/components/ui/confirm-dialog"
 
 interface Sessao {
   id: string
@@ -42,6 +43,30 @@ export function SessoesClient({ sessoes, slug, availableProjects, busyProjects, 
   const [editingSessao, setEditingSessao] = useState<Sessao | null>(null)
   const [searchTerm, setSearchTerm] = useState("")
 
+  // ConfirmDialog State
+  const [confirmConfig, setConfirmConfig] = useState<{
+    isOpen: boolean
+    title: string
+    description: string
+    onConfirm?: () => void
+    variant?: "default" | "destructive"
+    type?: "confirm" | "alert"
+  }>({
+    isOpen: false,
+    title: "",
+    description: "",
+  })
+
+  const showAlert = (title: string, description: string) => {
+    setConfirmConfig({
+      isOpen: true,
+      title,
+      description,
+      type: "alert",
+      variant: "default",
+    })
+  }
+
   const handleCreateOrUpdate = async (data: SessaoInputs) => {
     startTransition(async () => {
       let result;
@@ -60,7 +85,7 @@ export function SessoesClient({ sessoes, slug, availableProjects, busyProjects, 
       }
       
       if (result?.error) {
-        alert(result.error)
+        showAlert("Erro", result.error)
       } else {
         setIsModalOpen(false)
         setEditingSessao(null)
@@ -70,16 +95,23 @@ export function SessoesClient({ sessoes, slug, availableProjects, busyProjects, 
   }
 
   const handleDelete = async (id: string) => {
-      if (confirm("Tem certeza que deseja excluir esta sessão?")) {
-          startTransition(async () => {
-              const result = await deleteSessao(slug, id)
-              if (result?.error) {
-                  alert(result.error)
-              } else {
-                  router.refresh()
-              }
-          })
+    setConfirmConfig({
+      isOpen: true,
+      title: "Excluir Sessão",
+      description: "Tem certeza que deseja excluir esta sessão? Esta ação não pode ser desfeita.",
+      variant: "destructive",
+      type: "confirm",
+      onConfirm: async () => {
+        startTransition(async () => {
+          const result = await deleteSessao(slug, id)
+          if (result?.error) {
+            showAlert("Erro ao excluir", result.error)
+          } else {
+            router.refresh()
+          }
+        })
       }
+    })
   }
 
   const handleSearch = (e: React.FormEvent) => {
@@ -217,6 +249,16 @@ export function SessoesClient({ sessoes, slug, availableProjects, busyProjects, 
         isPending={isPending}
         availableProjects={availableProjects}
         busyProjects={busyProjects}
+      />
+
+      <ConfirmDialog
+        isOpen={confirmConfig.isOpen}
+        onClose={() => setConfirmConfig({ ...confirmConfig, isOpen: false })}
+        onConfirm={confirmConfig.onConfirm}
+        title={confirmConfig.title}
+        description={confirmConfig.description}
+        variant={confirmConfig.variant}
+        type={confirmConfig.type}
       />
     </>
   )

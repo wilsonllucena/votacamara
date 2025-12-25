@@ -8,6 +8,7 @@ import { Plus, Edit2, UserX, Power, User } from "lucide-react"
 import { CouncilorModal } from "./CouncilorModal"
 import { ResourceList } from "../ResourceList"
 import { toggleVereadorStatus, updateVereador, createVereador } from "@/app/admin/_actions/vereadores"
+import { ConfirmDialog } from "@/components/ui/confirm-dialog"
 
 interface CouncilorsClientProps {
   councilors: any[]
@@ -25,6 +26,30 @@ export function CouncilorsClient({ councilors, slug, pagination }: CouncilorsCli
   const [editingCouncilor, setEditingCouncilor] = useState<any | null>(null)
   const [searchTerm, setSearchTerm] = useState("")
 
+  // ConfirmDialog State
+  const [confirmConfig, setConfirmConfig] = useState<{
+    isOpen: boolean
+    title: string
+    description: string
+    onConfirm?: () => void
+    variant?: "default" | "destructive"
+    type?: "confirm" | "alert"
+  }>({
+    isOpen: false,
+    title: "",
+    description: "",
+  })
+
+  const showAlert = (title: string, description: string) => {
+    setConfirmConfig({
+      isOpen: true,
+      title,
+      description,
+      type: "alert",
+      variant: "default",
+    })
+  }
+
   const handleCreateOrUpdate = async (data: any) => {
     startTransition(async () => {
       let result;
@@ -37,7 +62,7 @@ export function CouncilorsClient({ councilors, slug, pagination }: CouncilorsCli
       }
       
       if (result?.error) {
-        alert(result.error)
+        showAlert("Erro", result.error)
       } else {
         setIsModalOpen(false)
         setEditingCouncilor(null)
@@ -48,12 +73,19 @@ export function CouncilorsClient({ councilors, slug, pagination }: CouncilorsCli
 
   const handleToggleStatus = async (id: string, currentStatus: boolean) => {
     const action = currentStatus ? 'desativar' : 'ativar'
-    if (confirm(`Tem certeza que deseja ${action} este vereador?`)) {
-      startTransition(async () => {
-        await toggleVereadorStatus(slug, id, currentStatus)
-        router.refresh()
-      })
-    }
+    setConfirmConfig({
+      isOpen: true,
+      title: `${currentStatus ? 'Desativar' : 'Ativar'} Vereador`,
+      description: `Tem certeza que deseja ${action} este vereador?`,
+      variant: currentStatus ? "destructive" : "default",
+      type: "confirm",
+      onConfirm: async () => {
+        startTransition(async () => {
+          await toggleVereadorStatus(slug, id, currentStatus)
+          router.refresh()
+        })
+      }
+    })
   }
 
   const handleSearch = (e: React.FormEvent) => {
@@ -176,6 +208,16 @@ export function CouncilorsClient({ councilors, slug, pagination }: CouncilorsCli
         onSubmit={handleCreateOrUpdate}
         editingCouncilor={editingCouncilor}
         isPending={isPending}
+      />
+
+      <ConfirmDialog
+        isOpen={confirmConfig.isOpen}
+        onClose={() => setConfirmConfig({ ...confirmConfig, isOpen: false })}
+        onConfirm={confirmConfig.onConfirm}
+        title={confirmConfig.title}
+        description={confirmConfig.description}
+        variant={confirmConfig.variant}
+        type={confirmConfig.type}
       />
     </>
   )

@@ -19,6 +19,7 @@ import { registrarVoto } from "@/app/admin/_actions/sessao_control"
 import { cn } from "@/lib/utils"
 
 import { useSessionStore } from "@/store/use-session-store"
+import { ConfirmDialog } from "@/components/ui/confirm-dialog"
 
 interface VotingClientProps {
     vereador: any
@@ -33,6 +34,30 @@ export function VotingClient({ vereador, slug, initialActiveVoting, camaraId, in
     const supabase = createClient()
     const [isPending, startTransition] = useTransition()
     
+    // ConfirmDialog State
+    const [confirmConfig, setConfirmConfig] = useState<{
+        isOpen: boolean
+        title: string
+        description: string
+        onConfirm?: () => void
+        variant?: "default" | "destructive"
+        type?: "confirm" | "alert"
+    }>({
+        isOpen: false,
+        title: "",
+        description: "",
+    })
+
+    const showAlert = (title: string, description: string) => {
+        setConfirmConfig({
+            isOpen: true,
+            title,
+            description,
+            type: "alert",
+            variant: "default",
+        })
+    }
+
     // Zustand Store
     const { 
         activeVoting, 
@@ -115,7 +140,7 @@ export function VotingClient({ vereador, slug, initialActiveVoting, camaraId, in
         startTransition(async () => {
             const result = await registrarVoto(activeVoting.id, valor)
             if (result?.error) {
-                alert(result.error)
+                showAlert("Erro ao votar", result.error)
             } else {
                 setMyVote(valor)
             }
@@ -254,6 +279,16 @@ export function VotingClient({ vereador, slug, initialActiveVoting, camaraId, in
 
                 </div>
             </div>
+
+            <ConfirmDialog
+                isOpen={confirmConfig.isOpen}
+                onClose={() => setConfirmConfig({ ...confirmConfig, isOpen: false })}
+                onConfirm={confirmConfig.onConfirm}
+                title={confirmConfig.title}
+                description={confirmConfig.description}
+                variant={confirmConfig.variant}
+                type={confirmConfig.type}
+            />
         </div>
     )
 }

@@ -27,6 +27,7 @@ import { cn } from "@/lib/utils"
 
 import { usePresenceStore } from "@/store/use-presence-store"
 import { useSessionStore } from "@/store/use-session-store"
+import { ConfirmDialog } from "@/components/ui/confirm-dialog"
 
 interface SessaoManagerProps {
     sessao: any
@@ -40,6 +41,30 @@ export function SessaoManager({ sessao, councilors, pautaItems, activeVoting: in
     const router = useRouter()
     const supabase = createClient()
     const [isPending, startTransition] = useTransition()
+    
+    // ConfirmDialog State
+    const [confirmConfig, setConfirmConfig] = useState<{
+        isOpen: boolean
+        title: string
+        description: string
+        onConfirm?: () => void
+        variant?: "default" | "destructive"
+        type?: "confirm" | "alert"
+    }>({
+        isOpen: false,
+        title: "",
+        description: "",
+    })
+
+    const showAlert = (title: string, description: string) => {
+        setConfirmConfig({
+            isOpen: true,
+            title,
+            description,
+            type: "alert",
+            variant: "default",
+        })
+    }
     
     // Zustand Stores
     const { onlineUsers } = usePresenceStore()
@@ -109,17 +134,25 @@ export function SessaoManager({ sessao, councilors, pautaItems, activeVoting: in
     const handleStartSession = async () => {
         startTransition(async () => {
             const result = await startSession(slug, sessao.id)
-            if (result?.error) alert(result.error)
+            if (result?.error) showAlert("Erro", result.error)
             else router.refresh()
         })
     }
 
     const handleEndSession = async () => {
-        if (!confirm("Tem certeza que deseja encerrar a sessão?")) return
-        startTransition(async () => {
-            const result = await endSession(slug, sessao.id)
-            if (result?.error) alert(result.error)
-            else router.refresh()
+        setConfirmConfig({
+            isOpen: true,
+            title: "Encerrar Sessão",
+            description: "Tem certeza que deseja encerrar a sessão? Esta ação é irreversível.",
+            variant: "destructive",
+            type: "confirm",
+            onConfirm: async () => {
+                startTransition(async () => {
+                    const result = await endSession(slug, sessao.id)
+                    if (result?.error) showAlert("Erro", result.error)
+                    else router.refresh()
+                })
+            }
         })
     }
 
@@ -127,7 +160,7 @@ export function SessaoManager({ sessao, councilors, pautaItems, activeVoting: in
         if (!selectedProjectId) return
         startTransition(async () => {
             const result = await openVoting(slug, sessao.id, selectedProjectId)
-            if (result?.error) alert(result.error)
+            if (result?.error) showAlert("Erro", result.error)
             else {
                 if (useTimer) setTimeLeft(timerValue)
                 router.refresh()
@@ -139,7 +172,7 @@ export function SessaoManager({ sessao, councilors, pautaItems, activeVoting: in
         if (!activeVoting) return
         startTransition(async () => {
             const result = await closeVoting(slug, sessao.id, activeVoting.id)
-            if (result?.error) alert(result.error)
+            if (result?.error) showAlert("Erro", result.error)
             else {
                 setTimeLeft(null)
                 setActiveVoting(null)
@@ -415,6 +448,16 @@ export function SessaoManager({ sessao, councilors, pautaItems, activeVoting: in
                     )}
                 </div>
             </div>
+
+            <ConfirmDialog
+                isOpen={confirmConfig.isOpen}
+                onClose={() => setConfirmConfig({ ...confirmConfig, isOpen: false })}
+                onConfirm={confirmConfig.onConfirm}
+                title={confirmConfig.title}
+                description={confirmConfig.description}
+                variant={confirmConfig.variant}
+                type={confirmConfig.type}
+            />
         </div>
     )
 }

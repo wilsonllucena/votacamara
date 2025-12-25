@@ -10,6 +10,7 @@ import { ProjetoModal } from "./ProjetoModal"
 import { ProjetoInputs } from "./ProjetoForm"
 import { ResourceList } from "../ResourceList"
 import { createProjeto, updateProjeto, deleteProjeto } from "@/app/admin/_actions/projetos"
+import { ConfirmDialog } from "@/components/ui/confirm-dialog"
 
 interface Projeto {
   id: string
@@ -42,6 +43,30 @@ export function ProjetosClient({ projetos, slug, pagination }: ProjetosClientPro
   const searchParams = useSearchParams()
   const [searchTerm, setSearchTerm] = useState(searchParams.get("search") || "")
 
+  // ConfirmDialog State
+  const [confirmConfig, setConfirmConfig] = useState<{
+    isOpen: boolean
+    title: string
+    description: string
+    onConfirm?: () => void
+    variant?: "default" | "destructive"
+    type?: "confirm" | "alert"
+  }>({
+    isOpen: false,
+    title: "",
+    description: "",
+  })
+
+  const showAlert = (title: string, description: string) => {
+    setConfirmConfig({
+      isOpen: true,
+      title,
+      description,
+      type: "alert",
+      variant: "default",
+    })
+  }
+
   // Fetch vereadores for the modal dropdown
   useEffect(() => {
     const fetchVereadores = async () => {
@@ -67,7 +92,7 @@ export function ProjetosClient({ projetos, slug, pagination }: ProjetosClientPro
       }
       
       if (result?.error) {
-        alert(result.error)
+        showAlert("Erro", result.error)
       } else {
         setIsModalOpen(false)
         setEditingProjeto(null)
@@ -77,16 +102,23 @@ export function ProjetosClient({ projetos, slug, pagination }: ProjetosClientPro
   }
 
   const handleDelete = async (id: string, titulo: string) => {
-    if (confirm(`Tem certeza que deseja excluir o projeto "${titulo}"?`)) {
-      startTransition(async () => {
-        const result = await deleteProjeto(slug, id)
-        if (result?.error) {
-          alert(result.error)
-        } else {
-          router.refresh()
-        }
-      })
-    }
+    setConfirmConfig({
+      isOpen: true,
+      title: "Excluir Projeto",
+      description: `Tem certeza que deseja excluir o projeto "${titulo}"? Esta ação não pode ser desfeita.`,
+      variant: "destructive",
+      type: "confirm",
+      onConfirm: async () => {
+        startTransition(async () => {
+          const result = await deleteProjeto(slug, id)
+          if (result?.error) {
+            showAlert("Erro ao excluir", result.error)
+          } else {
+            router.refresh()
+          }
+        })
+      }
+    })
   }
 
   const handleSearch = (e: React.FormEvent) => {
@@ -218,6 +250,16 @@ export function ProjetosClient({ projetos, slug, pagination }: ProjetosClientPro
         editingProjeto={editingProjeto}
         isPending={isPending}
         vereadores={vereadores}
+      />
+
+      <ConfirmDialog
+        isOpen={confirmConfig.isOpen}
+        onClose={() => setConfirmConfig({ ...confirmConfig, isOpen: false })}
+        onConfirm={confirmConfig.onConfirm}
+        title={confirmConfig.title}
+        description={confirmConfig.description}
+        variant={confirmConfig.variant}
+        type={confirmConfig.type}
       />
     </>
   )
