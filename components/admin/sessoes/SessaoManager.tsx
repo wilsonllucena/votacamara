@@ -237,15 +237,17 @@ export function SessaoManager({ sessao, councilors, pautaItems, activeVoting: in
                                                 style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='currentColor'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E")` }}
                                             >
                                                 <option value="">Selecione um projeto da pauta...</option>
-                                                {pautaItems.map((item) => (
-                                                    <option 
-                                                        key={item.projeto.id} 
-                                                        value={item.projeto.id}
-                                                        disabled={item.projeto.status === 'votado'}
-                                                    >
-                                                        {item.projeto.numero} - {item.projeto.titulo} {item.projeto.status === 'votado' ? '(Votado)' : ''}
-                                                    </option>
-                                                ))}
+                                                {pautaItems
+                                                    .filter(item => item.projeto.status !== 'votado')
+                                                    .map((item) => (
+                                                        <option 
+                                                            key={item.projeto.id} 
+                                                            value={item.projeto.id}
+                                                        >
+                                                            {item.projeto.numero} - {item.projeto.titulo}
+                                                        </option>
+                                                    ))
+                                                }
                                             </select>
                                         </div>
                                         <div className="space-y-2">

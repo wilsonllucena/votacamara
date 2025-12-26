@@ -59,7 +59,7 @@ export default async function SessoesPage({
     .from("projetos")
     .select("id, titulo, numero")
     .eq("camara_id", camara.id)
-    .in("status", ["em_pauta", "votado"])
+    .eq("status", "em_pauta")
     .order("numero", { ascending: true })
 
   // 5. Get projects already in other "active" sessions (agendada or aberta)

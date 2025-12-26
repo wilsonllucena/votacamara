@@ -75,17 +75,22 @@ export function SessoesClient({ sessoes, slug, availableProjects, busyProjects, 
       } else {
         const formData = new FormData()
         Object.entries(data).forEach(([key, value]) => {
-            if (key === "projeto_ids") {
-                formData.append(key, JSON.stringify(value))
-            } else {
-                formData.append(key, value as string)
+            if (key === "projeto_ids" && Array.isArray(value)) {
+                value.forEach(id => formData.append("projeto_ids", id))
+            } else if (value !== undefined && value !== null) {
+                formData.append(key, value.toString())
             }
         })
         result = await createSessao(slug, null, formData)
       }
       
-      if (result?.error) {
-        showAlert("Erro", result.error)
+      const anyResult = result as any
+      if (anyResult?.error) {
+        showAlert("Erro", anyResult.error)
+      } else if (anyResult?.errors) {
+        // Handle validation errors from zod
+        const firstError = Object.values(anyResult.errors)[0] as string[]
+        showAlert("Erro de Validação", firstError[0])
       } else {
         setIsModalOpen(false)
         setEditingSessao(null)

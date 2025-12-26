@@ -48,7 +48,7 @@ export default async function PautaPage({
       .from("projetos")
       .select("*")
       .eq("camara_id", sessao.camara_id)
-      .neq("status", "votado") // Only projects not yet voted? Or any?
+      .neq("status", "votado")
       .order("created_at", { ascending: false })
       
   if (pautaProjectIds.length > 0) {
