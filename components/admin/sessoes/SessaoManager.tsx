@@ -21,7 +21,8 @@ import {
     startSession, 
     endSession, 
     openVoting, 
-    closeVoting 
+    closeVoting,
+    interruptVoting
 } from "@/app/admin/_actions/sessao_control"
 import { cn } from "@/lib/utils"
 
@@ -85,26 +86,15 @@ export function SessaoManager({ sessao, councilors, pautaItems, activeVoting: in
     // Initialize Global Session Store
     useEffect(() => {
         initSession(sessao.id, sessao.camara_id, {
-            votes: [], // Will be fetched below
+            votes: [], 
             activeVoting: initialActiveVoting,
             sessaoStatus: sessao.status
-        })
-
-        // Initial fetch for votes if there's an active voting
-        if (initialActiveVoting) {
-            supabase
-                .from("votos")
-                .select("*")
-                .eq("votacao_id", initialActiveVoting.id)
-                .then(({ data }) => {
-                    useSessionStore.getState().setVotes(data || [])
-                })
-        }
+        }, () => router.refresh())
 
         return () => {
             cleanupSession()
         }
-    }, [sessao.id, sessao.camara_id, initialActiveVoting, sessao.status, initSession, cleanupSession, supabase])
+    }, [sessao.id, sessao.camara_id, initialActiveVoting, sessao.status]) 
 
     // Sync Local State with Prop Changes (for activeVoting specifically if revalidated)
     useEffect(() => {
@@ -113,18 +103,30 @@ export function SessaoManager({ sessao, councilors, pautaItems, activeVoting: in
         }
     }, [initialActiveVoting, setActiveVoting])
     
-    // 2. Timer Logic
+    // 2. Timer Logic (Synchronized with server)
     useEffect(() => {
-        if (timeLeft === null || timeLeft <= 0) {
+        if (!activeVoting || !activeVoting.expira_em) {
+            setTimeLeft(null)
             return
         }
 
+        const calculateTimeLeft = () => {
+            const expiry = new Date(activeVoting.expira_em).getTime()
+            const now = new Date().getTime()
+            const difference = Math.floor((expiry - now) / 1000)
+            return difference > 0 ? difference : 0
+        }
+
+        setTimeLeft(calculateTimeLeft())
+
         const timer = setInterval(() => {
-            setTimeLeft(prev => (prev !== null ? prev - 1 : null))
+            const next = calculateTimeLeft()
+            setTimeLeft(next)
+            if (next <= 0) clearInterval(timer)
         }, 1000)
 
         return () => clearInterval(timer)
-    }, [timeLeft, activeVoting])
+    }, [activeVoting?.expira_em, activeVoting?.id])
 
     // Actions
     const handleStartSession = async () => {
@@ -155,7 +157,12 @@ export function SessaoManager({ sessao, councilors, pautaItems, activeVoting: in
     const handleOpenVoting = async () => {
         if (!selectedProjectId) return
         startTransition(async () => {
-            const result = await openVoting(slug, sessao.id, selectedProjectId)
+            const result = await openVoting(
+                slug, 
+                sessao.id, 
+                selectedProjectId, 
+                useTimer ? timerValue : undefined
+            )
             if (result?.error) showAlert("Erro", result.error)
             else {
                 if (useTimer) setTimeLeft(timerValue)
@@ -168,6 +175,20 @@ export function SessaoManager({ sessao, councilors, pautaItems, activeVoting: in
         if (!activeVoting) return
         startTransition(async () => {
             const result = await closeVoting(slug, sessao.id, activeVoting.id)
+            if (result?.error) showAlert("Erro", result.error)
+            else {
+                setTimeLeft(null)
+                setActiveVoting(null)
+                setSelectedProjectId("")
+                router.refresh()
+            }
+        })
+    }
+
+    const handleInterruptVoting = async () => {
+        if (!activeVoting) return
+        startTransition(async () => {
+            const result = await interruptVoting(slug, sessao.id, activeVoting.id)
             if (result?.error) showAlert("Erro", result.error)
             else {
                 setTimeLeft(null)
@@ -192,12 +213,12 @@ export function SessaoManager({ sessao, councilors, pautaItems, activeVoting: in
                         <div className="space-y-1">
                             <h3 className="text-lg font-semibold text-foreground">Controle da Sessão</h3>
                             <div className="flex items-center gap-2">
-                                <Badge variant={sessao.status === 'aberta' ? 'default' : 'secondary'} className={cn(
-                                    sessao.status === 'aberta' ? "bg-green-500/10 text-green-500 border-green-500/20" : ""
+                                <Badge variant={sessaoStatus === 'aberta' ? 'default' : 'secondary'} className={cn(
+                                    sessaoStatus === 'aberta' ? "bg-green-500/10 text-green-500 border-green-500/20" : ""
                                 )}>
-                                    {sessao.status.toUpperCase()}
+                                    {sessaoStatus.toUpperCase()}
                                 </Badge>
-                                {sessao.status === 'aberta' && (
+                                {sessaoStatus === 'aberta' && (
                                     <span className="text-xs text-muted-foreground animate-pulse flex items-center gap-1">
                                         <div className="w-1.5 h-1.5 rounded-full bg-green-500" /> Em ANDAMENTO
                                     </span>
@@ -205,12 +226,12 @@ export function SessaoManager({ sessao, councilors, pautaItems, activeVoting: in
                             </div>
                         </div>
                         <div className="flex items-center gap-2">
-                            {sessao.status === 'agendada' && (
+                            {sessaoStatus === 'agendada' && (
                                 <Button onClick={handleStartSession} disabled={isPending} className="bg-green-600 hover:bg-green-700 text-white">
                                     <Play className="w-4 h-4 mr-2" /> Iniciar Sessão
                                 </Button>
                             )}
-                            {sessao.status === 'aberta' && (
+                            {sessaoStatus === 'aberta' && (
                                 <Button onClick={handleEndSession} disabled={isPending} variant="outline" className="border-red-500/50 text-red-500 hover:bg-red-500/10">
                                     <Square className="w-4 h-4 mr-2" /> Finalizar Sessão
                                 </Button>
@@ -219,7 +240,7 @@ export function SessaoManager({ sessao, councilors, pautaItems, activeVoting: in
                     </div>
 
                     {/* Voting Area */}
-                    {sessao.status === 'aberta' && (
+                    {sessaoStatus === 'aberta' && (
                         <div className="border-t border-border pt-6 mt-6">
                             {!activeVoting ? (
                                 <div className="space-y-4">
@@ -326,7 +347,12 @@ export function SessaoManager({ sessao, councilors, pautaItems, activeVoting: in
                                             >
                                                 ENCERRAR VOTAÇÃO E APURAR
                                             </Button>
-                                            <Button variant="outline" className="h-11 border-border bg-card">
+                                            <Button 
+                                                variant="outline" 
+                                                className="h-11 border-border bg-card"
+                                                onClick={handleInterruptVoting}
+                                                disabled={isPending}
+                                            >
                                                 Interromper
                                             </Button>
                                         </div>
@@ -341,33 +367,51 @@ export function SessaoManager({ sessao, councilors, pautaItems, activeVoting: in
                 <div className="bg-card border border-border rounded-xl p-6 shadow-sm">
                     <h3 className="text-lg font-semibold text-foreground mb-4">Itens da Pauta</h3>
                     <div className="space-y-2">
-                        {pautaItems.map((item) => (
-                            <div 
-                                key={item.id} 
-                                className={cn(
-                                    "flex items-center justify-between p-4 rounded-xl border transition-all",
-                                    item.projeto.id === selectedProjectId ? "border-primary bg-primary/5 ring-1 ring-primary" : "border-border hover:bg-muted/30"
-                                )}
-                            >
-                                <div className="flex items-center gap-4">
-                                    <div className="w-10 h-10 rounded-lg bg-muted flex items-center justify-center font-bold text-muted-foreground text-sm border border-border">
-                                        {item.ordem}
-                                    </div>
-                                    <div>
-                                        <h5 className="text-sm font-bold text-foreground">{item.projeto.numero}</h5>
-                                        <p className="text-xs text-muted-foreground line-clamp-1 max-w-[300px]">{item.projeto.titulo}</p>
-                                    </div>
-                                </div>
-                                <div className="flex items-center gap-3">
-                                    {item.projeto.status === 'votado' ? (
-                                        <Badge variant="outline" className="bg-green-500/5 text-green-500 border-green-500/20 px-3 py-1">VOTADO</Badge>
-                                    ) : (
-                                        <Badge variant="outline" className="px-3 py-1">PENDENTE</Badge>
+                        {pautaItems.map((item) => {
+                            const isCurrentlyVoting = activeVoting?.projeto_id === item.projeto_id
+                            
+                            return (
+                                <div 
+                                    key={item.id} 
+                                    className={cn(
+                                        "flex items-center justify-between p-4 rounded-xl border transition-all",
+                                        isCurrentlyVoting 
+                                            ? "border-blue-500 bg-blue-500/5 ring-1 ring-blue-500 shadow-md" 
+                                            : item.projeto.id === selectedProjectId 
+                                                ? "border-primary bg-primary/5 ring-1 ring-primary" 
+                                                : "border-border hover:bg-muted/30"
                                     )}
-                                    <ChevronRight className="w-4 h-4 text-muted-foreground" />
+                                >
+                                    <div className="flex items-center gap-4">
+                                        <div className={cn(
+                                            "w-10 h-10 rounded-lg flex items-center justify-center font-bold text-sm border",
+                                            isCurrentlyVoting ? "bg-blue-500 text-white border-blue-600" : "bg-muted text-muted-foreground border-border"
+                                        )}>
+                                            {item.ordem}
+                                        </div>
+                                        <div>
+                                            <div className="flex items-center gap-2">
+                                                <h5 className="text-sm font-bold text-foreground">{item.projeto.numero}</h5>
+                                                {isCurrentlyVoting && (
+                                                    <Badge className="bg-blue-500 animate-pulse text-[9px] h-4 px-1">VOTANDO</Badge>
+                                                )}
+                                            </div>
+                                            <p className="text-xs text-muted-foreground line-clamp-1 max-w-[300px]">{item.projeto.titulo}</p>
+                                        </div>
+                                    </div>
+                                    <div className="flex items-center gap-3">
+                                        {item.projeto.status === 'votado' ? (
+                                            <Badge variant="outline" className="bg-green-500/5 text-green-500 border-green-500/20 px-3 py-1">VOTADO</Badge>
+                                        ) : isCurrentlyVoting ? (
+                                            <Badge variant="outline" className="bg-blue-500/10 text-blue-500 border-blue-500/20 px-3 py-1 font-bold">EM VOTAÇÃO</Badge>
+                                        ) : (
+                                            <Badge variant="outline" className="px-3 py-1">PENDENTE</Badge>
+                                        )}
+                                        <ChevronRight className="w-4 h-4 text-muted-foreground" />
+                                    </div>
                                 </div>
-                            </div>
-                        ))}
+                            )
+                        })}
                     </div>
                 </div>
             </div>
@@ -395,7 +439,7 @@ export function SessaoManager({ sessao, councilors, pautaItems, activeVoting: in
                                                 {vereador.nome.substring(0, 2).toUpperCase()}
                                             </div>
                                             <div className={cn(
-                                                "absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full border-2 border-[#09090b]",
+                                                "absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full border-2 border-background",
                                                 isOnline ? "bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.5)]" : "bg-red-500"
                                             )} />
                                         </div>

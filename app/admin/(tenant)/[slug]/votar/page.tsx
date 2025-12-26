@@ -60,25 +60,22 @@ export default async function VotarPage({
         .eq("status", "aberta")
         .maybeSingle()
 
-    // 5. Get current session status if any active voting exists or just get the latest session
+    // 5. Get current session status and ID
     let sessaoStatus = "agendada"
-    if (activeVoting) {
-        const { data: sessao } = await supabase
-            .from("sessoes")
-            .select("status")
-            .eq("id", activeVoting.sessao_id)
-            .single()
-        if (sessao) sessaoStatus = sessao.status
-    } else {
-        // Get latest session to show correct status
-        const { data: latestSessao } = await supabase
-            .from("sessoes")
-            .select("status")
-            .eq("camara_id", camara.id)
-            .order("data", { ascending: false })
-            .limit(1)
-            .maybeSingle()
-        if (latestSessao) sessaoStatus = latestSessao.status
+    let sessaoId = "global"
+
+    // Get latest session for this chamber
+    const { data: latestSessao } = await supabase
+        .from("sessoes")
+        .select("id, status")
+        .eq("camara_id", camara.id)
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle()
+
+    if (latestSessao) {
+        sessaoId = latestSessao.id
+        sessaoStatus = latestSessao.status
     }
 
     return (
@@ -89,6 +86,7 @@ export default async function VotarPage({
                 initialActiveVoting={activeVoting} 
                 camaraId={camara.id}
                 initialSessaoStatus={sessaoStatus}
+                sessaoId={sessaoId}
             />
         </div>
     )

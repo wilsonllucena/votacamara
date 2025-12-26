@@ -27,9 +27,10 @@ interface VotingClientProps {
     initialActiveVoting: any
     camaraId: string
     initialSessaoStatus?: string
+    sessaoId: string
 }
 
-export function VotingClient({ vereador, slug, initialActiveVoting, camaraId, initialSessaoStatus }: VotingClientProps) {
+export function VotingClient({ vereador, slug, initialActiveVoting, camaraId, initialSessaoStatus, sessaoId }: VotingClientProps) {
     const router = useRouter()
     const supabase = createClient()
     const [isPending, startTransition] = useTransition()
@@ -71,15 +72,15 @@ export function VotingClient({ vereador, slug, initialActiveVoting, camaraId, in
 
     // 1. Initialize Global Session Store
     useEffect(() => {
-        initSession(initialActiveVoting?.sessao_id || "global", camaraId, {
+        initSession(sessaoId, camaraId, {
             activeVoting: initialActiveVoting,
             sessaoStatus: initialSessaoStatus || "agendada"
-        })
+        }, () => router.refresh())
 
         return () => {
             cleanupSession()
         }
-    }, [camaraId, initialActiveVoting, initialSessaoStatus, initSession, cleanupSession])
+    }, [camaraId, sessaoId, initialActiveVoting, initialSessaoStatus]) // Removed initSession and cleanupSession to avoid loops if they change
 
     // 2. Monitor My Vote for Current Active Voting
     useEffect(() => {
@@ -127,12 +128,44 @@ export function VotingClient({ vereador, slug, initialActiveVoting, camaraId, in
         }
     }, [supabase, vereador?.user_id, camaraId])
 
-    // Timer Logic (Simulated sync for now, ideal is to have 'expires_at' in DB)
+    // Timer Logic
     useEffect(() => {
-        if (!activeVoting) return
-        // If the management screen sends a "timer_start" event or similar, we could sync better.
-        // For now, it's independent or we'd need a field in the DB.
-    }, [activeVoting])
+        if (!activeVoting || !activeVoting.expira_em) {
+            setTimeLeft(null)
+            return
+        }
+
+        const calculateTimeLeft = () => {
+            const expiry = new Date(activeVoting.expira_em).getTime()
+            const now = new Date().getTime()
+            const difference = Math.floor((expiry - now) / 1000)
+            return difference > 0 ? difference : 0
+        }
+
+        setTimeLeft(calculateTimeLeft())
+
+        const timer = setInterval(() => {
+            const next = calculateTimeLeft()
+            setTimeLeft(next)
+            if (next <= 0) clearInterval(timer)
+        }, 1000)
+
+        return () => clearInterval(timer)
+    }, [activeVoting?.expira_em, activeVoting?.id])
+
+    const formatTime = (seconds: number | null) => {
+        if (seconds === null) return "--:--"
+        const mins = Math.floor(seconds / 60)
+        const secs = seconds % 60
+        return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`
+    }
+
+    const getProgress = () => {
+        if (!activeVoting?.expira_em || !activeVoting?.abriu_em || timeLeft === null) return 0
+        const total = (new Date(activeVoting.expira_em).getTime() - new Date(activeVoting.abriu_em).getTime()) / 1000
+        if (total <= 0) return 100
+        return (timeLeft / total) * 100
+    }
 
     const handleVote = async (valor: 'SIM' | 'NAO' | 'ABSTENCAO') => {
         if (!activeVoting || isPending) return
@@ -170,14 +203,14 @@ export function VotingClient({ vereador, slug, initialActiveVoting, camaraId, in
     return (
         <div className="max-w-5xl mx-auto">
             {/* Header / User Info */}
-            <div className="bg-[#111827] rounded-t-2xl p-6 border-x border-t border-white/5 flex items-center justify-between">
+            <div className="bg-muted/50 rounded-t-2xl p-6 border-x border-t border-border flex items-center justify-between">
                 <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 rounded-full bg-[#1e293b] flex items-center justify-center text-indigo-400 font-bold text-lg border border-indigo-500/20">
+                    <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-lg border border-primary/20">
                         {vereador?.nome?.substring(0, 2).toUpperCase() || "AD"}
                     </div>
                     <div>
-                        <h3 className="text-lg font-bold text-white">{vereador?.nome || "Administrador"}</h3>
-                        <p className="text-xs text-zinc-500 font-medium uppercase tracking-wider">{vereador?.partido || "Gestão"} - {vereador ? "Vereador" : "Visualização"}</p>
+                        <h3 className="text-lg font-bold text-foreground">{vereador?.nome || "Administrador"}</h3>
+                        <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider">{vereador?.partido || "Gestão"} - {vereador ? "Vereador" : "Visualização"}</p>
                     </div>
                 </div>
                 <Badge className="bg-green-500/10 text-green-500 border-green-500/20 px-4 py-1.5 font-bold tracking-widest text-[10px] uppercase flex items-center gap-2">
@@ -187,34 +220,39 @@ export function VotingClient({ vereador, slug, initialActiveVoting, camaraId, in
             </div>
 
             {/* Main Voting Section */}
-            <div className="bg-[#0f172a] rounded-b-2xl p-8 border-x border-b border-white/5 shadow-2xl">
+            <div className="bg-card rounded-b-2xl p-8 border-x border-b border-border shadow-2xl">
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
                     
                     {/* Project Info */}
                     <div className="space-y-8">
                         <div className="space-y-2">
-                            <span className="text-indigo-400 font-mono text-sm font-bold tracking-wider">{activeVoting.projetos?.numero || "PL 000/2024"}</span>
-                            <h2 className="text-3xl font-black text-white leading-tight">
+                            <span className="text-primary font-mono text-sm font-bold tracking-wider">{activeVoting.projetos?.numero || "PL 000/2024"}</span>
+                            <h2 className="text-3xl font-black text-foreground leading-tight">
                                 {activeVoting.projetos?.titulo}
                             </h2>
-                            <p className="text-zinc-400 text-lg leading-relaxed pt-4">
+                            <p className="text-muted-foreground text-lg leading-relaxed pt-4">
                                 {activeVoting.projetos?.ementa || "Descrição detalhada do projeto de lei sendo votado..."}
                             </p>
                         </div>
-
-                        {/* Optional Timer Logic View */}
-                        <div className="bg-[#1e293b]/40 border border-white/5 rounded-2xl p-6 space-y-4">
-                            <div className="flex items-center justify-between text-zinc-400 text-sm font-bold uppercase tracking-widest">
+ 
+                        {/* Timer View */}
+                        <div className="bg-muted/30 border border-border rounded-2xl p-6 space-y-4">
+                            <div className="flex items-center justify-between text-muted-foreground text-sm font-bold uppercase tracking-widest">
                                 <span>Tempo Restante para Voto</span>
-                                <span className="text-white text-2xl font-mono">--:--</span>
+                                <span className={cn(
+                                    "text-2xl font-mono",
+                                    timeLeft !== null && timeLeft <= 10 ? "text-red-500 animate-pulse" : "text-foreground"
+                                )}>
+                                    {formatTime(timeLeft)}
+                                </span>
                             </div>
-                            <Progress value={0} className="h-2.5 bg-zinc-800" />
+                            <Progress value={getProgress()} className="h-2.5 bg-muted" />
                         </div>
                     </div>
 
                     {/* Actions */}
                     <div className="flex flex-col gap-4">
-                        <h4 className="text-zinc-500 text-sm font-bold uppercase tracking-widest text-center mb-2">Selecione sua opção de voto</h4>
+                        <h4 className="text-muted-foreground text-sm font-bold uppercase tracking-widest text-center mb-2">Selecione sua opção de voto</h4>
                         
                         {/* Vote SIM */}
                         <button 
@@ -223,19 +261,19 @@ export function VotingClient({ vereador, slug, initialActiveVoting, camaraId, in
                             className={cn(
                                 "group relative w-full h-24 rounded-2xl border-2 transition-all flex items-center justify-between px-8",
                                 myVote === 'SIM' 
-                                    ? "bg-green-500/20 border-green-500 text-green-500" 
-                                    : "bg-transparent border-white/5 text-zinc-400 hover:border-green-500/50 hover:bg-green-500/5"
+                                    ? "bg-green-500/10 border-green-500 text-green-500 shadow-lg shadow-green-500/10" 
+                                    : "bg-transparent border-border text-muted-foreground hover:border-green-500/50 hover:bg-green-500/5 hover:text-green-500"
                             )}
                         >
-                            <span className="text-2xl font-black italic tracking-tighter">SIM</span>
+                            <span className="text-2xl font-black italic tracking-tighter uppercase">SIM</span>
                             <div className={cn(
                                 "w-10 h-10 rounded-full border-2 flex items-center justify-center transition-all",
-                                myVote === 'SIM' ? "bg-green-500 border-green-500 text-white" : "border-white/10 group-hover:border-green-500/50"
+                                myVote === 'SIM' ? "bg-green-500 border-green-500 text-white" : "border-border group-hover:border-green-500/50"
                             )}>
                                 {myVote === 'SIM' && <Check className="w-6 h-6 stroke-[3]" />}
                             </div>
                         </button>
-
+ 
                         {/* Vote NAO */}
                         <button 
                             onClick={() => handleVote('NAO')}
@@ -243,27 +281,27 @@ export function VotingClient({ vereador, slug, initialActiveVoting, camaraId, in
                             className={cn(
                                 "group relative w-full h-24 rounded-2xl border-2 transition-all flex items-center justify-between px-8",
                                 myVote === 'NAO' 
-                                    ? "bg-red-500/20 border-red-500 text-red-500" 
-                                    : "bg-transparent border-white/5 text-zinc-400 hover:border-red-500/50 hover:bg-red-500/5"
+                                    ? "bg-red-500/10 border-red-500 text-red-500 shadow-lg shadow-red-500/10" 
+                                    : "bg-transparent border-border text-muted-foreground hover:border-red-500/50 hover:bg-red-500/5 hover:text-red-500"
                             )}
                         >
-                            <span className="text-2xl font-black italic tracking-tighter">NÃO</span>
+                            <span className="text-2xl font-black italic tracking-tighter uppercase">NÃO</span>
                             <div className={cn(
                                 "w-10 h-10 rounded-full border-2 flex items-center justify-center transition-all",
-                                myVote === 'NAO' ? "bg-red-500 border-red-500 text-white" : "border-white/10 group-hover:border-red-500/50"
+                                myVote === 'NAO' ? "bg-red-500 border-red-500 text-white" : "border-border group-hover:border-red-500/50"
                             )}>
                                 {myVote === 'NAO' && <Check className="w-6 h-6 stroke-[3]" />}
                             </div>
                         </button>
-
+ 
                         {/* Vote ABSTENER */}
                         <Button 
                             variant="ghost" 
                             onClick={() => handleVote('ABSTENCAO')}
                             disabled={isPending || myVote !== null}
                             className={cn(
-                                "h-16 rounded-2xl border border-white/5 text-zinc-500 font-bold uppercase tracking-widest hover:bg-white/5 hover:text-white transition-all",
-                                myVote === 'ABSTENCAO' ? "bg-white/10 text-white border-white/20" : ""
+                                "h-16 rounded-2xl border border-border text-muted-foreground font-bold uppercase tracking-widest hover:bg-accent hover:text-accent-foreground transition-all",
+                                myVote === 'ABSTENCAO' ? "bg-accent text-accent-foreground border-primary/20" : ""
                             )}
                         >
                             {myVote === 'ABSTENCAO' ? "Voto: Abstenção" : "Abster-se da Votação"}

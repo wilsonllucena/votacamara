@@ -47,18 +47,18 @@ export async function endSession(slug: string, sessaoId: string) {
 /**
  * Abre a votação para um projeto específico dentro de uma sessão.
  */
-export async function openVoting(slug: string, sessaoId: string, projetoId: string) {
+export async function openVoting(slug: string, sessaoId: string, projetoId: string, timerSeconds?: number) {
     const supabase = await createClient()
 
     // 1. Verificar se já existe uma votação aberta nesta sessão
-    const { data: openVoting } = await supabase
+    const { data: openVotingData } = await supabase
         .from("votacoes")
         .select("id")
         .eq("sessao_id", sessaoId)
         .eq("status", "aberta")
         .single()
 
-    if (openVoting) {
+    if (openVotingData) {
         return { error: "Já existe uma votação aberta para esta sessão." }
     }
 
@@ -72,7 +72,14 @@ export async function openVoting(slug: string, sessaoId: string, projetoId: stri
 
     if (!profile) return { error: "Perfil não encontrado." }
 
-    // 3. Criar a votação
+    // 3. Calcular data de expiração se houver timer
+    let expira_em = null
+    if (timerSeconds && timerSeconds > 0) {
+        const now = new Date()
+        expira_em = new Date(now.getTime() + timerSeconds * 1000).toISOString()
+    }
+
+    // 4. Criar a votação
     const { error } = await supabase
         .from("votacoes")
         .insert({
@@ -80,7 +87,8 @@ export async function openVoting(slug: string, sessaoId: string, projetoId: stri
             sessao_id: sessaoId,
             projeto_id: projetoId,
             status: "aberta",
-            abriu_em: new Date().toISOString()
+            abriu_em: new Date().toISOString(),
+            expira_em
         })
 
     if (error) return { error: error.message }
@@ -118,6 +126,26 @@ export async function closeVoting(slug: string, sessaoId: string, votacaoId: str
             .update({ status: "votado" })
             .eq("id", votacao.projeto_id)
     }
+
+    revalidatePath(`/admin/${slug}/sessoes/${sessaoId}/manager`)
+    return { success: true }
+}
+
+/**
+ * Interrompe a votação (cancela sem marcar como votado).
+ */
+export async function interruptVoting(slug: string, sessaoId: string, votacaoId: string) {
+    const supabase = await createClient()
+
+    const { error } = await supabase
+        .from("votacoes")
+        .update({ 
+            status: "encerrada",
+            encerrou_em: new Date().toISOString()
+        })
+        .eq("id", votacaoId)
+
+    if (error) return { error: error.message }
 
     revalidatePath(`/admin/${slug}/sessoes/${sessaoId}/manager`)
     return { success: true }
