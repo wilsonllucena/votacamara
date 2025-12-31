@@ -11,44 +11,43 @@ import { summarizeProject } from "@/app/admin/_actions/projetos"
 import { Badge } from "@/components/ui/badge"
 import { cn } from "@/lib/utils"
 import { STORAGE_BUCKETS } from "@/config/storage"
+import { MultiSelect } from "@/components/ui/multi-select"
 
-const projetoSchema = z.object({
+const materiaSchema = z.object({
   numero: z.string().min(1, "Número é obrigatório"),
   titulo: z.string().min(3, "Título deve ter pelo menos 3 caracteres"),
   ementa: z.string().min(10, "Ementa deve ser detalhada"),
-  autor: z.string().min(2, "Autor é obrigatório"),
-  autor_id: z.string().uuid("Vereador selecionado inválido").optional().or(z.literal("")),
+  autores_ids: z.array(z.string().uuid("Vereador selecionado inválido")).min(1, "Selecione pelo menos um autor"),
   texto_url: z.string().url("URL do texto deve ser válida").optional().or(z.literal("")),
   status: z.enum(["Rascunho", "Em Pauta", "Votado"]),
 })
 
-export type ProjetoInputs = z.infer<typeof projetoSchema>
+export type MateriaInputs = z.infer<typeof materiaSchema>
 
-interface ProjetoFormProps {
-  defaultValues?: Partial<ProjetoInputs>
-  onSubmit: (data: ProjetoInputs) => void
+interface MateriaFormProps {
+  defaultValues?: Partial<MateriaInputs>
+  onSubmit: (data: MateriaInputs) => void
   onCancel: () => void
   isPending?: boolean
-  vereadores: { id: string, nome: string }[]
+  vereadores: { id: string, nome: string, partido: string }[]
 }
 
-export function ProjetoForm({ defaultValues, onSubmit, onCancel, isPending, vereadores }: ProjetoFormProps) {
+export function ProjetoForm({ defaultValues, onSubmit, onCancel, isPending, vereadores }: MateriaFormProps) {
   const {
     register,
     handleSubmit,
     setValue,
     watch,
     formState: { errors },
-  } = useForm<ProjetoInputs>({
-    resolver: zodResolver(projetoSchema),
+  } = useForm<MateriaInputs>({
+    resolver: zodResolver(materiaSchema),
     defaultValues: {
       numero: defaultValues?.numero || "",
       titulo: defaultValues?.titulo || "",
       ementa: defaultValues?.ementa || "",
-      autor: defaultValues?.autor || "",
-      autor_id: defaultValues?.autor_id || "",
+      autores_ids: defaultValues?.autores_ids || [],
       texto_url: defaultValues?.texto_url || "",
-      status: (defaultValues?.status as ProjetoInputs["status"]) || "Rascunho",
+      status: (defaultValues?.status as MateriaInputs["status"]) || "Rascunho",
     }
   })
 
@@ -56,13 +55,14 @@ export function ProjetoForm({ defaultValues, onSubmit, onCancel, isPending, vere
   const [isSummarizing, setIsSummarizing] = useState(false)
   const supabase = createClient()
 
+  const selectedAuthorsIds = watch("autores_ids") || []
+
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (!file) return
 
     setIsUploading(true)
     try {
-      // 1. Apagar arquivo antigo se existir
       const currentUrl = watch("texto_url")
       if (currentUrl && currentUrl.includes(STORAGE_BUCKETS.PROJETOS)) {
         try {
@@ -77,7 +77,6 @@ export function ProjetoForm({ defaultValues, onSubmit, onCancel, isPending, vere
         }
       }
 
-      // 2. Fazer upload do novo arquivo
       const fileExt = file.name.split('.').pop()
       const fileName = `${Math.random().toString(36).substring(2)}.${fileExt}`
       const filePath = `${fileName}`
@@ -155,54 +154,41 @@ export function ProjetoForm({ defaultValues, onSubmit, onCancel, isPending, vere
           id="ementa"
           rows={4}
           className={`w-full bg-background border ${errors.ementa ? 'border-red-500' : 'border-border'} rounded-lg px-4 py-2 text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all resize-none`}
-          placeholder="Descreva o projeto detalhadamente..."
+          placeholder="Descreva a materia detalhadamente..."
         />
         {errors.ementa && <p className="text-xs text-red-500 mt-1">{errors.ementa.message}</p>}
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div className="space-y-2">
-            <label className="text-sm font-medium text-muted-foreground" htmlFor="autor_id">Autor (Vereador)</label>
-            <select 
-              {...register("autor_id")}
-              id="autor_id"
-              className={`w-full bg-background border ${errors.autor_id ? 'border-red-500' : 'border-border'} rounded-lg px-4 py-2 text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all`}
-              onChange={(e) => {
-                const selected = vereadores.find(v => v.id === e.target.value)
-                if (selected) {
-                    setValue("autor", selected.nome)
-                }
-              }}
-            >
-              <option value="">Selecione um Vereador</option>
-              {vereadores.map(v => (
-                <option key={v.id} value={v.id}>{v.nome}</option>
-              ))}
-            </select>
-            <input type="hidden" {...register("autor")} />
-            {errors.autor_id && <p className="text-xs text-red-500 mt-1">{errors.autor_id.message}</p>}
-        </div>
+      <div className="space-y-2">
+          <label className="text-sm font-medium text-muted-foreground">Autores (Vereadores)</label>
+          <MultiSelect 
+            options={vereadores}
+            selected={selectedAuthorsIds}
+            onChange={(selected) => setValue("autores_ids", selected, { shouldValidate: true })}
+            placeholder="Selecione um ou mais autores..."
+          />
+          {errors.autores_ids && <p className="text-xs text-red-500 mt-1">{errors.autores_ids.message}</p>}
+      </div>
 
-        <div className="space-y-2">
-            <label className="text-sm font-medium text-muted-foreground" htmlFor="status">Status</label>
-            <select 
-              {...register("status")}
-              id="status"
-              className={`w-full bg-background border ${errors.status ? 'border-red-500' : 'border-border'} rounded-lg px-4 py-2 text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all`}
-            >
-              <option value="Rascunho">Rascunho</option>
-              <option value="Em Pauta">Em Pauta</option>
-              <option value="Votado">Votado</option>
-            </select>
-            {errors.status && <p className="text-xs text-red-500 mt-1">{errors.status.message}</p>}
-        </div>
+      <div className="space-y-2">
+          <label className="text-sm font-medium text-muted-foreground" htmlFor="status">Status</label>
+          <select 
+            {...register("status")}
+            id="status"
+            className={`w-full bg-background border ${errors.status ? 'border-red-500' : 'border-border'} rounded-lg px-4 py-2 text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all`}
+          >
+            <option value="Rascunho">Rascunho</option>
+            <option value="Em Pauta">Em Pauta</option>
+            <option value="Votado">Votado</option>
+          </select>
+          {errors.status && <p className="text-xs text-red-500 mt-1">{errors.status.message}</p>}
       </div>
 
       <div className="space-y-4 p-4 border border-dashed border-border rounded-xl bg-muted/30">
         <div className="flex items-center justify-between">
             <label className="text-sm font-bold text-foreground flex items-center gap-2">
                 <FileText className="w-4 h-4 text-primary" />
-                Documento do Projeto (PDF)
+                Documento da Materia (PDF)
             </label>
             {watch("texto_url") && (
                 <Badge variant="outline" className="bg-green-500/10 text-green-500 border-green-500/20 gap-1">
@@ -271,9 +257,9 @@ export function ProjetoForm({ defaultValues, onSubmit, onCancel, isPending, vere
         <Button 
           type="submit" 
           disabled={isPending}
-          className="bg-primary hover:bg-primary/90 text-primary-foreground shadow-sm"
+          className="bg-primary hover:bg-primary/90 text-primary-foreground shadow-sm px-8"
         >
-          {isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : "Salvar"}
+          {isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : "Salvar Materia"}
         </Button>
       </div>
     </form>

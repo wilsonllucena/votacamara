@@ -1,13 +1,12 @@
 "use client"
 
-import { useState, useEffect, useTransition } from "react"
+import { useState, useTransition } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
-import { createClient } from "@/utils/supabase/client"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { Plus, Edit2, Trash2, FileText, User, ScrollText } from "lucide-react"
+import { Edit2, Trash2, FileText, User, ScrollText } from "lucide-react"
 import { ProjetoModal } from "./ProjetoModal"
-import { ProjetoInputs } from "./ProjetoForm"
+import { MateriaInputs } from "./ProjetoForm"
 import { ResourceList } from "../ResourceList"
 import { createProjeto, updateProjeto, deleteProjeto } from "@/app/admin/_actions/projetos"
 import { ConfirmDialog } from "@/components/ui/confirm-dialog"
@@ -17,29 +16,33 @@ interface Projeto {
   numero: string
   titulo: string
   ementa: string
-  autor: string
-  autor_id?: string | null
   texto_url?: string | null
   status: string
   created_at: string
+  projeto_autores?: {
+    vereadores: {
+      id: string
+      nome: string
+      partido: string
+    }
+  }[]
 }
 
 interface ProjetosClientProps {
   projetos: Projeto[]
   slug: string
+  vereadores: { id: string, nome: string, partido: string }[]
   pagination: {
     currentPage: number
     totalPages: number
   }
 }
 
-export function ProjetosClient({ projetos, slug, pagination }: ProjetosClientProps) {
+export function ProjetosClient({ projetos, slug, vereadores, pagination }: ProjetosClientProps) {
   const router = useRouter()
-  const supabase = createClient()
   const [isPending, startTransition] = useTransition()
   const [isModalOpen, setIsModalOpen] = useState(false)
-  const [editingProjeto, setEditingProjeto] = useState<(ProjetoInputs & { id: string }) | null>(null)
-  const [vereadores, setVereadores] = useState<{ id: string, nome: string }[]>([])
+  const [editingProjeto, setEditingProjeto] = useState<(MateriaInputs & { id: string }) | null>(null)
   const searchParams = useSearchParams()
   const [searchTerm, setSearchTerm] = useState(searchParams.get("search") || "")
 
@@ -67,27 +70,20 @@ export function ProjetosClient({ projetos, slug, pagination }: ProjetosClientPro
     })
   }
 
-  // Fetch vereadores for the modal dropdown
-  useEffect(() => {
-    const fetchVereadores = async () => {
-        const { data } = await supabase
-            .from("vereadores")
-            .select("id, nome")
-            .order("nome")
-        
-        if (data) setVereadores(data)
-    }
-    fetchVereadores()
-  }, [supabase])
-
-  const handleCreateOrUpdate = async (data: ProjetoInputs) => {
+  const handleCreateOrUpdate = async (data: MateriaInputs) => {
     startTransition(async () => {
       let result;
       if (editingProjeto) {
         result = await updateProjeto(slug, editingProjeto.id, data)
       } else {
         const formData = new FormData()
-        Object.entries(data).forEach(([key, value]) => formData.append(key, value as string))
+        Object.entries(data).forEach(([key, value]) => {
+            if (key === 'autores_ids') {
+                (value as string[]).forEach(id => formData.append('autores_ids', id))
+            } else {
+                formData.append(key, value as string)
+            }
+        })
         result = await createProjeto(slug, null, formData)
       }
       
@@ -104,8 +100,8 @@ export function ProjetosClient({ projetos, slug, pagination }: ProjetosClientPro
   const handleDelete = async (id: string, titulo: string) => {
     setConfirmConfig({
       isOpen: true,
-      title: "Excluir Projeto",
-      description: `Tem certeza que deseja excluir o projeto "${titulo}"? Esta ação não pode ser desfeita.`,
+      title: "Excluir Materia",
+      description: `Tem certeza que deseja excluir a materia "${titulo}"? Esta ação não pode ser desfeita.`,
       variant: "destructive",
       type: "confirm",
       onConfirm: async () => {
@@ -157,10 +153,10 @@ export function ProjetosClient({ projetos, slug, pagination }: ProjetosClientPro
   return (
     <>
       <ResourceList
-        title="Projetos de Lei"
-        description="Gerencie as proposituras legislativas."
+        title="Materias Legislativas"
+        description="Gerencie as proposituras legislativas da Câmara."
         primaryAction={{
-          label: "Novo Projeto",
+          label: "Nova Materia",
           onClick: () => {
             setEditingProjeto(null)
             setIsModalOpen(true)
@@ -174,72 +170,76 @@ export function ProjetosClient({ projetos, slug, pagination }: ProjetosClientPro
         }}
         pagination={pagination}
         isEmpty={!projetos || projetos.length === 0}
-        emptyMessage="Nenhum projeto encontrado."
+        emptyMessage="Nenhuma materia encontrada."
         emptyIcon={<FileText className="h-10 w-10 opacity-20" />}
       >
         <div className="space-y-4">
-          {projetos.map((projeto) => (
-            <div key={projeto.id} className="flex flex-col md:flex-row gap-4 items-start md:items-center justify-between bg-card/50 border border-border p-4 rounded-xl hover:bg-muted/50 transition-all duration-200 group shadow-sm">
-              <div className="flex gap-4 items-start">
-                <div className="h-12 w-12 rounded-lg bg-muted flex flex-shrink-0 items-center justify-center text-primary group-hover:bg-accent transition-colors">
-                  <FileText className="h-6 w-6" />
-                </div>
-                <div>
-                  <div className="flex items-center gap-2 mb-1">
-                    <h3 className="font-bold text-foreground text-lg">{projeto.numero || "S/N"}</h3>
-                    <Badge variant="outline" className={`capitalize ${getStatusColor(projeto.status)}`}>
-                      {formatStatus(projeto.status)}
-                    </Badge>
-                  </div>
-                  <h4 className="text-foreground/90 font-medium mb-1">{projeto.titulo}</h4>
-                  <p className="text-sm text-muted-foreground line-clamp-2 max-w-2xl">{projeto.ementa}</p>
-                  
-                  <div className="flex items-center gap-4 mt-3 text-sm text-muted-foreground">
-                    <div className="flex items-center gap-1">
-                      <User className="h-3 w-3" />
-                      {projeto.autor}
-                    </div>
-                    {projeto.texto_url && (
-                      <div className="flex items-center gap-1">
-                        <ScrollText className="h-3 w-3" />
-                        <a href={projeto.texto_url} target="_blank" className="hover:text-primary hover:underline">Texto Original</a>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </div>
+          {projetos.map((projeto) => {
+            const authors = projeto.projeto_autores?.map(pa => pa.vereadores.nome).join(", ") || "Sem autor"
+            const authorsIds = projeto.projeto_autores?.map(pa => pa.vereadores.id) || []
 
-              <div className="flex gap-2 w-full md:w-auto">
-                <Button 
-                  onClick={() => {
-                    setEditingProjeto({
-                      id: projeto.id,
-                      numero: projeto.numero,
-                      titulo: projeto.titulo,
-                      ementa: projeto.ementa,
-                      autor: projeto.autor,
-                      autor_id: projeto.autor_id || undefined,
-                      texto_url: projeto.texto_url || undefined,
-                      status: formatStatus(projeto.status) as ProjetoInputs["status"]
-                    })
-                    setIsModalOpen(true)
-                  }}
-                  variant="outline" 
-                  className="border-border bg-background text-foreground hover:bg-muted flex-1 md:flex-none font-medium h-9"
-                >
-                  <Edit2 className="h-4 w-4 mr-2" />
-                  Editar
-                </Button>
-                <Button 
-                  onClick={() => handleDelete(projeto.id, projeto.titulo)}
-                  variant="ghost" 
-                  className="text-muted-foreground hover:text-red-500 hover:bg-red-500/10 flex-1 md:flex-none h-9"
-                >
-                  <Trash2 className="h-4 w-4" />
-                </Button>
-              </div>
-            </div>
-          ))}
+            return (
+                <div key={projeto.id} className="flex flex-col md:flex-row gap-4 items-start md:items-center justify-between bg-card/50 border border-border p-4 rounded-xl hover:bg-muted/50 transition-all duration-200 group shadow-sm">
+                  <div className="flex gap-4 items-start">
+                    <div className="h-12 w-12 rounded-lg bg-muted flex flex-shrink-0 items-center justify-center text-primary group-hover:bg-accent transition-colors">
+                      <FileText className="h-6 w-6" />
+                    </div>
+                    <div>
+                      <div className="flex items-center gap-2 mb-1">
+                        <h3 className="font-bold text-foreground text-lg">{projeto.numero || "S/N"}</h3>
+                        <Badge variant="outline" className={`capitalize ${getStatusColor(projeto.status)}`}>
+                          {formatStatus(projeto.status)}
+                        </Badge>
+                      </div>
+                      <h4 className="text-foreground/90 font-medium mb-1">{projeto.titulo}</h4>
+                      <p className="text-sm text-muted-foreground line-clamp-2 max-w-2xl">{projeto.ementa}</p>
+                      
+                      <div className="flex items-center gap-4 mt-3 text-sm text-muted-foreground">
+                        <div className="flex items-center gap-1">
+                          <User className="h-3 w-3" />
+                          <span className="max-w-[300px] truncate">{authors}</span>
+                        </div>
+                        {projeto.texto_url && (
+                          <div className="flex items-center gap-1">
+                            <ScrollText className="h-3 w-3" />
+                            <a href={projeto.texto_url} target="_blank" className="hover:text-primary hover:underline">Texto Original</a>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+    
+                  <div className="flex gap-2 w-full md:w-auto">
+                    <Button 
+                      onClick={() => {
+                        setEditingProjeto({
+                          id: projeto.id,
+                          numero: projeto.numero,
+                          titulo: projeto.titulo,
+                          ementa: projeto.ementa,
+                          autores_ids: authorsIds,
+                          texto_url: projeto.texto_url || undefined,
+                          status: formatStatus(projeto.status) as MateriaInputs["status"]
+                        })
+                        setIsModalOpen(true)
+                      }}
+                      variant="outline" 
+                      className="border-border bg-background text-foreground hover:bg-muted flex-1 md:flex-none font-medium h-9"
+                    >
+                      <Edit2 className="h-4 w-4 mr-2" />
+                      Editar
+                    </Button>
+                    <Button 
+                      onClick={() => handleDelete(projeto.id, projeto.titulo)}
+                      variant="ghost" 
+                      className="text-muted-foreground hover:text-red-500 hover:bg-red-500/10 flex-1 md:flex-none h-9"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+              )
+          })}
         </div>
       </ResourceList>
 

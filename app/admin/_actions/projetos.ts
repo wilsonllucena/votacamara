@@ -1,6 +1,7 @@
 'use server'
 
 import { createClient } from "@/utils/supabase/server"
+import { createAdminClient } from "@/utils/supabase/admin"
 import { revalidatePath } from "next/cache"
 import { z } from "zod"
 import { generateSummary, generateEmbeddings } from "@/lib/ai"
@@ -78,7 +79,7 @@ export async function summarizeProject(fileUrl: string, projetoId?: string) {
         // 1. Gerar Sumário e Título
         const aiResult = await generateSummary(fullText)
 
-        // 2. Processar Embeddings se tivermos um ID de projeto
+        // 2. Processar Embeddings se tivermos um ID de projeto (materia)
         if (projetoId) {
             const supabase = await createClient()
             
@@ -104,7 +105,7 @@ export async function summarizeProject(fileUrl: string, projetoId?: string) {
         
         return { success: true, ...aiResult }
     } catch (error: any) {
-        console.error("Erro ao resumir projeto:", error)
+        console.error("Erro ao resumir materia:", error)
         return { error: error.message || "Erro desconhecido ao processar IA" }
     }
 }
@@ -113,14 +114,15 @@ const projetoSchema = z.object({
   numero: z.string().min(1, "Número é obrigatório"),
   titulo: z.string().min(3, "Título deve ter pelo menos 3 caracteres"),
   ementa: z.string().min(10, "Ementa deve ser detalhada"),
-  autor: z.string().min(2, "Autor é obrigatório"),
-  autor_id: z.string().uuid("Vereador selecionado inválido").optional().or(z.literal("")),
+  autor: z.string().optional(), // Mantido por compatibilidade temporária
+  autores_ids: z.array(z.string().uuid("Vereador selecionado inválido")).min(1, "Selecione pelo menos um autor"),
   texto_url: z.string().url("URL do texto deve ser válida").optional().or(z.literal("")),
   status: z.enum(["Rascunho", "Em Pauta", "Votado"]),
 })
 
 export async function createProjeto(slug: string, prevState: unknown, formData: FormData) {
   const supabase = await createClient()
+  const adminClient = createAdminClient()
 
   const { data: camara } = await supabase
     .from("camaras")
@@ -132,12 +134,14 @@ export async function createProjeto(slug: string, prevState: unknown, formData: 
       return { message: "Câmara não encontrada" }
   }
 
+  // Pegar múltiplos autores do formData
+  const autores_ids = formData.getAll("autores_ids") as string[]
+
   const validatedFields = projetoSchema.safeParse({
     numero: formData.get("numero"),
     titulo: formData.get("titulo"),
     ementa: formData.get("ementa"),
-    autor: formData.get("autor"),
-    autor_id: formData.get("autor_id"),
+    autores_ids: autores_ids,
     texto_url: formData.get("texto_url"),
     status: formData.get("status"),
   })
@@ -146,24 +150,35 @@ export async function createProjeto(slug: string, prevState: unknown, formData: 
     return { errors: validatedFields.error.flatten().fieldErrors }
   }
 
-  const { numero, titulo, ementa, autor, autor_id, texto_url, status } = validatedFields.data
+  const { numero, titulo, ementa, autores_ids: autores, texto_url, status } = validatedFields.data
 
   const { data: newProjeto, error } = await supabase.from("projetos").insert({
     camara_id: camara.id,
     numero,
     titulo,
     ementa,
-    autor,
-    autor_id: autor_id || null,
     texto_url: texto_url || null,
     status: status === "Em Pauta" ? "em_pauta" : status.toLowerCase()
   }).select("id").single()
 
   if (error) {
-    return { error: "Erro ao criar projeto: " + error.message }
+    return { error: "Erro ao criar materia: " + error.message }
   }
 
-  // Se houver PDF, processar embeddings em background (opcionalmente)
+  // Inserir autores na tabela de junção
+  if (newProjeto?.id) {
+    const authorsToInsert = autores.map(vereador_id => ({
+        projeto_id: newProjeto.id,
+        vereador_id
+    }))
+
+    const { error: authorsError } = await adminClient.from("projeto_autores").insert(authorsToInsert)
+    if (authorsError) {
+        console.error("Erro ao inserir autores:", authorsError)
+    }
+  }
+
+  // Se houver PDF, processar embeddings em background
   if (texto_url && newProjeto?.id) {
     summarizeProject(texto_url, newProjeto.id).catch(console.error)
   }
@@ -174,6 +189,7 @@ export async function createProjeto(slug: string, prevState: unknown, formData: 
 
 export async function updateProjeto(slug: string, id: string, data: z.infer<typeof projetoSchema>) {
     const supabase = await createClient()
+    const adminClient = createAdminClient()
 
     const validatedFields = projetoSchema.safeParse(data)
 
@@ -181,7 +197,7 @@ export async function updateProjeto(slug: string, id: string, data: z.infer<type
         return { error: validatedFields.error.message }
     }
 
-    const { numero, titulo, ementa, autor, autor_id, texto_url, status } = validatedFields.data
+    const { numero, titulo, ementa, autores_ids: autores, texto_url, status } = validatedFields.data
 
     const { error } = await supabase
         .from("projetos")
@@ -189,15 +205,26 @@ export async function updateProjeto(slug: string, id: string, data: z.infer<type
             numero,
             titulo,
             ementa,
-            autor,
-            autor_id: autor_id || null,
             texto_url: texto_url || null,
             status: status === "Em Pauta" ? "em_pauta" : status.toLowerCase()
         })
         .eq("id", id)
 
     if (error) {
-        return { error: "Erro ao atualizar projeto: " + error.message }
+        return { error: "Erro ao atualizar materia: " + error.message }
+    }
+
+    // Atualizar autores (deletar antigos e inserir novos)
+    await adminClient.from("projeto_autores").delete().eq("projeto_id", id)
+    
+    const authorsToInsert = autores.map(vereador_id => ({
+        projeto_id: id,
+        vereador_id
+    }))
+
+    const { error: authorsError } = await adminClient.from("projeto_autores").insert(authorsToInsert)
+    if (authorsError) {
+        console.error("Erro ao atualizar autores:", authorsError)
     }
 
     // Processar embeddings se a URL mudou ou for a primeira vez
@@ -224,24 +251,26 @@ export async function deleteProjeto(slug: string, id: string) {
     }
 
     if (pautaItems && pautaItems.length > 0) {
-        return { error: "Não é possível excluir um projeto que está vinculado a uma sessão (pauta)." }
+        return { error: "Não é possível excluir uma materia que está vinculada a uma sessão (pauta)." }
     }
 
-    // 1. Buscar o projeto para obter a URL do arquivo
+    // 1. Buscar a materia para obter a URL do arquivo
     const { data: projeto } = await supabase
         .from("projetos")
         .select("texto_url")
         .eq("id", id)
         .single()
 
-    // 2. Apagar do banco
+    // 2. Apagar do banco (projeto_autores será apagado via cascade se configurado, senão apagamos manualmente)
+    // Na migration eu usei on delete cascade, mas por segurança podemos apagar.
+    
     const { error } = await supabase
         .from("projetos")
         .delete()
         .eq("id", id)
 
     if (error) {
-        return { error: "Erro ao excluir projeto: " + error.message }
+        return { error: "Erro ao excluir materia: " + error.message }
     }
 
     // 3. Se houver arquivo no Storage, apagar

@@ -2,9 +2,8 @@
 
 import { useState, useTransition } from "react"
 import { useRouter } from "next/navigation"
-import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { Plus, Edit2, Trash2, Gavel, User } from "lucide-react"
+import { Edit2, Trash2, User } from "lucide-react"
 import { MesaDiretoraModal } from "./MesaDiretoraModal"
 import { ResourceList } from "../ResourceList"
 import { upsertMesaMember, removeMesaMember } from "@/app/admin/_actions/mesa_diretora"

@@ -52,7 +52,7 @@ export function Sidebar({ slug, userProfile }: SidebarProps) {
     //   active: pathname.startsWith(`/admin/${slug}/agenda`),
     // },
     {
-      label: "Projetos",
+      label: "Materias",
       icon: FileText,
       href: `/admin/${slug}/projetos`,
       active: pathname.startsWith(`/admin/${slug}/projetos`),
