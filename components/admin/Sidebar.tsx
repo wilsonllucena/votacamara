@@ -1,5 +1,6 @@
 "use client"
 
+import { useState, useEffect } from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { cn } from "@/lib/utils"
@@ -15,6 +16,7 @@ import {
   Calendar,
   Menu,
   ChevronLeft,
+  ChevronDown,
   Briefcase
 } from "lucide-react"
 import { signOutAction } from "@/app/(auth)/_actions"
@@ -31,8 +33,10 @@ interface SidebarProps {
 export function Sidebar({ slug, userProfile }: SidebarProps) {
   const pathname = usePathname()
   const { isCollapsed, toggleSidebar } = useSidebar()
+  const [expandedMenus, setExpandedMenus] = useState<string[]>([])
 
   const routes = [
+    // ... routes defined inside to access slug and pathname
     {
       label: "Visão Geral",
       icon: LayoutDashboard,
@@ -40,17 +44,23 @@ export function Sidebar({ slug, userProfile }: SidebarProps) {
       active: pathname === `/admin/${slug}/dashboard`,
     },
     {
-      label: "Sessões",
+      label: "Sessões Plenárias",
       icon: Gavel,
-      href: `/admin/${slug}/sessoes`,
+      href: '',
       active: pathname.startsWith(`/admin/${slug}/sessoes`),
+      subItems: [
+        {
+            label: "Listar Sessões",
+            href: `/admin/${slug}/sessoes`,
+            active: pathname === `/admin/${slug}/sessoes`,
+        },
+        {
+            label: "Atas",
+            href: `/admin/${slug}/sessoes/atas`,
+            active: pathname === `/admin/${slug}/sessoes/atas`,
+        }
+      ]
     },
-    // {
-    //   label: "Agenda",
-    //   icon: Calendar,
-    //   href: `/admin/${slug}/agenda`,
-    //   active: pathname.startsWith(`/admin/${slug}/agenda`),
-    // },
     {
       label: "Materias",
       icon: FileText,
@@ -89,6 +99,27 @@ export function Sidebar({ slug, userProfile }: SidebarProps) {
     },
   ]
 
+  // Initialize expanded menus with active parent routes
+  useEffect(() => {
+    const activeParents = routes
+      .filter(r => r.active && r.subItems)
+      .map(r => r.href)
+    
+    setExpandedMenus((prev: string[]) => {
+        const newExpanded = [...prev]
+        activeParents.forEach(p => {
+            if (!newExpanded.includes(p)) newExpanded.push(p)
+        })
+        return newExpanded
+    })
+  }, [pathname])
+
+  const toggleMenu = (href: string) => {
+    setExpandedMenus((prev: string[]) => 
+      prev.includes(href) ? prev.filter(h => h !== href) : [...prev, href]
+    )
+  }
+
   const getInitials = (name: string) => {
       return name
           .split(' ')
@@ -99,7 +130,7 @@ export function Sidebar({ slug, userProfile }: SidebarProps) {
   }
 
   return (
-    <div className="flex flex-col h-full bg-card text-muted-foreground">
+    <div className="flex flex-col h-full bg-card text-muted-foreground border-r border-border/50">
       {/* Brand / Switcher Area */}
       <div className={cn("p-4", isCollapsed && "p-2 shrink-0")}>
         <div className={cn(
@@ -127,24 +158,72 @@ export function Sidebar({ slug, userProfile }: SidebarProps) {
       </div>
 
       {/* Navigation */}
-      <div className="flex-1 px-2 py-2 space-y-0.5">
-        {routes.map((route) => (
-          <Link
-            key={route.href}
-            href={route.href}
-            title={isCollapsed ? route.label : undefined}
-            className={cn(
-              "flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-md transition-colors",
-              route.active 
-                ? "text-foreground bg-accent" 
-                : "text-muted-foreground hover:text-foreground hover:bg-accent/50",
-              isCollapsed && "justify-center px-0 py-2 h-10 w-10 mx-auto gap-0"
-            )}
-          >
-            <route.icon className={cn("w-4 h-4", !isCollapsed && "shrink-0")} />
-            {!isCollapsed && <span className="truncate">{route.label}</span>}
-          </Link>
-        ))}
+      <div className="flex-1 px-2 py-2 space-y-1 overflow-y-auto">
+        {routes.map((route) => {
+          const isExpanded = expandedMenus.includes(route.href)
+          
+          return (
+            <div key={route.href} className="space-y-1">
+                {route.subItems ? (
+                  <div
+                    onClick={() => !isCollapsed && toggleMenu(route.href)}
+                    className={cn(
+                      "flex items-center justify-between px-3 py-2 text-sm font-medium rounded-md transition-colors cursor-pointer",
+                      route.active 
+                        ? "text-foreground bg-accent" 
+                        : "text-muted-foreground hover:text-foreground hover:bg-accent/50",
+                      isCollapsed && "justify-center px-0 py-2 h-10 w-10 mx-auto gap-0"
+                    )}
+                  >
+                    <div className={cn("flex items-center gap-3", isCollapsed && "justify-center")}>
+                        <route.icon className={cn("w-4 h-4", !isCollapsed && "shrink-0")} />
+                        {!isCollapsed && <span className="truncate">{route.label}</span>}
+                    </div>
+                    {!isCollapsed && (
+                        <ChevronDown className={cn(
+                            "w-3.5 h-3.5 transition-transform duration-300",
+                            isExpanded ? "rotate-0 text-foreground" : "-rotate-90 text-muted-foreground"
+                        )} />
+                    )}
+                  </div>
+                ) : (
+                  <Link
+                    href={route.href}
+                    title={isCollapsed ? route.label : undefined}
+                    className={cn(
+                      "flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-md transition-colors",
+                      route.active 
+                        ? "text-foreground bg-accent" 
+                        : "text-muted-foreground hover:text-foreground hover:bg-accent/50",
+                      isCollapsed && "justify-center px-0 py-2 h-10 w-10 mx-auto gap-0"
+                    )}
+                  >
+                    <route.icon className={cn("w-4 h-4", !isCollapsed && "shrink-0")} />
+                    {!isCollapsed && <span className="truncate">{route.label}</span>}
+                  </Link>
+                )}
+                
+                {!isCollapsed && route.subItems && isExpanded && (
+                    <div className="ml-7 flex flex-col gap-1 border-l border-border pl-3 pb-1 pt-1 animate-in fade-in slide-in-from-top-1 duration-300">
+                        {route.subItems.map((subItem) => (
+                            <Link
+                                key={subItem.href}
+                                href={subItem.href}
+                                className={cn(
+                                    "text-xs py-1.5 px-2 rounded-md transition-colors",
+                                    subItem.active
+                                        ? "text-foreground bg-accent/40 font-semibold"
+                                        : "text-muted-foreground hover:text-foreground hover:bg-accent/20"
+                                )}
+                            >
+                                {subItem.label}
+                            </Link>
+                        ))}
+                    </div>
+                )}
+            </div>
+          )
+        })}
       </div>
 
       {/* User Profile */}
