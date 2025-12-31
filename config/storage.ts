@@ -1,5 +1,6 @@
 export const STORAGE_BUCKETS = {
-  PROJETOS: "projetos",
+  PROJETOS: "projetos", // Deprecated
+  CAMARA: "camara",
 } as const;
 
 export const STORAGE_CONFIG = {

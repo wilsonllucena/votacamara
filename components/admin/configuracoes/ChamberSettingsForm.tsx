@@ -62,18 +62,23 @@ export function ChamberSettingsForm({ defaultValues, onSubmit, isPending, userRo
 
     setIsUploading(true)
     try {
+      // Extract slug from path if not available via props
+      const pathname = typeof window !== 'undefined' ? window.location.pathname : '';
+      const pathParts = pathname.split('/');
+      const slug = pathParts[2] || 'default'; // admin/[slug]/configuracoes
+
       const fileExt = file.name.split('.').pop()
       const fileName = `logo-${Math.random().toString(36).substring(2)}.${fileExt}`
-      const filePath = `${fileName}`
+      const filePath = `${slug}/logos/${fileName}`
 
       const { error: uploadError } = await supabase.storage
-        .from('logos')
+        .from('camara')
         .upload(filePath, file)
 
       if (uploadError) throw uploadError
 
       const { data: { publicUrl } } = supabase.storage
-        .from('logos')
+        .from('camara')
         .getPublicUrl(filePath)
 
       setValue("logo_url", publicUrl, { shouldValidate: true })

@@ -63,14 +63,21 @@ export function ProjetoForm({ defaultValues, onSubmit, onCancel, isPending, vere
 
     setIsUploading(true)
     try {
+      const pathname = typeof window !== 'undefined' ? window.location.pathname : '';
+      const pathParts = pathname.split('/');
+      const slug = pathParts[2] || 'default';
+
       const currentUrl = watch("texto_url")
-      if (currentUrl && currentUrl.includes(STORAGE_BUCKETS.PROJETOS)) {
+      if (currentUrl && currentUrl.includes('camara')) {
         try {
-          const oldFileName = currentUrl.split('/').pop()
-          if (oldFileName) {
+          // Extract the full path inside the bucket
+          // e.g. https://.../camara/slug/projetos/filename.pdf
+          const urlParts = currentUrl.split('/camara/')
+          const fullPath = urlParts[1]
+          if (fullPath) {
             await supabase.storage
-              .from(STORAGE_BUCKETS.PROJETOS)
-              .remove([oldFileName])
+              .from('camara')
+              .remove([fullPath])
           }
         } catch (err) {
           console.error("Erro ao remover arquivo antigo:", err)
@@ -79,16 +86,16 @@ export function ProjetoForm({ defaultValues, onSubmit, onCancel, isPending, vere
 
       const fileExt = file.name.split('.').pop()
       const fileName = `${Math.random().toString(36).substring(2)}.${fileExt}`
-      const filePath = `${fileName}`
+      const filePath = `${slug}/projetos/${fileName}`
 
       const { error: uploadError } = await supabase.storage
-        .from(STORAGE_BUCKETS.PROJETOS)
+        .from('camara')
         .upload(filePath, file)
 
       if (uploadError) throw uploadError
 
       const { data: { publicUrl } } = supabase.storage
-        .from(STORAGE_BUCKETS.PROJETOS)
+        .from('camara')
         .getPublicUrl(filePath)
 
       setValue("texto_url", publicUrl)

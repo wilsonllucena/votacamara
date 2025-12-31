@@ -39,12 +39,15 @@ export async function summarizeProject(fileUrl: string, projetoId?: string) {
         let buffer: ArrayBuffer
         
         // Tenta baixar via cliente Supabase primeiro (mais confiável em Server Actions)
-        const fileName = fileUrl.split('/').pop()
-        console.log(`Iniciando processamento IA para arquivo: ${fileName} (URL: ${fileUrl})`)
+        // A URL agora é no formato .../camara/slug/projetos/filename.pdf
+        const urlParts = fileUrl.split('/camara/')
+        const fullPath = urlParts[1]
         
-        const { data: fileBlob, error: downloadError } = fileName 
-            ? await supabase.storage.from('projetos').download(fileName)
-            : { data: null, error: new Error("Nome de arquivo não encontrado na URL") }
+        console.log(`Iniciando processamento IA para arquivo: ${fullPath} (URL: ${fileUrl})`)
+        
+        const { data: fileBlob, error: downloadError } = fullPath 
+            ? await supabase.storage.from('camara').download(fullPath)
+            : { data: null, error: new Error("Caminho do arquivo não encontrado na URL") }
 
         if (downloadError || !fileBlob) {
             const errorMsg = downloadError ? (downloadError as any).message || JSON.stringify(downloadError) : "Arquivo não encontrado";
@@ -52,7 +55,7 @@ export async function summarizeProject(fileUrl: string, projetoId?: string) {
             
             const response = await fetch(fileUrl)
             if (!response.ok) {
-                throw new Error(`Erro ao baixar arquivo (${response.status}): ${errorMsg}. Verifique as permissões do bucket 'projetos'.`)
+                throw new Error(`Erro ao baixar arquivo (${response.status}): ${errorMsg}. Verifique as permissões do bucket 'camara'.`)
             }
             buffer = await response.arrayBuffer()
         } else {
@@ -274,12 +277,13 @@ export async function deleteProjeto(slug: string, id: string) {
     }
 
     // 3. Se houver arquivo no Storage, apagar
-    if (projeto?.texto_url && projeto.texto_url.includes('projetos')) {
-        const fileName = projeto.texto_url.split('/').pop()
-        if (fileName) {
+    if (projeto?.texto_url && projeto.texto_url.includes('camara')) {
+        const urlParts = projeto.texto_url.split('/camara/')
+        const fullPath = urlParts[1]
+        if (fullPath) {
             await supabase.storage
-                .from('projetos')
-                .remove([fileName])
+                .from('camara')
+                .remove([fullPath])
         }
     }
 
