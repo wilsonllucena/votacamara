@@ -9,6 +9,7 @@ import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { z } from "zod"
 import { maskCnpj, maskTelefone } from "@/lib/utils"
+import { StateSelect } from "@/components/ui/state-select"
 
 const registerSchema = z.object({
   camara_nome: z.string().min(3, "Mínimo 3 caracteres"),
@@ -138,13 +139,10 @@ export function RegisterForm() {
                 </div>
                 <div className="col-span-1 space-y-2">
                     <label className="text-sm font-medium text-slate-300" htmlFor="uf">UF</label>
-                    <input 
+                    <StateSelect 
                         {...register("uf")}
                         id="uf"
-                        type="text" 
-                        maxLength={2}
-                        className={`w-full bg-slate-900/50 border ${errors.uf ? 'border-red-500' : 'border-slate-700'} rounded-lg px-4 py-2.5 text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all sm:text-sm uppercase text-center`}
-                        placeholder="GO"
+                        className={`bg-slate-900/50 border ${errors.uf ? 'border-red-500' : 'border-slate-700'} text-white focus:ring-blue-500/50`}
                     />
                     {errors.uf && <p className="text-xs text-red-500 mt-1">{errors.uf.message}</p>}
                 </div>

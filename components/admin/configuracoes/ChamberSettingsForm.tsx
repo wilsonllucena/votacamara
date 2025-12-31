@@ -8,12 +8,16 @@ import { Button } from "@/components/ui/button"
 import { Loader2, Upload, Trash2, Building2 } from "lucide-react"
 import { createClient } from "@/utils/supabase/client"
 import { cn, maskCnpj, maskTelefone } from "@/lib/utils"
+import { StateSelect } from "@/components/ui/state-select"
 
 const chamberSchema = z.object({
   nome: z.string().min(3, "Mínimo 3 caracteres"),
   telefone: z.string().optional().or(z.literal("")),
   cnpj: z.string().optional().or(z.literal("")),
   logo_url: z.string().url("URL inválida").optional().or(z.literal("")),
+  endereco: z.string().optional().or(z.literal("")),
+  cidade: z.string().optional().or(z.literal("")),
+  uf: z.string().optional().or(z.literal("")),
 })
 
 type ChamberInputs = z.infer<typeof chamberSchema>
@@ -22,9 +26,10 @@ interface ChamberSettingsFormProps {
   defaultValues?: Partial<ChamberInputs>
   onSubmit: (data: ChamberInputs) => void
   isPending?: boolean
+  userRole: string
 }
 
-export function ChamberSettingsForm({ defaultValues, onSubmit, isPending }: ChamberSettingsFormProps) {
+export function ChamberSettingsForm({ defaultValues, onSubmit, isPending, userRole }: ChamberSettingsFormProps) {
   const [cnpjDisplay, setCnpjDisplay] = useState(maskCnpj(defaultValues?.cnpj || ""))
   const [telefoneDisplay, setTelefoneDisplay] = useState(maskTelefone(defaultValues?.telefone || ""))
 
@@ -41,6 +46,9 @@ export function ChamberSettingsForm({ defaultValues, onSubmit, isPending }: Cham
       telefone: maskTelefone(defaultValues?.telefone || ""),
       cnpj: maskCnpj(defaultValues?.cnpj || ""),
       logo_url: defaultValues?.logo_url || "",
+      endereco: defaultValues?.endereco || "",
+      cidade: defaultValues?.cidade || "",
+      uf: defaultValues?.uf || "",
     }
   })
 
@@ -173,9 +181,43 @@ export function ChamberSettingsForm({ defaultValues, onSubmit, isPending }: Cham
               placeholder="(00) 0000-0000"
             />
         </div>
+
+        {userRole === 'ADMIN' && (
+          <>
+            <div className="space-y-2 md:col-span-2">
+                <label className="text-sm font-medium text-muted-foreground" htmlFor="endereco">Endereço Completo</label>
+                <input 
+                  {...register("endereco")}
+                  id="endereco"
+                  type="text" 
+                  className="w-full bg-background border border-border rounded-lg px-4 py-2 text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all"
+                  placeholder="Rua, número, bairro..."
+                />
+            </div>
+
+            <div className="space-y-2">
+                <label className="text-sm font-medium text-muted-foreground" htmlFor="cidade">Cidade</label>
+                <input 
+                  {...register("cidade")}
+                  id="cidade"
+                  type="text" 
+                  className="w-full bg-background border border-border rounded-lg px-4 py-2 text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all"
+                  placeholder="Ex: São Paulo"
+                />
+            </div>
+
+            <div className="space-y-2">
+                <label className="text-sm font-medium text-muted-foreground" htmlFor="uf">UF</label>
+                <StateSelect 
+                  {...register("uf")}
+                  id="uf"
+                />
+            </div>
+          </>
+        )}
       </div>
 
-      <div className="flex justify-start">
+      <div className="flex justify-start pt-4">
         <Button 
           type="submit" 
           disabled={isPending}

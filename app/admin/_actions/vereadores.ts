@@ -26,17 +26,22 @@ export async function createVereador(slug: string, prevState: any, formData: For
   const foto_url = formData.get("foto_url") as string
   const data_inicio = formData.get("data_inicio") as string
   const data_fim = formData.get("data_fim") as string
+  const isExecutivo = formData.get("isExecutivo") === "on" || formData.get("isExecutivo") === "true"
 
 
   // Simple validation
   if (!councilorActionSchema.nome(nome)) return { error: "Nome inválido" }
-  if (!councilorActionSchema.partido(partido)) return { error: "Partido inválido" }
-  if (!councilorActionSchema.cpf(cpf)) return { error: "CPF inválido" }
-  if (!councilorActionSchema.email(email)) return { error: "Email inválido" }
-  if (!councilorActionSchema.telefone(telefone)) return { error: "Telefone inválido" }
+  
+  // Conditionally validate user fields if NOT executivo
+  if (!isExecutivo) {
+    if (!councilorActionSchema.partido(partido)) return { error: "Partido inválido" }
+    if (!councilorActionSchema.cpf(cpf)) return { error: "CPF inválido" }
+    if (!councilorActionSchema.email(email)) return { error: "Email inválido" }
+    if (!councilorActionSchema.telefone(telefone)) return { error: "Telefone inválido" }
+  }
 
-  const cleanCpf = cpf.replace(/\D/g, '')
-  const password = cleanCpf.substring(0, 6)
+  const cleanCpf = cpf?.replace(/\D/g, '') || null
+  const password = cleanCpf?.substring(0, 6)
 
   // 1. Get Tenant
   const { data: camara, error: camaraError } = await supabase
@@ -63,43 +68,50 @@ export async function createVereador(slug: string, prevState: any, formData: For
     }
   }
 
-  // 2. Create Auth User
-  const { data: authUser, error: authError } = await adminClient.auth.admin.createUser({
-    email,
-    password,
-    email_confirm: true,
-    user_metadata: { nome }
-  })
+  // 2. Create Auth User & Profile (ONLY if NOT Executivo)
+  let authUserId = null;
 
-  if (authError) {
-    return { error: "Erro ao criar usuário: " + authError.message }
-  }
+  if (!isExecutivo) {
+    const { data: authUser, error: authError } = await adminClient.auth.admin.createUser({
+      email,
+      password: password!,
+      email_confirm: true,
+      user_metadata: { nome }
+    })
 
-  // 3. Create Profile
-  const { error: profileError } = await adminClient.from("profiles").insert({
-    user_id: authUser.user.id,
-    camara_id: camara.id,
-    nome,
-    role: isPresidente ? 'PRESIDENTE' : 'VEREADOR',
-    email,
-    telefone
-  })
+    if (authError) {
+      return { error: "Erro ao criar usuário: " + authError.message }
+    }
 
-  if (profileError) {
-    // Cleanup auth user if profile fails
-    await adminClient.auth.admin.deleteUser(authUser.user.id)
-    return { error: "Erro ao criar perfil: " + profileError.message }
+    authUserId = authUser.user.id;
+
+    // 3. Create Profile
+    const { error: profileError } = await adminClient.from("profiles").insert({
+      user_id: authUserId,
+      camara_id: camara.id,
+      nome,
+      role: isPresidente ? 'PRESIDENTE' : 'VEREADOR',
+      email,
+      telefone
+    })
+
+    if (profileError) {
+      // Cleanup auth user if profile fails
+      await adminClient.auth.admin.deleteUser(authUserId)
+      return { error: "Erro ao criar perfil: " + profileError.message }
+    }
   }
 
   // 4. Create Councilor
   const { error: councilorError } = await adminClient.from("vereadores").insert({
     camara_id: camara.id,
-    user_id: authUser.user.id,
+    user_id: authUserId,
     nome,
-    partido,
+    partido: partido || "EXECUTIVO",
     cpf: cleanCpf,
     ativo,
     is_presidente: isPresidente,
+    is_executivo: isExecutivo,
     foto_url: foto_url || null,
     data_inicio: data_inicio || null,
     data_fim: data_fim || null,
@@ -107,7 +119,9 @@ export async function createVereador(slug: string, prevState: any, formData: For
 
   if (councilorError) {
     // Cleanup
-    await adminClient.auth.admin.deleteUser(authUser.user.id)
+    if (authUserId) {
+        await adminClient.auth.admin.deleteUser(authUserId)
+    }
     return { error: "Erro ao criar vereador: " + councilorError.message }
   }
 
@@ -155,10 +169,11 @@ export async function updateVereador(slug: string, id: string, data: any) {
     .from("vereadores")
     .update({
       nome: data.nome,
-      partido: data.partido,
-      cpf: data.cpf.replace(/\D/g, ''),
+      partido: data.partido || (data.isExecutivo ? "EXECUTIVO" : null),
+      cpf: data.cpf ? data.cpf.replace(/\D/g, '') : null,
       ativo: data.ativo,
       is_presidente: data.isPresidente,
+      is_executivo: data.isExecutivo,
       foto_url: data.foto_url || null,
       data_inicio: data.data_inicio || null,
       data_fim: data.data_fim || null,

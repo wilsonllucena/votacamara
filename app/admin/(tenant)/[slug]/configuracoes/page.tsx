@@ -5,9 +5,16 @@ export default async function SettingsPage({ params }: { params: Promise<{ slug:
   const { slug } = await params
   const supabase = await createClient()
 
+  const { data: { user } } = await supabase.auth.getUser()
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("role")
+    .eq("user_id", user?.id)
+    .single()
+
   const { data: camara } = await supabase
     .from("camaras")
-    .select("nome, telefone, cnpj, logo_url")
+    .select("nome, telefone, cnpj, logo_url, endereco, cidade, uf")
     .eq("slug", slug)
     .single()
 
@@ -17,7 +24,7 @@ export default async function SettingsPage({ params }: { params: Promise<{ slug:
 
   return (
     <div className="py-6 px-4 md:px-8">
-      <SettingsClient slug={slug} camara={camara} />
+      <SettingsClient slug={slug} camara={camara} userRole={profile?.role || 'USER'} />
     </div>
   )
 }

@@ -10,6 +10,9 @@ const camaraSettingsSchema = z.object({
   telefone: z.string().optional().or(z.literal("")),
   cnpj: z.string().optional().or(z.literal("")),
   logo_url: z.string().url("URL inválida").optional().or(z.literal("")),
+  endereco: z.string().optional().or(z.literal("")),
+  cidade: z.string().optional().or(z.literal("")),
+  uf: z.string().optional().or(z.literal("")),
 })
 
 export async function updateCamaraSettings(slug: string, data: any) {
@@ -29,6 +32,9 @@ export async function updateCamaraSettings(slug: string, data: any) {
       telefone: validated.data.telefone,
       cnpj: validated.data.cnpj?.replace(/\D/g, ''),
       logo_url: validated.data.logo_url || null,
+      endereco: validated.data.endereco || null,
+      cidade: validated.data.cidade || null,
+      uf: validated.data.uf || null,
     })
     .eq("slug", slug)
 

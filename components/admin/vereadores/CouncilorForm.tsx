@@ -11,15 +11,31 @@ import { cn, maskCpf, maskTelefone } from "@/lib/utils"
 
 const councilorSchema = z.object({
   nome: z.string().min(3, "Mínimo 3 caracteres"),
-  partido: z.string().min(1, "Partido é obrigatório"),
-  cpf: z.string().min(1, "CPF é obrigatório").transform(v => v.replace(/\D/g, "")).pipe(z.string().length(11, "CPF deve ter 11 dígitos")),
-  email: z.string().min(1, "Email é obrigatório").email("Email inválido"),
-  telefone: z.string().min(1, "Telefone é obrigatório").transform(v => v.replace(/\D/g, "")).pipe(z.string().min(10, "Mínimo 10 dígitos").max(11, "Máximo 11 dígitos")),
+  partido: z.string().optional().or(z.literal("")),
+  cpf: z.string().optional().or(z.literal("")),
+  email: z.string().optional().or(z.literal("")),
+  telefone: z.string().optional().or(z.literal("")),
   ativo: z.boolean(),
   isPresidente: z.boolean(),
+  isExecutivo: z.boolean(),
   foto_url: z.string().url("URL inválida").optional().or(z.literal("")),
   data_inicio: z.string().optional().or(z.literal("")),
   data_fim: z.string().optional().or(z.literal("")),
+}).superRefine((data, ctx) => {
+  if (!data.isExecutivo) {
+    if (!data.partido) {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Partido é obrigatório", path: ["partido"] });
+    }
+    if (!data.cpf || data.cpf.replace(/\D/g, "").length !== 11) {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, message: "CPF inválido", path: ["cpf"] });
+    }
+    if (!data.email) {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Email é obrigatório", path: ["email"] });
+    }
+    if (!data.telefone || data.telefone.replace(/\D/g, "").length < 10) {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Telefone inválido", path: ["telefone"] });
+    }
+  }
 })
 
 export type CouncilorInputs = z.infer<typeof councilorSchema>
@@ -48,6 +64,7 @@ export function CouncilorForm({ defaultValues, onSubmit, onCancel, isPending }: 
       telefone: maskTelefone(defaultValues?.telefone || ""),
       ativo: defaultValues?.ativo ?? true,
       isPresidente: defaultValues?.isPresidente ?? false,
+      isExecutivo: defaultValues?.isExecutivo ?? false,
       foto_url: defaultValues?.foto_url || "",
       data_inicio: defaultValues?.data_inicio || "",
       data_fim: defaultValues?.data_fim || "",
@@ -160,6 +177,18 @@ export function CouncilorForm({ defaultValues, onSubmit, onCancel, isPending }: 
         <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider">Recomendado: 400x400px (JPG/PNG)</p>
       </div>
 
+      <div className="flex items-center space-x-2 p-3 bg-primary/5 border border-primary/10 rounded-lg">
+        <input
+          {...register("isExecutivo")}
+          id="isExecutivo"
+          type="checkbox"
+          className="h-4 w-4 rounded border-border bg-background text-primary focus:ring-primary/50"
+        />
+        <label htmlFor="isExecutivo" className="text-sm font-semibold text-primary cursor-pointer">
+          Chefe do Executivo (Prefeito/Vice)
+        </label>
+      </div>
+
       <div className="space-y-2">
         <label className="text-sm font-medium text-muted-foreground" htmlFor="nome">Nome Completo</label>
         <input 
@@ -172,72 +201,76 @@ export function CouncilorForm({ defaultValues, onSubmit, onCancel, isPending }: 
         {errors.nome && <p className="text-xs text-red-500 mt-1">{errors.nome.message}</p>}
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div className="space-y-2">
-          <label className="text-sm font-medium text-muted-foreground" htmlFor="partido">Partido</label>
-          <div className="relative">
-            <input 
-              {...register("partido")}
-              id="partido"
-              type="text" 
-              className={`w-full bg-background border ${errors.partido ? 'border-red-500' : 'border-border'} rounded-lg px-4 py-2 pr-12 text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all`}
-              placeholder="Ex: PSD"
-            />
-            {currentPartyLogo && (
-              <div className="absolute right-2 top-1/2 -translate-y-1/2 h-8 w-8 rounded bg-muted flex items-center justify-center p-1 border border-border">
-                <img src={currentPartyLogo} alt="Logo Partido" className="h-full w-full object-contain" />
+      {!watch("isExecutivo") && (
+        <>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-muted-foreground" htmlFor="partido">Partido</label>
+              <div className="relative">
+                <input 
+                  {...register("partido")}
+                  id="partido"
+                  type="text" 
+                  className={`w-full bg-background border ${errors.partido ? 'border-red-500' : 'border-border'} rounded-lg px-4 py-2 pr-12 text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all`}
+                  placeholder="Ex: PSD"
+                />
+                {currentPartyLogo && (
+                  <div className="absolute right-2 top-1/2 -translate-y-1/2 h-8 w-8 rounded bg-muted flex items-center justify-center p-1 border border-border">
+                    <img src={currentPartyLogo} alt="Logo Partido" className="h-full w-full object-contain" />
+                  </div>
+                )}
               </div>
-            )}
+              {errors.partido && <p className="text-xs text-red-500 mt-1">{errors.partido.message}</p>}
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-muted-foreground" htmlFor="cpf">CPF</label>
+              <input 
+                id="cpf"
+                type="text" 
+                value={cpfDisplay}
+                onChange={(e) => {
+                  const masked = maskCpf(e.target.value)
+                  setCpfDisplay(masked)
+                  setValue("cpf", masked, { shouldValidate: true })
+                }}
+                className={`w-full bg-background border ${errors.cpf ? 'border-red-500' : 'border-border'} rounded-lg px-4 py-2 text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all`}
+                placeholder="000.000.000-00"
+              />
+              {errors.cpf && <p className="text-xs text-red-500 mt-1">{errors.cpf.message}</p>}
+            </div>
           </div>
-          {errors.partido && <p className="text-xs text-red-500 mt-1">{errors.partido.message}</p>}
-        </div>
 
-        <div className="space-y-2">
-          <label className="text-sm font-medium text-muted-foreground" htmlFor="cpf">CPF</label>
-          <input 
-            id="cpf"
-            type="text" 
-            value={cpfDisplay}
-            onChange={(e) => {
-              const masked = maskCpf(e.target.value)
-              setCpfDisplay(masked)
-              setValue("cpf", masked, { shouldValidate: true })
-            }}
-            className={`w-full bg-background border ${errors.cpf ? 'border-red-500' : 'border-border'} rounded-lg px-4 py-2 text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all`}
-            placeholder="000.000.000-00"
-          />
-          {errors.cpf && <p className="text-xs text-red-500 mt-1">{errors.cpf.message}</p>}
-        </div>
-      </div>
+          <div className="space-y-2">
+            <label className="text-sm font-medium text-muted-foreground" htmlFor="email">Email</label>
+            <input 
+              {...register("email")}
+              id="email"
+              type="email" 
+              className={`w-full bg-background border ${errors.email ? 'border-red-500' : 'border-border'} rounded-lg px-4 py-2 text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all`}
+              placeholder="joao@camara.leg.br"
+            />
+            {errors.email && <p className="text-xs text-red-500 mt-1">{errors.email.message}</p>}
+          </div>
 
-      <div className="space-y-2">
-        <label className="text-sm font-medium text-muted-foreground" htmlFor="email">Email</label>
-        <input 
-          {...register("email")}
-          id="email"
-          type="email" 
-          className={`w-full bg-background border ${errors.email ? 'border-red-500' : 'border-border'} rounded-lg px-4 py-2 text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all`}
-          placeholder="joao@camara.leg.br"
-        />
-        {errors.email && <p className="text-xs text-red-500 mt-1">{errors.email.message}</p>}
-      </div>
-
-      <div className="space-y-2">
-        <label className="text-sm font-medium text-muted-foreground" htmlFor="telefone">Telefone</label>
-        <input 
-          id="telefone"
-          type="text" 
-          value={telefoneDisplay}
-          onChange={(e) => {
-            const masked = maskTelefone(e.target.value)
-            setTelefoneDisplay(masked)
-            setValue("telefone", masked, { shouldValidate: true })
-          }}
-          className={`w-full bg-background border ${errors.telefone ? 'border-red-500' : 'border-border'} rounded-lg px-4 py-2 text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all`}
-          placeholder="(00) 00000-0000"
-        />
-        {errors.telefone && <p className="text-xs text-red-500 mt-1">{errors.telefone.message}</p>}
-      </div>
+          <div className="space-y-2">
+            <label className="text-sm font-medium text-muted-foreground" htmlFor="telefone">Telefone</label>
+            <input 
+              id="telefone"
+              type="text" 
+              value={telefoneDisplay}
+              onChange={(e) => {
+                const masked = maskTelefone(e.target.value)
+                setTelefoneDisplay(masked)
+                setValue("telefone", masked, { shouldValidate: true })
+              }}
+              className={`w-full bg-background border ${errors.telefone ? 'border-red-500' : 'border-border'} rounded-lg px-4 py-2 text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all`}
+              placeholder="(00) 00000-0000"
+            />
+            {errors.telefone && <p className="text-xs text-red-500 mt-1">{errors.telefone.message}</p>}
+          </div>
+        </>
+      )}
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="space-y-2">

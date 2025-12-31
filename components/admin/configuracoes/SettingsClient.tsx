@@ -14,10 +14,14 @@ interface SettingsClientProps {
     telefone: string | null
     cnpj: string | null
     logo_url: string | null
+    endereco: string | null
+    cidade: string | null
+    uf: string | null
   }
+  userRole: string
 }
 
-export function SettingsClient({ slug, camara }: SettingsClientProps) {
+export function SettingsClient({ slug, camara, userRole }: SettingsClientProps) {
   const [activeTab, setActiveTab] = useState<"geral" | "seguranca">("geral")
   const [isPending, startTransition] = useTransition()
   const [message, setMessage] = useState<{ type: "success" | "error", text: string } | null>(null)
@@ -47,13 +51,13 @@ export function SettingsClient({ slug, camara }: SettingsClientProps) {
   }
 
   return (
-    <div className="max-w-4xl space-y-6">
-      <div className="flex flex-col gap-1">
-        <h1 className="text-3xl font-bold text-foreground">Configurações</h1>
-        <p className="text-muted-foreground">Gerencie as preferências da Câmara e segurança da sua conta.</p>
+    <div className="max-w-4xl mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+      <div className="flex flex-col gap-2 text-left">
+        <h1 className="text-3xl font-extrabold text-foreground tracking-tight">Configurações</h1>
+        <p className="text-muted-foreground text-sm">Gerencie as preferências da Câmara e segurança da sua conta.</p>
       </div>
 
-      <div className="flex border-b border-border">
+      <div className="flex justify-start border-b border-border">
         <button
           onClick={() => { setActiveTab("geral"); setMessage(null); }}
           className={cn(
@@ -94,11 +98,15 @@ export function SettingsClient({ slug, camara }: SettingsClientProps) {
         {activeTab === "geral" ? (
           <div className="space-y-6 animate-in fade-in duration-300">
             <ChamberSettingsForm 
+              userRole={userRole}
               defaultValues={{
                 nome: camara.nome,
                 telefone: camara.telefone || "",
                 cnpj: camara.cnpj || "",
                 logo_url: camara.logo_url || "",
+                endereco: camara.endereco || "",
+                cidade: camara.cidade || "",
+                uf: camara.uf || "",
               }}
               onSubmit={handleUpdateChamber}
               isPending={isPending}
@@ -107,6 +115,7 @@ export function SettingsClient({ slug, camara }: SettingsClientProps) {
         ) : (
           <div className="space-y-6 animate-in fade-in duration-300">
              <PasswordSettingsForm 
+                userRole={userRole}
                 onSubmit={handleUpdatePassword}
                 isPending={isPending}
              />
