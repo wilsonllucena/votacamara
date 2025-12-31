@@ -3,7 +3,7 @@
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { z } from "zod"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Loader2, Upload, Camera, X } from "lucide-react"
 import { createClient } from "@/utils/supabase/client"
@@ -57,7 +57,26 @@ export function CouncilorForm({ defaultValues, onSubmit, onCancel, isPending }: 
   const [cpfDisplay, setCpfDisplay] = useState(maskCpf(defaultValues?.cpf || ""))
   const [telefoneDisplay, setTelefoneDisplay] = useState(maskTelefone(defaultValues?.telefone || ""))
   const [isUploading, setIsUploading] = useState(false)
+  const [partyLogos, setPartyLogos] = useState<Record<string, string>>({})
   const supabase = createClient()
+
+  const partido = watch("partido")
+
+  useEffect(() => {
+    async function fetchParties() {
+      const { data } = await supabase.from('partidos').select('sigla, logo_url')
+      if (data) {
+        const mapping = data.reduce((acc: any, p: any) => {
+          if (p.logo_url) acc[p.sigla.toUpperCase()] = p.logo_url
+          return acc
+        }, {})
+        setPartyLogos(mapping)
+      }
+    }
+    fetchParties()
+  }, [])
+
+  const currentPartyLogo = partido ? partyLogos[partido.toUpperCase()] : null
 
   const fotoUrl = watch("foto_url")
 
@@ -156,13 +175,20 @@ export function CouncilorForm({ defaultValues, onSubmit, onCancel, isPending }: 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="space-y-2">
           <label className="text-sm font-medium text-muted-foreground" htmlFor="partido">Partido</label>
-          <input 
-            {...register("partido")}
-            id="partido"
-            type="text" 
-            className={`w-full bg-background border ${errors.partido ? 'border-red-500' : 'border-border'} rounded-lg px-4 py-2 text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all`}
-            placeholder="Ex: PSD"
-          />
+          <div className="relative">
+            <input 
+              {...register("partido")}
+              id="partido"
+              type="text" 
+              className={`w-full bg-background border ${errors.partido ? 'border-red-500' : 'border-border'} rounded-lg px-4 py-2 pr-12 text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all`}
+              placeholder="Ex: PSD"
+            />
+            {currentPartyLogo && (
+              <div className="absolute right-2 top-1/2 -translate-y-1/2 h-8 w-8 rounded bg-muted flex items-center justify-center p-1 border border-border">
+                <img src={currentPartyLogo} alt="Logo Partido" className="h-full w-full object-contain" />
+              </div>
+            )}
+          </div>
           {errors.partido && <p className="text-xs text-red-500 mt-1">{errors.partido.message}</p>}
         </div>
 

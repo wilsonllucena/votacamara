@@ -128,7 +128,8 @@ export function CouncilorsClient({ councilors, slug, pagination }: CouncilorsCli
               <thead className="text-xs text-muted-foreground uppercase bg-background border-b border-border">
                 <tr>
                   <th className="px-6 py-4">Parlamentar</th>
-                  <th className="px-6 py-4 hidden md:table-cell">Partido</th>
+                  <th className="px-6 py-4 hidden md:table-cell">Logo</th>
+                  <th className="px-6 py-4 hidden md:table-cell">Sigla</th>
                   <th className="px-6 py-4 hidden sm:table-cell">Status</th>
                   <th className="px-6 py-4 text-right">Ações</th>
                 </tr>
@@ -156,8 +157,21 @@ export function CouncilorsClient({ councilors, slug, pagination }: CouncilorsCli
                         </div>
                       </div>
                     </td>
+                    <td className="px-6 py-4 hidden md:table-cell">
+                      {vereador.partido_logo_url ? (
+                        <img 
+                          src={vereador.partido_logo_url} 
+                          alt={vereador.partido} 
+                          className="h-8 w-8 object-contain rounded p-1 bg-muted/50 border border-border"
+                        />
+                      ) : (
+                        <div className="h-8 w-8 rounded bg-muted/30 border border-border border-dashed flex items-center justify-center text-[10px] text-muted-foreground uppercase">
+                          -
+                        </div>
+                      )}
+                    </td>
                     <td className="px-6 py-4 text-muted-foreground hidden md:table-cell">
-                      <span className="px-2 py-1 rounded bg-muted border border-border text-xs font-bold">
+                      <span className="px-2 py-1 rounded bg-muted border border-border text-xs font-bold uppercase">
                         {vereador.partido}
                       </span>
                     </td>
