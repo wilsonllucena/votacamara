@@ -23,6 +23,7 @@ export async function createVereador(slug: string, prevState: any, formData: For
   const telefone = formData.get("telefone") as string
   const ativo = formData.get("ativo") === "on" || formData.get("ativo") === "true"
   const isPresidente = formData.get("isPresidente") === "on" || formData.get("isPresidente") === "true"
+  const foto_url = formData.get("foto_url") as string
 
 
   // Simple validation
@@ -97,6 +98,7 @@ export async function createVereador(slug: string, prevState: any, formData: For
     cpf: cleanCpf,
     ativo,
     is_presidente: isPresidente,
+    foto_url: foto_url || null,
   })
 
   if (councilorError) {
@@ -153,6 +155,7 @@ export async function updateVereador(slug: string, id: string, data: any) {
       cpf: data.cpf.replace(/\D/g, ''),
       ativo: data.ativo,
       is_presidente: data.isPresidente,
+      foto_url: data.foto_url || null,
     })
     .eq("id", id)
 

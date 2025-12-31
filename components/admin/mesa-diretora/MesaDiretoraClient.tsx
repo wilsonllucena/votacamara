@@ -114,8 +114,12 @@ export function MesaDiretoraClient({ members, cargos, vereadores, slug, camaraId
                   <tr key={member.id} className="hover:bg-muted/50 transition-colors">
                     <td className="px-6 py-4 font-medium text-foreground">
                       <div className="flex items-center gap-3">
-                        <div className="h-10 w-10 rounded-full bg-muted flex items-center justify-center font-bold text-xs text-primary">
-                          <User className="h-5 w-5" />
+                        <div className="h-10 w-10 rounded-full bg-muted flex items-center justify-center font-bold text-xs text-primary overflow-hidden border border-border">
+                          {member.vereadores?.foto_url ? (
+                            <img src={member.vereadores.foto_url} alt={member.vereadores.nome} className="h-full w-full object-cover" />
+                          ) : (
+                            <User className="h-5 w-5" />
+                          )}
                         </div>
                         <div className="flex flex-col">
                           <span>{member.vereadores?.nome}</span>

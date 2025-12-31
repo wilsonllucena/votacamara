@@ -5,7 +5,9 @@ import { zodResolver } from "@hookform/resolvers/zod"
 import { z } from "zod"
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
-import { Loader2 } from "lucide-react"
+import { Loader2, Upload, Camera, X } from "lucide-react"
+import { createClient } from "@/utils/supabase/client"
+import { cn } from "@/lib/utils"
 
 const councilorSchema = z.object({
   nome: z.string().min(3, "Mínimo 3 caracteres"),
@@ -15,6 +17,7 @@ const councilorSchema = z.object({
   telefone: z.string().min(1, "Telefone é obrigatório").transform(v => v.replace(/\D/g, "")).pipe(z.string().min(10, "Mínimo 10 dígitos").max(11, "Máximo 11 dígitos")),
   ativo: z.boolean(),
   isPresidente: z.boolean(),
+  foto_url: z.string().url("URL inválida").optional().or(z.literal("")),
 })
 
 export type CouncilorInputs = z.infer<typeof councilorSchema>
@@ -31,6 +34,7 @@ export function CouncilorForm({ defaultValues, onSubmit, onCancel, isPending }: 
     register,
     handleSubmit,
     setValue,
+    watch,
     formState: { errors },
   } = useForm<CouncilorInputs>({
     resolver: zodResolver(councilorSchema),
@@ -42,11 +46,16 @@ export function CouncilorForm({ defaultValues, onSubmit, onCancel, isPending }: 
       telefone: defaultValues?.telefone || "",
       ativo: defaultValues?.ativo ?? true,
       isPresidente: defaultValues?.isPresidente ?? false,
+      foto_url: defaultValues?.foto_url || "",
     }
   })
 
   const [cpfDisplay, setCpfDisplay] = useState(defaultValues?.cpf || "")
   const [telefoneDisplay, setTelefoneDisplay] = useState(defaultValues?.telefone || "")
+  const [isUploading, setIsUploading] = useState(false)
+  const supabase = createClient()
+
+  const fotoUrl = watch("foto_url")
 
   const maskCpf = (value: string) => {
     return value
@@ -72,12 +81,86 @@ export function CouncilorForm({ defaultValues, onSubmit, onCancel, isPending }: 
     }
   }
 
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    setIsUploading(true)
+    try {
+      const fileExt = file.name.split('.').pop()
+      const fileName = `${Math.random().toString(36).substring(2)}.${fileExt}`
+      const filePath = `${fileName}`
+
+      const { error: uploadError } = await supabase.storage
+        .from('vereadores')
+        .upload(filePath, file)
+
+      if (uploadError) throw uploadError
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('vereadores')
+        .getPublicUrl(filePath)
+
+      setValue("foto_url", publicUrl, { shouldValidate: true })
+    } catch (error: any) {
+      alert("Erro no upload: " + error.message)
+    } finally {
+      setIsUploading(false)
+    }
+  }
+
   const handleFormSubmit = async (data: CouncilorInputs) => {
     onSubmit(data)
   }
 
   return (
     <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-4">
+      <div className="flex flex-col items-center justify-center p-4 border-2 border-dashed border-border rounded-xl bg-muted/30 gap-3">
+        <div className="relative h-24 w-24 rounded-full border-2 border-primary/20 bg-muted overflow-hidden group">
+          {fotoUrl ? (
+            <>
+              <img src={fotoUrl} alt="Preview" className="h-full w-full object-cover" />
+              <button
+                type="button"
+                onClick={() => setValue("foto_url", "")}
+                className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+              >
+                <X className="h-6 w-6 text-white" />
+              </button>
+            </>
+          ) : (
+            <div className="h-full w-full flex items-center justify-center text-muted-foreground">
+              <Camera className="h-8 w-8" />
+            </div>
+          )}
+          {isUploading && (
+            <div className="absolute inset-0 bg-black/40 flex items-center justify-center z-10">
+              <Loader2 className="h-6 w-6 text-white animate-spin" />
+            </div>
+          )}
+        </div>
+        
+        <input 
+          type="file" 
+          id="photo-upload" 
+          className="hidden" 
+          accept="image/*"
+          onChange={handleFileUpload}
+          disabled={isUploading}
+        />
+        <label 
+          htmlFor="photo-upload"
+          className={cn(
+            "flex items-center gap-2 px-4 py-2 bg-background border border-border rounded-lg cursor-pointer hover:bg-muted transition-all text-sm font-medium",
+            isUploading && "opacity-50 cursor-not-allowed"
+          )}
+        >
+          <Upload className="h-4 w-4" />
+          {fotoUrl ? "Trocar Foto" : "Fazer Upload de Foto"}
+        </label>
+        <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider">Recomendado: 400x400px (JPG/PNG)</p>
+      </div>
+
       <div className="space-y-2">
         <label className="text-sm font-medium text-muted-foreground" htmlFor="nome">Nome Completo</label>
         <input 
