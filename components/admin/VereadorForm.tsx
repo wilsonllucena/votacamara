@@ -17,6 +17,8 @@ const formSchema = z.object({
   telefone: z.string().min(1, "Telefone é obrigatório").transform(v => v.replace(/\D/g, "")).pipe(z.string().min(10, "Mínimo 10 dígitos").max(11, "Máximo 11 dígitos")),
   status: z.enum(["Ativo", "Licenciado", "Inativo"]),
   isPresidente: z.boolean(),
+  data_inicio: z.string().optional().or(z.literal("")),
+  data_fim: z.string().optional().or(z.literal("")),
 })
 
 interface VereadorFormProps {
@@ -38,6 +40,8 @@ export function VereadorForm({ slug }: VereadorFormProps) {
       telefone: "",
       status: "Ativo",
       isPresidente: false,
+      data_inicio: "",
+      data_fim: "",
     },
   })
 
@@ -51,6 +55,8 @@ export function VereadorForm({ slug }: VereadorFormProps) {
         formData.append("telefone", values.telefone)
         formData.append("ativo", values.status === "Ativo" ? "true" : "false")
         formData.append("isPresidente", values.isPresidente ? "true" : "false")
+        formData.append("data_inicio", values.data_inicio || "")
+        formData.append("data_fim", values.data_fim || "")
         
         await createVereador(slug, null, formData)
     })
@@ -164,8 +170,27 @@ export function VereadorForm({ slug }: VereadorFormProps) {
                         />
                         <label htmlFor="isPresidente" className="group flex items-center gap-2 text-sm font-medium text-zinc-300 cursor-pointer">
                             Presidente da Câmara
-                            <span className="text-[10px] bg-blue-500/10 text-blue-500 px-1.5 py-0.5 rounded border border-blue-500/20 group-hover:bg-blue-500/20 transition-colors uppercase font-bold tracking-wider">Presidente</span>
                         </label>
+                    </div>
+
+                    {/* Datas do Mandato */}
+                    <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                            <label className="text-sm font-medium leading-none">Início do Mandato</label>
+                            <input
+                                {...form.register("data_inicio")}
+                                type="date"
+                                className="flex h-10 w-full rounded-md border border-zinc-800 bg-zinc-950 px-3 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-blue-500/50"
+                            />
+                        </div>
+                        <div className="space-y-2">
+                            <label className="text-sm font-medium leading-none">Fim do Mandato</label>
+                            <input
+                                {...form.register("data_fim")}
+                                type="date"
+                                className="flex h-10 w-full rounded-md border border-zinc-800 bg-zinc-950 px-3 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-blue-500/50"
+                            />
+                        </div>
                     </div>
 
                     {/* Foto Upload Mockup */}

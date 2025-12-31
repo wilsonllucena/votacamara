@@ -18,6 +18,8 @@ const councilorSchema = z.object({
   ativo: z.boolean(),
   isPresidente: z.boolean(),
   foto_url: z.string().url("URL inválida").optional().or(z.literal("")),
+  data_inicio: z.string().optional().or(z.literal("")),
+  data_fim: z.string().optional().or(z.literal("")),
 })
 
 export type CouncilorInputs = z.infer<typeof councilorSchema>
@@ -47,6 +49,8 @@ export function CouncilorForm({ defaultValues, onSubmit, onCancel, isPending }: 
       ativo: defaultValues?.ativo ?? true,
       isPresidente: defaultValues?.isPresidente ?? false,
       foto_url: defaultValues?.foto_url || "",
+      data_inicio: defaultValues?.data_inicio || "",
+      data_fim: defaultValues?.data_fim || "",
     }
   })
 
@@ -207,6 +211,28 @@ export function CouncilorForm({ defaultValues, onSubmit, onCancel, isPending }: 
           placeholder="(00) 00000-0000"
         />
         {errors.telefone && <p className="text-xs text-red-500 mt-1">{errors.telefone.message}</p>}
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="space-y-2">
+          <label className="text-sm font-medium text-muted-foreground" htmlFor="data_inicio">Início do Mandato</label>
+          <input 
+            {...register("data_inicio")}
+            id="data_inicio"
+            type="date" 
+            className="w-full bg-background border border-border rounded-lg px-4 py-2 text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all"
+          />
+        </div>
+
+        <div className="space-y-2">
+          <label className="text-sm font-medium text-muted-foreground" htmlFor="data_fim">Fim do Mandato</label>
+          <input 
+            {...register("data_fim")}
+            id="data_fim"
+            type="date" 
+            className="w-full bg-background border border-border rounded-lg px-4 py-2 text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all"
+          />
+        </div>
       </div>
 
       <div className="flex flex-col gap-4 py-2">
