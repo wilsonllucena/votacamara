@@ -7,7 +7,7 @@ import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Loader2, Upload, Camera, X } from "lucide-react"
 import { createClient } from "@/utils/supabase/client"
-import { cn } from "@/lib/utils"
+import { cn, maskCpf, maskTelefone } from "@/lib/utils"
 
 const councilorSchema = z.object({
   nome: z.string().min(3, "Mínimo 3 caracteres"),
@@ -41,45 +41,21 @@ export function CouncilorForm({ defaultValues, onSubmit, onCancel, isPending }: 
     defaultValues: {
       nome: defaultValues?.nome || "",
       partido: defaultValues?.partido || "",
-      cpf: defaultValues?.cpf || "",
+      cpf: maskCpf(defaultValues?.cpf || ""),
       email: defaultValues?.email || "",
-      telefone: defaultValues?.telefone || "",
+      telefone: maskTelefone(defaultValues?.telefone || ""),
       ativo: defaultValues?.ativo ?? true,
       isPresidente: defaultValues?.isPresidente ?? false,
       foto_url: defaultValues?.foto_url || "",
     }
   })
 
-  const [cpfDisplay, setCpfDisplay] = useState(defaultValues?.cpf || "")
-  const [telefoneDisplay, setTelefoneDisplay] = useState(defaultValues?.telefone || "")
+  const [cpfDisplay, setCpfDisplay] = useState(maskCpf(defaultValues?.cpf || ""))
+  const [telefoneDisplay, setTelefoneDisplay] = useState(maskTelefone(defaultValues?.telefone || ""))
   const [isUploading, setIsUploading] = useState(false)
   const supabase = createClient()
 
   const fotoUrl = watch("foto_url")
-
-  const maskCpf = (value: string) => {
-    return value
-      .replace(/\D/g, "")
-      .replace(/(\d{3})(\d)/, "$1.$2")
-      .replace(/(\d{3})(\d)/, "$1.$2")
-      .replace(/(\d{3})(\d{1,2})/, "$1-$2")
-      .replace(/(-\d{2})\d+?$/, "$1")
-  }
-
-  const maskTelefone = (value: string) => {
-    const numbers = value.replace(/\D/g, "")
-    if (numbers.length <= 10) {
-      return numbers
-        .replace(/^(\d{2})(\d)/, "($1) $2")
-        .replace(/(\d{4})(\d)/, "$1-$2")
-        .slice(0, 14)
-    } else {
-      return numbers
-        .replace(/^(\d{2})(\d)/, "($1) $2")
-        .replace(/(\d{5})(\d)/, "$1-$2")
-        .slice(0, 15)
-    }
-  }
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]

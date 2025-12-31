@@ -8,6 +8,7 @@ import { Loader2 } from "lucide-react"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { z } from "zod"
+import { maskCnpj, maskTelefone } from "@/lib/utils"
 
 const registerSchema = z.object({
   camara_nome: z.string().min(3, "Mínimo 3 caracteres"),
@@ -46,31 +47,6 @@ export function RegisterForm() {
 
   const [cnpjDisplay, setCnpjDisplay] = useState("")
   const [telefoneDisplay, setTelefoneDisplay] = useState("")
-
-  const maskCnpj = (value: string) => {
-    return value
-      .replace(/\D/g, "")
-      .replace(/^(\d{2})(\d)/, "$1.$2")
-      .replace(/^(\d{2})\.(\d{3})(\d)/, "$1.$2.$3")
-      .replace(/\.(\d{3})(\d)/, ".$1/$2")
-      .replace(/(\d{4})(\d)/, "$1-$2")
-      .slice(0, 18)
-  }
-
-  const maskTelefone = (value: string) => {
-    const numbers = value.replace(/\D/g, "")
-    if (numbers.length <= 10) {
-      return numbers
-        .replace(/^(\d{2})(\d)/, "($1) $2")
-        .replace(/(\d{4})(\d)/, "$1-$2")
-        .slice(0, 14)
-    } else {
-      return numbers
-        .replace(/^(\d{2})(\d)/, "($1) $2")
-        .replace(/(\d{5})(\d)/, "$1-$2")
-        .slice(0, 15)
-    }
-  }
 
   const onSubmit = (data: any) => {
     const formData = new FormData()
@@ -229,5 +205,3 @@ export function RegisterForm() {
     </div>
   )
 }
-
-

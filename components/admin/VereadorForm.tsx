@@ -6,7 +6,8 @@ import * as z from "zod"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { createVereador } from "@/app/admin/_actions/vereadores"
-import { useTransition } from "react"
+import { useTransition, useState } from "react"
+import { maskCpf, maskTelefone } from "@/lib/utils"
 
 const formSchema = z.object({
   nome: z.string().min(2, "Nome deve ter pelo menos 2 caracteres"),
@@ -24,6 +25,8 @@ interface VereadorFormProps {
 
 export function VereadorForm({ slug }: VereadorFormProps) {
   const [isPending, startTransition] = useTransition()
+  const [cpfDisplay, setCpfDisplay] = useState("")
+  const [telefoneDisplay, setTelefoneDisplay] = useState("")
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -61,10 +64,10 @@ export function VereadorForm({ slug }: VereadorFormProps) {
                 <div className="space-y-4">
                     {/* Nome */}
                     <div className="space-y-2">
-                        <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">Nome Completo</label>
+                        <label className="text-sm font-medium leading-none">Nome Completo</label>
                         <input
                             {...form.register("nome")}
-                            className="flex h-10 w-full rounded-md border border-zinc-800 bg-zinc-950 px-3 py-2 text-sm placeholder:text-zinc-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 disabled:cursor-not-allowed disabled:opacity-50 text-white"
+                            className="flex h-10 w-full rounded-md border border-zinc-800 bg-zinc-950 px-3 py-2 text-sm placeholder:text-zinc-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 text-white"
                             placeholder="Ex: Carlos Silva"
                         />
                         {form.formState.errors.nome && (
@@ -74,10 +77,10 @@ export function VereadorForm({ slug }: VereadorFormProps) {
 
                     {/* Partido */}
                     <div className="space-y-2">
-                        <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">Partido</label>
+                        <label className="text-sm font-medium leading-none">Partido</label>
                          <input
                             {...form.register("partido")}
-                            className="flex h-10 w-full rounded-md border border-zinc-800 bg-zinc-950 px-3 py-2 text-sm placeholder:text-zinc-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 disabled:cursor-not-allowed disabled:opacity-50 text-white"
+                            className="flex h-10 w-full rounded-md border border-zinc-800 bg-zinc-950 px-3 py-2 text-sm placeholder:text-zinc-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 text-white"
                             placeholder="Ex: PSD"
                         />
                          {form.formState.errors.partido && (
@@ -89,7 +92,14 @@ export function VereadorForm({ slug }: VereadorFormProps) {
                     <div className="space-y-2">
                         <label className="text-sm font-medium leading-none">CPF</label>
                         <input
-                            {...form.register("cpf")}
+                            id="cpf"
+                            type="text" 
+                            value={cpfDisplay}
+                            onChange={(e) => {
+                              const masked = maskCpf(e.target.value)
+                              setCpfDisplay(masked)
+                              form.setValue("cpf", masked, { shouldValidate: true })
+                            }}
                             className="flex h-10 w-full rounded-md border border-zinc-800 bg-zinc-950 px-3 py-2 text-sm placeholder:text-zinc-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 text-white"
                             placeholder="000.000.000-00"
                         />
@@ -115,7 +125,14 @@ export function VereadorForm({ slug }: VereadorFormProps) {
                     <div className="space-y-2">
                         <label className="text-sm font-medium leading-none">Telefone</label>
                         <input
-                            {...form.register("telefone")}
+                            id="telefone"
+                            type="text" 
+                            value={telefoneDisplay}
+                            onChange={(e) => {
+                              const masked = maskTelefone(e.target.value)
+                              setTelefoneDisplay(masked)
+                              form.setValue("telefone", masked, { shouldValidate: true })
+                            }}
                             className="flex h-10 w-full rounded-md border border-zinc-800 bg-zinc-950 px-3 py-2 text-sm placeholder:text-zinc-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 text-white"
                             placeholder="(00) 00000-0000"
                         />
@@ -129,7 +146,7 @@ export function VereadorForm({ slug }: VereadorFormProps) {
                         <label className="text-sm font-medium leading-none">Status</label>
                          <select
                             {...form.register("status")}
-                            className="flex h-10 w-full rounded-md border border-zinc-800 bg-zinc-950 px-3 py-2 text-sm placeholder:text-zinc-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 disabled:cursor-not-allowed disabled:opacity-50 text-white"
+                            className="flex h-10 w-full rounded-md border border-zinc-800 bg-zinc-950 px-3 py-2 text-sm placeholder:text-zinc-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 text-white"
                         >
                             <option value="Ativo">Ativo</option>
                             <option value="Licenciado">Licenciado</option>

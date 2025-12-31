@@ -81,12 +81,12 @@ export function Sidebar({ slug, userProfile }: SidebarProps) {
       href: `/admin/${slug}/mesa-diretora`,
       active: pathname.startsWith(`/admin/${slug}/mesa-diretora`),
     },
-    // {
-    //   label: "Configurações",
-    //   icon: Settings,
-    //   href: `/admin/${slug}/configuracoes`,
-    //   active: pathname.startsWith(`/admin/${slug}/configuracoes`),
-    // },
+    {
+      label: "Configurações",
+      icon: Settings,
+      href: `/admin/${slug}/configuracoes`,
+      active: pathname.startsWith(`/admin/${slug}/configuracoes`),
+    },
   ]
 
   const getInitials = (name: string) => {
