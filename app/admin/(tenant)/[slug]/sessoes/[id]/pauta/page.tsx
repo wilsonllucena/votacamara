@@ -39,9 +39,6 @@ export default async function PautaPage({
     .eq("sessao_id", id)
     .order("ordem", { ascending: true })
 
-  // 3. Get Available Projects (Not in Pauta)
-  // This is tricky in Supabase without a "not in" easy join sometimes, but let's try a simple approach
-  // Fetch all projects for the camara, exclude ones in pautaIds.
   const pautaProjectIds = pautaItens?.map((item: any) => item.projeto?.id) || []
   
   let projectsQuery = supabase

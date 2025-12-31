@@ -14,7 +14,8 @@ import {
   LogOut,
   Calendar,
   Menu,
-  ChevronLeft
+  ChevronLeft,
+  Briefcase
 } from "lucide-react"
 import { signOutAction } from "@/app/(auth)/_actions"
 import { useSidebar } from "./SidebarProvider"
@@ -63,10 +64,22 @@ export function Sidebar({ slug, userProfile }: SidebarProps) {
       active: pathname.startsWith(`/admin/${slug}/vereadores`),
     },
     {
+      label: "Cargos",
+      icon: Briefcase,
+      href: `/admin/${slug}/cargos`,
+      active: pathname.startsWith(`/admin/${slug}/cargos`),
+    },
+    {
       label: "Votação",
       icon: Vote,
       href: `/admin/${slug}/votar`,
       active: pathname.startsWith(`/admin/${slug}/votar`),
+    },
+    {
+      label: "Mesa Diretora",
+      icon: Gavel,
+      href: `/admin/${slug}/mesa-diretora`,
+      active: pathname.startsWith(`/admin/${slug}/mesa-diretora`),
     },
     // {
     //   label: "Configurações",
