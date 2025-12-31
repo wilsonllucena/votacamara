@@ -17,7 +17,8 @@ import {
   Menu,
   ChevronLeft,
   ChevronDown,
-  Briefcase
+  Briefcase,
+  Table
 } from "lucide-react"
 import { signOutAction } from "@/app/(auth)/_actions"
 import { useSidebar } from "./SidebarProvider"
@@ -36,12 +37,17 @@ export function Sidebar({ slug, userProfile }: SidebarProps) {
   const [expandedMenus, setExpandedMenus] = useState<string[]>([])
 
   const routes = [
-    // ... routes defined inside to access slug and pathname
     {
       label: "Visão Geral",
       icon: LayoutDashboard,
       href: `/admin/${slug}/dashboard`,
       active: pathname === `/admin/${slug}/dashboard`,
+    },
+    {
+      label: "Matérias",
+      icon: FileText,
+      href: `/admin/${slug}/projetos`,
+      active: pathname.startsWith(`/admin/${slug}/projetos`),
     },
     {
       label: "Sessões Plenárias",
@@ -62,10 +68,28 @@ export function Sidebar({ slug, userProfile }: SidebarProps) {
       ]
     },
     {
-      label: "Materias",
-      icon: FileText,
-      href: `/admin/${slug}/projetos`,
-      active: pathname.startsWith(`/admin/${slug}/projetos`),
+      label: "Mesa Diretora",
+      icon: Table,
+      href: `/admin/${slug}/mesa-diretora`,
+      active: pathname.startsWith(`/admin/${slug}/mesa-diretora`),
+    },
+    {
+      label: "Comissões",
+      icon: Users,
+      href: `/admin/${slug}/comissoes`,
+      active: pathname.startsWith(`/admin/${slug}/comissoes`),
+      subItems: [
+        {
+          label: "Listar Comissões",
+          href: `/admin/${slug}/comissoes`,
+          active: pathname === `/admin/${slug}/comissoes`,
+        },
+        {
+          label: "Atas",
+          href: `/admin/${slug}/comissoes/atas`,
+          active: pathname === `/admin/${slug}/comissoes/atas`,
+        }
+      ]
     },
     {
       label: "Vereadores",
@@ -74,22 +98,16 @@ export function Sidebar({ slug, userProfile }: SidebarProps) {
       active: pathname.startsWith(`/admin/${slug}/vereadores`),
     },
     {
-      label: "Cargos",
-      icon: Briefcase,
-      href: `/admin/${slug}/cargos`,
-      active: pathname.startsWith(`/admin/${slug}/cargos`),
-    },
-    {
       label: "Votação",
       icon: Vote,
       href: `/admin/${slug}/votar`,
       active: pathname.startsWith(`/admin/${slug}/votar`),
     },
     {
-      label: "Mesa Diretora",
-      icon: Gavel,
-      href: `/admin/${slug}/mesa-diretora`,
-      active: pathname.startsWith(`/admin/${slug}/mesa-diretora`),
+      label: "Cargos",
+      icon: Briefcase,
+      href: `/admin/${slug}/cargos`,
+      active: pathname.startsWith(`/admin/${slug}/cargos`),
     },
     {
       label: "Configurações",
@@ -99,7 +117,6 @@ export function Sidebar({ slug, userProfile }: SidebarProps) {
     },
   ]
 
-  // Initialize expanded menus with active parent routes
   useEffect(() => {
     const activeParents = routes
       .filter(r => r.active && r.subItems)
@@ -131,7 +148,6 @@ export function Sidebar({ slug, userProfile }: SidebarProps) {
 
   return (
     <div className="flex flex-col h-full bg-card text-muted-foreground border-r border-border/50">
-      {/* Brand / Switcher Area */}
       <div className={cn("p-4", isCollapsed && "p-2 shrink-0")}>
         <div className={cn(
             "flex items-center justify-between gap-x-2 px-1 py-1.5 transition-colors rounded-md",
