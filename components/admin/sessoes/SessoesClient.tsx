@@ -5,9 +5,9 @@ import { useRouter } from "next/navigation"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { Plus, Edit2, Calendar, Clock, FileText, Trash2 } from "lucide-react"
-import { SessaoModal } from "./SessaoModal"
-import { ResourceList } from "../ResourceList"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Plus, Edit2, Calendar, Clock, FileText, Trash2, List, Search } from "lucide-react"
+import { SessaoForm } from "./SessaoForm"
 import { createSessao, updateSessao, deleteSessao, SessaoInputs } from "@/app/admin/_actions/sessoes"
 import { format } from "date-fns"
 import { ptBR } from "date-fns/locale"
@@ -39,7 +39,7 @@ interface SessoesClientProps {
 export function SessoesClient({ sessoes, slug, availableProjects, busyProjects, pagination }: SessoesClientProps) {
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
-  const [isModalOpen, setIsModalOpen] = useState(false)
+  const [activeTab, setActiveTab] = useState("list")
   const [editingSessao, setEditingSessao] = useState<Sessao | null>(null)
   const [searchTerm, setSearchTerm] = useState("")
 
@@ -92,8 +92,8 @@ export function SessoesClient({ sessoes, slug, availableProjects, busyProjects, 
         const firstError = Object.values(anyResult.errors)[0] as string[]
         showAlert("Erro de Validação", firstError[0])
       } else {
-        setIsModalOpen(false)
         setEditingSessao(null)
+        setActiveTab("list")
         router.refresh()
       }
     })
@@ -134,127 +134,195 @@ export function SessoesClient({ sessoes, slug, availableProjects, busyProjects, 
   const getStatusBadge = (status: string) => {
     switch (status.toLowerCase()) {
       case "agendada":
-        return <Badge variant="outline" className="border-blue-500/20 text-blue-500 bg-blue-500/5">Agendada</Badge>
+        return <Badge variant="outline" className="border-blue-500/20 text-blue-500 bg-blue-500/5 shadow-none">Agendada</Badge>
       case "aberta":
         return <Badge variant="default" className="bg-green-600 hover:bg-green-500 text-white shadow-sm shadow-green-600/20 border-none">Aberta</Badge>
       case "encerrada":
-        return <Badge variant="secondary" className="bg-muted text-muted-foreground">Encerrada</Badge>
+        return <Badge variant="secondary" className="bg-muted text-muted-foreground shadow-none">Encerrada</Badge>
       default:
-        return <Badge variant="outline">{status}</Badge>
+        return <Badge variant="outline" className="shadow-none">{status}</Badge>
     }
   }
 
   return (
-    <>
-      <ResourceList
-        title="Sessões"
-        description="Gerencie as sessões ordinárias e extraordinárias."
-        primaryAction={{
-          label: "Nova Sessão",
-          onClick: () => {
-            setEditingSessao(null)
-            setIsModalOpen(true)
-          }
-        }}
-        search={{
-          value: searchTerm,
-          onChange: setSearchTerm,
-          onSubmit: handleSearch,
-          placeholder: "Buscar por título..."
-        }}
-        pagination={pagination}
-        isEmpty={sessoes.length === 0}
-        emptyMessage="Nenhuma sessão encontrada."
-        emptyIcon={<Calendar className="h-10 w-10 opacity-20" />}
-      >
-        <div className="bg-card/50 border border-border rounded-xl overflow-hidden shadow-sm">
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm text-left">
-              <thead className="text-xs text-muted-foreground uppercase bg-background border-b border-border">
-                <tr>
-                  <th className="px-6 py-4">Sessão</th>
-                  <th className="px-6 py-4 hidden md:table-cell">Tipo</th>
-                  <th className="px-6 py-4">Data / Hora</th>
-                  <th className="px-6 py-4 hidden sm:table-cell">Status</th>
-                  <th className="px-6 py-4 text-right">Ações</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-border">
-                {sessoes.map((sessao) => (
-                  <tr key={sessao.id} className="hover:bg-muted/50 transition-colors">
-                    <td className="px-6 py-4 font-medium text-foreground">
-                      <div className="flex flex-col">
-                        <span className="font-bold text-base">{sessao.titulo}</span>
-                        <span className="text-xs text-muted-foreground md:hidden">{sessao.tipo}</span>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 hidden md:table-cell">
-                      <Badge variant="outline" className="border-border text-muted-foreground capitalize">
-                        {sessao.tipo}
-                      </Badge>
-                    </td>
-                    <td className="px-6 py-4 text-muted-foreground">
-                      <div className="flex flex-col gap-1">
-                        <div className="flex items-center gap-2">
-                          <Calendar className="h-3.5 w-3.5 text-primary/70" />
-                          <span className="text-xs">
-                            {sessao.data ? format(new Date(sessao.data + 'T00:00:00'), "dd/MM/yyyy", { locale: ptBR }) : 'Data não informada'}
-                          </span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <Clock className="h-3.5 w-3.5 text-primary/70" />
-                          <span className="text-xs">{sessao.hora}h</span>
-                        </div>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 hidden sm:table-cell">
-                      {getStatusBadge(sessao.status)}
-                    </td>
-                    <td className="px-6 py-4 text-right">
-                      <div className="flex justify-end gap-2">
-                        <Link href={`/admin/${slug}/sessoes/${sessao.id}/manager`}>
-                          <Button variant="outline" size="sm" className="bg-primary/5 text-primary border-primary/20 hover:bg-primary/10 h-8">
-                            Gerenciar
-                          </Button>
-                        </Link>
-                        <button 
-                          type="button"
-                          onClick={() => {
-                            setEditingSessao(sessao)
-                            setIsModalOpen(true)
-                          }}
-                          className="p-2 text-muted-foreground hover:text-primary transition-colors hover:bg-muted rounded-md"
-                          title="Editar"
-                        >
-                          <Edit2 className="h-4 w-4" />
-                        </button>
-                        <button 
-                          type="button"
-                          onClick={() => handleDelete(sessao.id)}
-                          className="p-2 text-muted-foreground hover:text-red-500 transition-colors hover:bg-red-500/10 rounded-md"
-                          title="Excluir"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+    <div className="space-y-6">
+      <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
+        <div className="space-y-1">
+          <h1 className="text-3xl font-extrabold text-foreground tracking-tight">Sessões Legislativas</h1>
+          <p className="text-muted-foreground text-sm">Gerencie as sessões ordinárias e extraordinárias da Câmara.</p>
         </div>
-      </ResourceList>
+      </div>
 
-      <SessaoModal 
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-        onSubmit={handleCreateOrUpdate}
-        editingSessao={editingSessao}
-        isPending={isPending}
-        availableProjects={availableProjects}
-        busyProjects={busyProjects}
-      />
+      <Tabs value={activeTab} onValueChange={(v) => {
+        setActiveTab(v)
+        if (v === "list") setEditingSessao(null)
+      }} className="w-full">
+        <TabsList className="grid w-full grid-cols-2 lg:w-[400px] mb-8">
+          <TabsTrigger value="list" className="flex items-center gap-2">
+            <List className="w-4 h-4" />
+            Listar Sessões
+          </TabsTrigger>
+          <TabsTrigger value="form" className="flex items-center gap-2">
+            <Plus className="w-4 h-4" />
+            {editingSessao ? "Editar Sessão" : "Nova Sessão"}
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="list" className="space-y-4 animate-in fade-in duration-500">
+          <div className="flex flex-col md:flex-row gap-4 mb-4">
+            <form onSubmit={handleSearch} className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <input
+                type="text"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                placeholder="Buscar por título..."
+                className="w-full bg-background border border-border rounded-lg pl-10 pr-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all"
+              />
+            </form>
+          </div>
+
+          <div className="bg-card border border-border rounded-xl overflow-hidden shadow-sm">
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm text-left">
+                <thead className="text-xs text-muted-foreground uppercase bg-muted/30 border-b border-border">
+                  <tr>
+                    <th className="px-6 py-4">Sessão</th>
+                    <th className="px-6 py-4 hidden md:table-cell">Tipo</th>
+                    <th className="px-6 py-4">Data / Hora</th>
+                    <th className="px-6 py-4 hidden sm:table-cell">Status</th>
+                    <th className="px-6 py-4 text-right">Ações</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-border">
+                  {sessoes.length === 0 ? (
+                    <tr>
+                      <td colSpan={5} className="px-6 py-12 text-center text-muted-foreground">
+                        <div className="flex flex-col items-center gap-2">
+                          <Calendar className="h-10 w-10 opacity-20" />
+                          <p>Nenhuma sessão encontrada.</p>
+                        </div>
+                      </td>
+                    </tr>
+                  ) : (
+                    sessoes.map((sessao) => (
+                      <tr key={sessao.id} className="hover:bg-muted/50 transition-colors group">
+                        <td className="px-6 py-4 font-medium text-foreground">
+                          <div className="flex flex-col">
+                            <span className="font-bold text-base">{sessao.titulo}</span>
+                            <span className="text-xs text-muted-foreground md:hidden capitalize">{sessao.tipo}</span>
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 hidden md:table-cell">
+                          <Badge variant="outline" className="border-border text-muted-foreground capitalize shadow-none">
+                            {sessao.tipo}
+                          </Badge>
+                        </td>
+                        <td className="px-6 py-4 text-muted-foreground">
+                          <div className="flex flex-col gap-1">
+                            <div className="flex items-center gap-2">
+                              <Calendar className="h-3.5 w-3.5 text-primary/70" />
+                              <span className="text-xs">
+                                {sessao.data ? format(new Date(sessao.data + 'T00:00:00'), "dd/MM/yyyy", { locale: ptBR }) : 'Data não informada'}
+                              </span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <Clock className="h-3.5 w-3.5 text-primary/70" />
+                              <span className="text-xs">{sessao.hora}h</span>
+                            </div>
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 hidden sm:table-cell">
+                          {getStatusBadge(sessao.status)}
+                        </td>
+                        <td className="px-6 py-4 text-right">
+                          <div className="flex justify-end gap-2">
+                            <Link href={`/admin/${slug}/sessoes/${sessao.id}/manager`}>
+                              <Button variant="outline" size="sm" className="bg-primary/5 text-primary border-primary/20 hover:bg-primary/10 h-8 font-bold text-xs uppercase shadow-none">
+                                Gerenciar
+                              </Button>
+                            </Link>
+                            <button 
+                              type="button"
+                              onClick={() => {
+                                setEditingSessao(sessao)
+                                setActiveTab("form")
+                              }}
+                              className="p-2 text-muted-foreground hover:text-primary transition-colors hover:bg-muted rounded-md"
+                              title="Editar"
+                            >
+                              <Edit2 className="h-4 w-4" />
+                            </button>
+                            <button 
+                              type="button"
+                              onClick={() => handleDelete(sessao.id)}
+                              className="p-2 text-muted-foreground hover:text-red-500 transition-colors hover:bg-red-500/10 rounded-md"
+                              title="Excluir"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          {pagination.totalPages > 1 && (
+            <div className="flex items-center justify-between px-6 py-4 bg-muted/20 border border-border rounded-xl mt-4">
+              <div className="text-xs text-muted-foreground font-medium">
+                Página {pagination.currentPage} de {pagination.totalPages}
+              </div>
+              <div className="flex gap-2">
+                <button 
+                  onClick={() => {
+                    const params = new URLSearchParams(window.location.search)
+                    params.set("page", (pagination.currentPage - 1).toString())
+                    router.push(`?${params.toString()}`)
+                  }}
+                  disabled={pagination.currentPage === 1}
+                  className="px-3 py-1.5 text-xs font-bold bg-background border border-border rounded-lg disabled:opacity-50 hover:bg-muted transition-colors"
+                >
+                  Anterior
+                </button>
+                <button 
+                  onClick={() => {
+                    const params = new URLSearchParams(window.location.search)
+                    params.set("page", (pagination.currentPage + 1).toString())
+                    router.push(`?${params.toString()}`)
+                  }}
+                  disabled={pagination.currentPage === pagination.totalPages}
+                  className="px-3 py-1.5 text-xs font-bold bg-background border border-border rounded-lg disabled:opacity-50 hover:bg-muted transition-colors"
+                >
+                  Próxima
+                </button>
+              </div>
+            </div>
+          )}
+        </TabsContent>
+
+        <TabsContent value="form" className="animate-in slide-in-from-left-2 fade-in duration-500">
+           <div className="bg-card border border-border rounded-xl p-6 shadow-sm">
+             <h2 className="text-xl font-bold text-foreground mb-6">
+               {editingSessao ? "Editar Sessão" : "Cadastrar Nova Sessão Legislativa"}
+             </h2>
+             <SessaoForm 
+               defaultValues={editingSessao || undefined}
+               isPending={isPending}
+               availableProjects={availableProjects}
+               busyProjects={busyProjects}
+               onSubmit={handleCreateOrUpdate}
+               onCancel={() => {
+                 setEditingSessao(null)
+                 setActiveTab("list")
+               }}
+             />
+           </div>
+        </TabsContent>
+      </Tabs>
 
       <ConfirmDialog
         isOpen={confirmConfig.isOpen}
@@ -265,6 +333,6 @@ export function SessoesClient({ sessoes, slug, availableProjects, busyProjects, 
         variant={confirmConfig.variant}
         type={confirmConfig.type}
       />
-    </>
+    </div>
   )
 }
