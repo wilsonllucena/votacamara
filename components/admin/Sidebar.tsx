@@ -49,31 +49,7 @@ export function Sidebar({ slug, userProfile }: SidebarProps) {
       href: `/admin/${slug}/projetos`,
       active: pathname.startsWith(`/admin/${slug}/projetos`),
     },
-    {
-      label: "Sessões Plenárias",
-      icon: Gavel,
-      href: '',
-      active: pathname.startsWith(`/admin/${slug}/sessoes`),
-      subItems: [
-        {
-            label: "Listar Sessões",
-            href: `/admin/${slug}/sessoes`,
-            active: pathname === `/admin/${slug}/sessoes`,
-        },
-        {
-            label: "Atas",
-            href: `/admin/${slug}/sessoes/atas`,
-            active: pathname === `/admin/${slug}/sessoes/atas`,
-        }
-      ]
-    },
-    {
-      label: "Mesa Diretora",
-      icon: Table,
-      href: `/admin/${slug}/mesa-diretora`,
-      active: pathname.startsWith(`/admin/${slug}/mesa-diretora`),
-    },
-    {
+     {
       label: "Comissões",
       icon: Users,
       href: `/admin/${slug}/comissoes`,
@@ -92,6 +68,36 @@ export function Sidebar({ slug, userProfile }: SidebarProps) {
       ]
     },
     {
+      label: "Sessões Plenárias",
+      icon: Gavel,
+      href: '',
+      active: pathname.startsWith(`/admin/${slug}/sessoes`),
+      subItems: [
+        {
+            label: "Listar Sessões",
+            href: `/admin/${slug}/sessoes`,
+            active: pathname === `/admin/${slug}/sessoes`,
+        },
+        {
+            label: "Atas",
+            href: `/admin/${slug}/sessoes/atas`,
+            active: pathname === `/admin/${slug}/sessoes/atas`,
+        }
+      ]
+    },
+   {
+      label: "Cargos",
+      icon: Briefcase,
+      href: `/admin/${slug}/cargos`,
+      active: pathname.startsWith(`/admin/${slug}/cargos`),
+    },
+    {
+      label: "Mesa Diretora",
+      icon: Table,
+      href: `/admin/${slug}/mesa-diretora`,
+      active: pathname.startsWith(`/admin/${slug}/mesa-diretora`),
+    },
+    {
       label: "Vereadores",
       icon: Users,
       href: `/admin/${slug}/vereadores`,
@@ -103,12 +109,7 @@ export function Sidebar({ slug, userProfile }: SidebarProps) {
       href: `/admin/${slug}/votar`,
       active: pathname.startsWith(`/admin/${slug}/votar`),
     },
-    {
-      label: "Cargos",
-      icon: Briefcase,
-      href: `/admin/${slug}/cargos`,
-      active: pathname.startsWith(`/admin/${slug}/cargos`),
-    },
+ 
     {
       label: "Configurações",
       icon: Settings,
