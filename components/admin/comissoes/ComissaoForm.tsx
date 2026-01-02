@@ -157,8 +157,8 @@ export function ComissaoForm({ vereadores, materias, onSuccess }: ComissaoFormPr
                         ))}
                       </select>
                       {selectedVereador?.isMesa && (
-                        <div className="absolute right-8 top-1/2 -translate-y-1/2">
-                          <Crown className="w-3.5 h-3.5 text-amber-500" title="Membro da Mesa Diretora" />
+                        <div className="absolute right-8 top-1/2 -translate-y-1/2" title="Membro da Mesa Diretora">
+                          <Crown className="w-3.5 h-3.5 text-amber-500" />
                         </div>
                       )}
                     </div>
