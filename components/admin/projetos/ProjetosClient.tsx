@@ -5,7 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Edit2, Trash2, FileText, User, ScrollText, Plus, List, Search } from "lucide-react"
+import { Edit2, Trash2, FileText, User, ScrollText, Plus, List, Search, Tag } from "lucide-react"
 import { ProjetoForm, MateriaInputs } from "./ProjetoForm"
 import { createProjeto, updateProjeto, deleteProjeto } from "@/app/admin/_actions/projetos"
 import { ConfirmDialog } from "@/components/ui/confirm-dialog"
@@ -25,19 +25,25 @@ interface Projeto {
       partido: string
     }
   }[]
+  projeto_categorias?: {
+    id: string
+    nome: string
+  } | null
+  categoria_id?: string | null
 }
 
 interface ProjetosClientProps {
   projetos: Projeto[]
   slug: string
   vereadores: { id: string, nome: string, partido: string }[]
+  categorias: { id: string, nome: string }[]
   pagination: {
     currentPage: number
     totalPages: number
   }
 }
 
-export function ProjetosClient({ projetos, slug, vereadores, pagination }: ProjetosClientProps) {
+export function ProjetosClient({ projetos, slug, vereadores, categorias, pagination }: ProjetosClientProps) {
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
   const [activeTab, setActiveTab] = useState("list")
@@ -210,6 +216,12 @@ export function ProjetosClient({ projetos, slug, vereadores, pagination }: Proje
                           <Badge variant="outline" className={`capitalize ${getStatusColor(projeto.status)} shadow-none`}>
                             {formatStatus(projeto.status)}
                           </Badge>
+                          {projeto.projeto_categorias && (
+                            <Badge variant="secondary" className="bg-primary/10 text-primary border-primary/20 shadow-none font-bold uppercase tracking-widest text-[10px] gap-1.5">
+                               <Tag className="w-3 h-3" />
+                               {projeto.projeto_categorias.nome}
+                            </Badge>
+                          )}
                         </div>
                         <h4 className="text-foreground/90 font-medium mb-1 truncate">{projeto.titulo}</h4>
                         <p className="text-sm text-muted-foreground line-clamp-2 max-w-2xl">{projeto.ementa}</p>
@@ -239,7 +251,8 @@ export function ProjetosClient({ projetos, slug, vereadores, pagination }: Proje
                             ementa: projeto.ementa,
                             autores_ids: authorsIds,
                             texto_url: projeto.texto_url || undefined,
-                            status: projeto.status as MateriaInputs["status"]
+                            status: formatStatus(projeto.status) as MateriaInputs["status"],
+                            categoria_id: projeto.categoria_id || undefined
                           })
                           setActiveTab("form")
                         }}
@@ -305,6 +318,7 @@ export function ProjetosClient({ projetos, slug, vereadores, pagination }: Proje
                defaultValues={editingProjeto || undefined}
                isPending={isPending}
                vereadores={vereadores}
+               categorias={categorias}
                onSubmit={handleCreateOrUpdate}
                onCancel={() => {
                  setEditingProjeto(null)

@@ -38,9 +38,18 @@ export default async function VotarPage({
                 </div>
             )
         }
-        // If admin/president, we might want to show them the view as well? 
-        // For now, let's just handle it or show a message.
-        // Actually, the user asked for a page where VEREADORES can vote.
+    }
+
+    if (vereador?.cargo === 'CHEFE DO EXECUTIVO') {
+        return (
+            <div className="flex flex-col items-center justify-center min-h-[60vh] text-center space-y-4">
+                <div className="w-16 h-16 bg-amber-500/10 rounded-full flex items-center justify-center mb-2">
+                    <span className="text-amber-500 text-2xl">⚠️</span>
+                </div>
+                <h2 className="text-2xl font-bold">Acesso não permitido</h2>
+                <p className="text-muted-foreground max-w-md">Membros do Poder Executivo (Prefeitos e Vice-Prefeitos) não possuem poder de voto no legislativo e não podem acessar a interface de votação.</p>
+            </div>
+        )
     }
 
     // 3. Get Camara ID for fallback

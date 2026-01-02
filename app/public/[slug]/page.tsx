@@ -35,12 +35,13 @@ export default async function PublicVotingPage({ params }: PublicVotingPageProps
         .eq("status", "aberta")
         .maybeSingle()
 
-    // 4. Get all councilors for this chamber
+    // 4. Get all councilors for this chamber (excluding executive)
     const { data: councilors } = await supabase
         .from("vereadores")
-        .select("id, nome, partido, foto_url")
+        .select("id, nome, partido, foto_url, cargo")
         .eq("camara_id", camara.id)
         .eq("ativo", true)
+        .neq("cargo", "CHEFE DO EXECUTIVO")
         .order("nome")
 
     return (

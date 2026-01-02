@@ -22,12 +22,13 @@ export default async function SessionManagerPage({
 
     if (!sessao) notFound()
 
-    // 2. Get Councilors (to show voting progress)
+    // 2. Get Councilors (to show voting progress) - excluding executive
     const { data: councilors } = await supabase
         .from("vereadores")
         .select("*")
         .eq("camara_id", sessao.camara_id)
         .eq("ativo", true)
+        .neq("cargo", "CHEFE DO EXECUTIVO")
         .order("nome")
 
     // 3. Get Pauta Items (projects to be voted)

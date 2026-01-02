@@ -35,7 +35,14 @@ export default async function ProjetosPage({
     .eq("ativo", true)
     .order("nome")
 
-  // 3. Query Materias (Projetos) with authors
+  // 3. Fetch Categories
+  const { data: categorias } = await supabase
+    .from("projeto_categorias")
+    .select("id, nome")
+    .eq("camara_id", camara.id)
+    .order("nome")
+
+  // 4. Query Materias (Projetos) with authors and category
   const currentPage = Number(page) || 1
   const from = (currentPage - 1) * ITEMS_PER_PAGE
   const to = from + ITEMS_PER_PAGE - 1
@@ -44,6 +51,10 @@ export default async function ProjetosPage({
     .from("projetos")
     .select(`
       *,
+      projeto_categorias (
+        id,
+        nome
+      ),
       projeto_autores (
         vereadores (
           id,
@@ -70,6 +81,7 @@ export default async function ProjetosPage({
             projetos={(projetos as any) || []} 
             slug={slug} 
             vereadores={vereadores || []}
+            categorias={categorias || []}
             pagination={{
                 currentPage,
                 totalPages

@@ -46,8 +46,20 @@ export function Sidebar({ slug, userProfile }: SidebarProps) {
     {
       label: "Matérias",
       icon: FileText,
-      href: `/admin/${slug}/projetos`,
+      href: '',
       active: pathname.startsWith(`/admin/${slug}/projetos`),
+      subItems: [
+        {
+          label: "Listar Matérias",
+          href: `/admin/${slug}/projetos`,
+          active: pathname === `/admin/${slug}/projetos`,
+        },
+        {
+          label: "Categorias",
+          href: `/admin/${slug}/projetos/categorias`,
+          active: pathname === `/admin/${slug}/projetos/categorias`,
+        }
+      ]
     },
      {
       label: "Comissões",
@@ -180,7 +192,7 @@ export function Sidebar({ slug, userProfile }: SidebarProps) {
           const isExpanded = expandedMenus.includes(route.href)
           
           return (
-            <div key={route.href} className="space-y-1">
+            <div key={route.label} className="space-y-1">
                 {route.subItems ? (
                   <div
                     onClick={() => !isCollapsed && toggleMenu(route.href)}
@@ -224,7 +236,7 @@ export function Sidebar({ slug, userProfile }: SidebarProps) {
                     <div className="ml-7 flex flex-col gap-1 border-l border-border pl-3 pb-1 pt-1 animate-in fade-in slide-in-from-top-1 duration-300">
                         {route.subItems.map((subItem) => (
                             <Link
-                                key={subItem.href}
+                                key={subItem.label}
                                 href={subItem.href}
                                 className={cn(
                                     "text-xs py-1.5 px-2 rounded-md transition-colors",

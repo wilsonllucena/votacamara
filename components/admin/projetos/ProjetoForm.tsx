@@ -20,6 +20,7 @@ const materiaSchema = z.object({
   autores_ids: z.array(z.string().uuid("Vereador selecionado inválido")).min(1, "Selecione pelo menos um autor"),
   texto_url: z.string().url("URL do texto deve ser válida").optional().or(z.literal("")),
   status: z.enum(["Rascunho", "Em Pauta", "Votado"]),
+  categoria_id: z.string().uuid("Categoria selecionada inválida").optional().or(z.literal("")),
 })
 
 export type MateriaInputs = z.infer<typeof materiaSchema>
@@ -30,9 +31,10 @@ interface MateriaFormProps {
   onCancel: () => void
   isPending?: boolean
   vereadores: { id: string, nome: string, partido: string }[]
+  categorias: { id: string, nome: string }[]
 }
 
-export function ProjetoForm({ defaultValues, onSubmit, onCancel, isPending, vereadores }: MateriaFormProps) {
+export function ProjetoForm({ defaultValues, onSubmit, onCancel, isPending, vereadores, categorias }: MateriaFormProps) {
   const {
     register,
     handleSubmit,
@@ -48,8 +50,9 @@ export function ProjetoForm({ defaultValues, onSubmit, onCancel, isPending, vere
       autores_ids: defaultValues?.autores_ids || [],
       texto_url: defaultValues?.texto_url || "",
       status: (defaultValues?.status as MateriaInputs["status"]) || "Rascunho",
+      categoria_id: defaultValues?.categoria_id || "",
     }
-  })
+})
 
   const [isUploading, setIsUploading] = useState(false)
   const [isSummarizing, setIsSummarizing] = useState(false)
@@ -141,7 +144,22 @@ export function ProjetoForm({ defaultValues, onSubmit, onCancel, isPending, vere
             {errors.numero && <p className="text-xs text-red-500 mt-1">{errors.numero.message}</p>}
         </div>
 
-        <div className="space-y-2 col-span-3">
+        <div className="space-y-2 col-span-1 md:col-span-1">
+            <label className="text-sm font-medium text-muted-foreground" htmlFor="categoria_id">Categoria</label>
+            <select 
+              {...register("categoria_id")}
+              id="categoria_id"
+              className={`w-full h-11 bg-background border ${errors.categoria_id ? 'border-red-500' : 'border-border'} rounded-lg px-3 py-2 text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all text-xs font-bold uppercase`}
+            >
+              <option value="">SELECIONE...</option>
+              {categorias.map(cat => (
+                <option key={cat.id} value={cat.id}>{cat.nome}</option>
+              ))}
+            </select>
+            {errors.categoria_id && <p className="text-xs text-red-500 mt-1">{errors.categoria_id.message}</p>}
+        </div>
+
+        <div className="space-y-2 col-span-1 md:col-span-2">
             <label className="text-sm font-medium text-muted-foreground" htmlFor="titulo">Título Curto</label>
             <input 
               {...register("titulo")}
