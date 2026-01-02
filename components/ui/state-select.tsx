@@ -46,7 +46,7 @@ const StateSelect = React.forwardRef<HTMLSelectElement, StateSelectProps>(
           ref={ref}
           {...props}
         >
-          <option value="" disabled selected={!props.defaultValue && !props.value}>UF</option>
+          <option value="" disabled>UF</option>
           {ESTADOS_BRASIL.map((estado) => (
             <option key={estado.sigla} value={estado.sigla}>
               {estado.sigla}
