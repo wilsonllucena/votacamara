@@ -38,13 +38,22 @@ export default async function DashboardLayout({
 
   const camaraId = profile?.camara_id || ""
 
+  // Fetch camara name
+  const { data: camara } = await supabase
+      .from("camaras")
+      .select("nome")
+      .eq("id", camaraId)
+      .single()
+
+  const camaraNome = camara?.nome || ""
+
   return (
     <AdminThemeProvider>
       <SidebarProvider>
         <GlobalPresence userId={user.id} camaraId={camaraId} />
         <AdminLayoutWrapper
           sidebar={<Sidebar slug={slug} userProfile={userProfile} />}
-          header={<Header slug={slug} userProfile={userProfile} />}
+          header={<Header slug={slug} userProfile={userProfile} camaraNome={camaraNome} />}
         >
           {children}
         </AdminLayoutWrapper>
