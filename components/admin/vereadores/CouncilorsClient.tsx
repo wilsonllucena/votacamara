@@ -4,11 +4,13 @@ import { useState, useTransition } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { cn } from "@/lib/utils"
 import { Plus, List, Search, Edit2, UserX, Power, User } from "lucide-react"
 import { CouncilorForm } from "./CouncilorForm"
 import { toggleVereadorStatus, updateVereador, createVereador } from "@/app/admin/_actions/vereadores"
 import { ConfirmDialog } from "@/components/ui/confirm-dialog"
 import { Pagination } from "@/components/admin/Pagination"
+import { Tooltip } from "@/components/ui/tooltip"
 
 interface CouncilorsClientProps {
   councilors: any[]
@@ -160,23 +162,23 @@ export function CouncilorsClient({ councilors, slug, pagination }: CouncilorsCli
                   ) : (
                     councilors.map((vereador) => (
                       <tr key={vereador.id} className="hover:bg-muted/50 transition-colors group">
-                        <td className="px-6 py-4 font-medium text-foreground">
-                          <div className="flex items-center gap-3">
-                            <div className="h-10 w-10 rounded-full bg-muted flex items-center justify-center font-bold text-xs text-primary overflow-hidden border border-border">
+                        <td className="px-4 sm:px-6 py-4 font-medium text-foreground">
+                          <div className="flex items-center gap-2 sm:gap-3">
+                            <div className="h-8 w-8 sm:h-10 sm:w-10 rounded-full bg-muted flex items-center justify-center font-bold text-[10px] sm:text-xs text-primary overflow-hidden border border-border shrink-0">
                               {vereador.foto_url ? (
                                 <img src={vereador.foto_url} alt={vereador.nome} className="h-full w-full object-cover" />
                               ) : (
-                                <User className="h-5 w-5" />
+                                <User className="h-4 w-4 sm:h-5 sm:w-5" />
                               )}
                             </div>
-                            <div className="flex flex-col">
-                              <div className="flex items-center gap-2">
-                                <span className="font-bold">{vereador.nome}</span>
+                            <div className="flex flex-col min-w-0">
+                              <div className="flex items-center gap-1.5 sm:gap-2">
+                                <span className="font-bold text-xs sm:text-sm truncate max-w-[120px] sm:max-w-none" title={vereador.nome}>{vereador.nome}</span>
                                 {vereador.is_presidente && (
-                                  <span className="text-[10px] bg-primary/10 text-primary px-1.5 py-0.5 rounded border border-primary/20 uppercase font-bold tracking-wider whitespace-nowrap">Presidente</span>
+                                  <span className="text-[8px] sm:text-[10px] bg-primary/10 text-primary px-1 sm:px-1.5 py-0.5 rounded border border-primary/20 uppercase font-bold tracking-wider shrink-0">Pres.</span>
                                 )}
                               </div>
-                              <span className="text-muted-foreground text-xs md:hidden">{vereador.partido}</span>
+                              <span className="text-muted-foreground text-[10px] md:hidden truncate">{vereador.partido}</span>
                             </div>
                           </div>
                         </td>
@@ -207,33 +209,41 @@ export function CouncilorsClient({ councilors, slug, pagination }: CouncilorsCli
                             {vereador.ativo ? "Ativo" : "Inativo"}
                           </Badge>
                         </td>
-                        <td className="px-6 py-4 text-right">
-                          <div className="flex justify-end gap-2">
-                            <button 
-                              type="button"
-                              onClick={() => {
-                                const flatVereador = {
-                                  ...vereador,
-                                  email: vereador.profile_email,
-                                  telefone: vereador.profile_telefone,
-                                  isPresidente: vereador.is_presidente
-                                }
-                                setEditingCouncilor(flatVereador)
-                                setActiveTab("form")
-                              }}
-                              className="p-2 text-muted-foreground hover:text-primary transition-colors hover:bg-muted rounded-md"
-                              title="Editar"
-                            >
-                              <Edit2 className="h-4 w-4" />
-                            </button>
-                            <button 
-                              type="button"
-                              onClick={() => handleToggleStatus(vereador.id, vereador.ativo)}
-                              className={`p-2 transition-colors rounded-md ${vereador.ativo ? 'text-muted-foreground hover:text-red-400 hover:bg-red-400/10' : 'text-muted-foreground hover:text-green-400 hover:bg-green-400/10'}`}
-                              title={vereador.ativo ? "Desativar" : "Ativar"}
-                            >
-                              {vereador.ativo ? <UserX className="h-4 w-4" /> : <Power className="h-4 w-4" />}
-                            </button>
+                        <td className="px-4 sm:px-6 py-4 text-right">
+                          <div className="flex justify-end gap-1 sm:gap-2 items-center">
+                            <Tooltip content="Editar Parlamentar">
+                              <button 
+                                type="button"
+                                onClick={() => {
+                                  const flatVereador = {
+                                    ...vereador,
+                                    email: vereador.profile_email,
+                                    telefone: vereador.profile_telefone,
+                                    isPresidente: vereador.is_presidente
+                                  }
+                                  setEditingCouncilor(flatVereador)
+                                  setActiveTab("form")
+                                }}
+                                className="p-1.5 sm:p-2 text-muted-foreground hover:text-primary transition-colors hover:bg-muted rounded-md"
+                              >
+                                <Edit2 className="h-4 w-4" />
+                              </button>
+                            </Tooltip>
+
+                            <Tooltip content={vereador.ativo ? "Desativar Parlamentar" : "Ativar Parlamentar"}>
+                              <button 
+                                type="button"
+                                onClick={() => handleToggleStatus(vereador.id, vereador.ativo)}
+                                className={cn(
+                                    "p-1.5 sm:p-2 transition-colors rounded-md",
+                                    vereador.ativo 
+                                        ? 'text-muted-foreground hover:text-red-400 hover:bg-red-400/10' 
+                                        : 'text-muted-foreground hover:text-green-400 hover:bg-green-400/10'
+                                )}
+                              >
+                                {vereador.ativo ? <UserX className="h-4 w-4" /> : <Power className="h-4 w-4" />}
+                              </button>
+                            </Tooltip>
                           </div>
                         </td>
                       </tr>

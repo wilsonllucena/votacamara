@@ -16,6 +16,8 @@ import {
 } from "lucide-react"
 import { ComissaoForm } from "./ComissaoForm"
 import { Pagination } from "@/components/admin/Pagination"
+import { Tooltip } from "@/components/ui/tooltip"
+import { cn } from "@/lib/utils"
 
 interface Comissao {
   id: string
@@ -125,36 +127,38 @@ export function ComissoesClient({ slug, initialComissoes, vereadores, materias, 
                   ) : (
                     initialComissoes.map((comissao) => (
                       <tr key={comissao.id} className="hover:bg-accent/30 transition-colors group">
-                        <td className="px-6 py-4">
-                          <div className="flex flex-col">
-                            <span className="font-bold text-foreground">{comissao.nome}</span>
-                            <span className="text-xs text-muted-foreground truncate max-w-[300px]">{comissao.descricao}</span>
+                        <td className="px-4 sm:px-6 py-4">
+                          <div className="flex flex-col min-w-0">
+                            <span className="font-bold text-foreground text-sm sm:text-base truncate max-w-[150px] sm:max-w-[300px]">{comissao.nome}</span>
+                            <span className="text-[10px] sm:text-xs text-muted-foreground truncate max-w-[200px] sm:max-w-md">{comissao.descricao}</span>
                           </div>
                         </td>
-                        <td className="px-6 py-4">
+                        <td className="px-4 sm:px-6 py-4 hidden sm:table-cell">
                           <Badge variant="outline" className={cn(
-                              "font-bold",
+                              "font-bold text-[10px] sm:text-xs px-1.5 py-0 sm:px-2 sm:py-0.5",
                               comissao.tipo === "Permanente" ? "border-blue-500/20 bg-blue-500/5 text-blue-500" : "border-amber-500/20 bg-amber-500/5 text-amber-500"
                           )}>
                             {comissao.tipo}
                           </Badge>
                         </td>
-                        <td className="px-6 py-4">
-                          <div className="flex items-center gap-1.5 text-sm text-foreground">
-                            <Users className="w-4 h-4 text-muted-foreground" />
+                        <td className="px-4 sm:px-6 py-4">
+                          <div className="flex items-center gap-1 sm:gap-1.5 text-xs sm:text-sm text-foreground">
+                            <Users className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-muted-foreground shrink-0" />
                             <span className="font-semibold">{comissao.comissao_membros?.length || 0}</span>
                           </div>
                         </td>
-                        <td className="px-6 py-4">
+                        <td className="px-4 sm:px-6 py-4 hidden md:table-cell">
                           <div className="flex items-center gap-1.5 text-sm text-foreground">
                             <FileText className="w-4 h-4 text-muted-foreground" />
                             <span className="font-semibold">{0}</span>
                           </div>
                         </td>
-                        <td className="px-6 py-4 text-right">
-                          <Button variant="ghost" size="sm" className="h-8 w-8 p-0 opacity-0 group-hover:opacity-100 transition-opacity">
-                            <MoreVertical className="w-4 h-4" />
-                          </Button>
+                        <td className="px-4 sm:px-6 py-4 text-right">
+                          <Tooltip content="Gerenciar Comissão">
+                            <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                              <MoreVertical className="w-4 h-4" />
+                            </Button>
+                          </Tooltip>
                         </td>
                       </tr>
                     ))
@@ -185,6 +189,3 @@ export function ComissoesClient({ slug, initialComissoes, vereadores, materias, 
   )
 }
 
-function cn(...classes: any[]) {
-  return classes.filter(Boolean).join(" ")
-}

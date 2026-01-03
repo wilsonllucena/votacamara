@@ -6,6 +6,8 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Edit2, Trash2, FileText, User, ScrollText, Plus, List, Search, Tag } from "lucide-react"
+import { cn } from "@/lib/utils"
+import { Tooltip } from "@/components/ui/tooltip"
 import { ProjetoForm, MateriaInputs } from "./ProjetoForm"
 import { createProjeto, updateProjeto, deleteProjeto } from "@/app/admin/_actions/projetos"
 import { ConfirmDialog } from "@/components/ui/confirm-dialog"
@@ -213,70 +215,77 @@ export function ProjetosClient({ projetos, slug, vereadores, categorias, situaco
 
                 return (
                   <div key={projeto.id} className="flex flex-col md:flex-row gap-4 items-start md:items-center justify-between bg-card/50 border border-border p-4 rounded-xl hover:bg-muted/50 transition-all duration-200 group shadow-sm">
-                    <div className="flex gap-4 items-start">
-                      <div className="h-12 w-12 rounded-lg bg-muted flex flex-shrink-0 items-center justify-center text-primary group-hover:bg-accent transition-colors">
-                        <FileText className="h-6 w-6" />
+                    <div className="flex gap-3 sm:gap-4 items-start min-w-0 flex-1">
+                      <div className="h-10 w-10 sm:h-12 sm:w-12 rounded-lg bg-muted flex flex-shrink-0 items-center justify-center text-primary group-hover:bg-accent transition-colors">
+                        <FileText className="h-5 w-5 sm:h-6 sm:w-6" />
                       </div>
-                      <div className="flex-1 overflow-hidden">
+                      <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 mb-1 flex-wrap">
-                          <h3 className="font-bold text-foreground text-lg">{projeto.numero || "S/N"}</h3>
-                          <Badge variant="outline" className={`capitalize ${getStatusColor(projeto.status)} shadow-none`}>
+                          <h3 className="font-bold text-foreground text-base sm:text-lg shrink-0">{projeto.numero || "S/N"}</h3>
+                          <Badge variant="outline" className={cn("text-[9px] sm:text-xs capitalize shadow-none px-1.5 py-0 sm:px-2 sm:py-0.5", getStatusColor(projeto.status))}>
                             {projeto.projeto_situacoes?.nome || formatStatus(projeto.status)}
                           </Badge>
                           {projeto.projeto_categorias && (
-                            <Badge variant="secondary" className="bg-primary/10 text-primary border-primary/20 shadow-none font-bold uppercase tracking-widest text-[10px] gap-1.5">
-                               <Tag className="w-3 h-3" />
-                               {projeto.projeto_categorias.nome}
+                            <Badge variant="secondary" className="bg-primary/10 text-primary border-primary/20 shadow-none font-bold uppercase tracking-widest text-[8px] sm:text-[10px] gap-1 sm:gap-1.5 px-1.5 py-0 sm:px-2 sm:py-0.5">
+                               <Tag className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
+                               <span className="truncate max-w-[80px] sm:max-w-none">{projeto.projeto_categorias.nome}</span>
                             </Badge>
                           )}
                         </div>
-                        <h4 className="text-foreground/90 font-medium mb-1 truncate">{projeto.titulo}</h4>
-                        <p className="text-sm text-muted-foreground line-clamp-2 max-w-2xl">{projeto.ementa}</p>
+                        <h4 className="text-foreground/90 font-medium mb-0.5 sm:mb-1 text-sm sm:text-base truncate">{projeto.titulo}</h4>
+                        <p className="text-[10px] sm:text-sm text-muted-foreground line-clamp-2 max-w-2xl">{projeto.ementa}</p>
                         
-                        <div className="flex items-center gap-4 mt-3 text-sm text-muted-foreground flex-wrap">
-                          <div className="flex items-center gap-1">
-                            <User className="h-3 w-3" />
-                            <span className="max-w-[300px] truncate">{authors}</span>
+                        <div className="flex items-center gap-2 sm:gap-4 mt-2 sm:mt-3 text-[10px] sm:text-sm text-muted-foreground flex-wrap">
+                          <div className="flex items-center gap-1 min-w-0">
+                            <User className="h-3 w-3 shrink-0" />
+                            <span className="truncate max-w-[150px] sm:max-w-[300px]">{authors}</span>
                           </div>
                           {projeto.texto_url && (
                             <div className="flex items-center gap-1">
-                              <ScrollText className="h-3 w-3" />
-                              <a href={projeto.texto_url} target="_blank" className="hover:text-primary hover:underline font-medium">Texto Original</a>
+                              <ScrollText className="h-3 w-3 shrink-0" />
+                              <a href={projeto.texto_url} target="_blank" className="hover:text-primary hover:underline font-medium">Doc</a>
+                              <span className="hidden sm:inline">Texto Original</span>
                             </div>
                           )}
                         </div>
                       </div>
                     </div>
       
-                    <div className="flex gap-2 w-full md:w-auto mt-4 md:mt-0">
-                      <Button 
-                        onClick={() => {
-                          setEditingProjeto({
-                            id: projeto.id,
-                            numero: projeto.numero,
-                            titulo: projeto.titulo,
-                            ementa: projeto.ementa,
-                            autores_ids: authorsIds,
-                            texto_url: projeto.texto_url || undefined,
-                            status: projeto.status,
-                            categoria_id: projeto.categoria_id || undefined,
-                            situacao_id: projeto.situacao_id || undefined
-                          })
-                          setActiveTab("form")
-                        }}
-                        variant="outline" 
-                        className="border-border bg-background text-foreground hover:bg-muted flex-1 md:flex-none font-medium h-9 shadow-none"
-                      >
-                        <Edit2 className="h-4 w-4 mr-2" />
-                        Editar
-                      </Button>
-                      <Button 
-                        onClick={() => handleDelete(projeto.id, projeto.titulo)}
-                        variant="ghost" 
-                        className="text-muted-foreground hover:text-red-500 hover:bg-red-500/10 flex-1 md:flex-none h-9 shadow-none"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
+                    <div className="flex gap-2 w-full md:w-auto mt-3 md:mt-0 justify-end md:justify-start border-t md:border-t-0 pt-3 md:pt-0 border-border/50">
+                      <Tooltip content="Editar Matéria">
+                        <Button 
+                          onClick={() => {
+                            setEditingProjeto({
+                              id: projeto.id,
+                              numero: projeto.numero,
+                              titulo: projeto.titulo,
+                              ementa: projeto.ementa,
+                              autores_ids: authorsIds,
+                              texto_url: projeto.texto_url || undefined,
+                              status: projeto.status,
+                              categoria_id: projeto.categoria_id || undefined,
+                              situacao_id: projeto.situacao_id || undefined
+                            })
+                            setActiveTab("form")
+                          }}
+                          variant="outline" 
+                          className="border-border bg-background text-foreground hover:bg-muted font-medium h-8 sm:h-9 shadow-none px-2 sm:px-4 flex-1 md:flex-none"
+                        >
+                          <Edit2 className="h-3.5 w-3.5 sm:h-4 sm:w-4 sm:mr-2" />
+                          <span className="hidden sm:inline">Editar</span>
+                        </Button>
+                      </Tooltip>
+
+                      <Tooltip content="Excluir Matéria">
+                        <Button 
+                          onClick={() => handleDelete(projeto.id, projeto.titulo)}
+                          variant="ghost" 
+                          className="text-muted-foreground hover:text-red-500 hover:bg-red-500/10 h-8 sm:h-9 shadow-none px-2 sm:px-3 flex-1 md:flex-none"
+                        >
+                          <Trash2 className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                          <span className="sm:hidden ml-2 text-xs">Excluir</span>
+                        </Button>
+                      </Tooltip>
                     </div>
                   </div>
                 )

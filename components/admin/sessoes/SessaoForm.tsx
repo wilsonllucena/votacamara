@@ -94,13 +94,13 @@ export function SessaoForm({ defaultValues, availableProjects = [], busyProjects
             {errors.titulo && <p className="text-xs text-red-500">{errors.titulo.message}</p>}
         </div>
 
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-2">
             <Label htmlFor="tipo" className="text-muted-foreground">Tipo</Label>
             <select
                 id="tipo"
                 {...register("tipo")}
-                className="flex h-10 w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
+                className="flex h-11 sm:h-10 w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
             >
                 <option value="ordinaria">Ordinária</option>
                 <option value="extraordinaria">Extraordinária</option>
@@ -113,7 +113,7 @@ export function SessaoForm({ defaultValues, availableProjects = [], busyProjects
             <select
                 id="status"
                 {...register("status")}
-                className="flex h-10 w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
+                className="flex h-11 sm:h-10 w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
             >
                 <option value="agendada">Agendada</option>
                 <option value="aberta">Aberta</option>
@@ -123,14 +123,14 @@ export function SessaoForm({ defaultValues, availableProjects = [], busyProjects
             </div>
         </div>
 
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-2">
             <Label htmlFor="data" className="text-muted-foreground">Data</Label>
             <Input
                 id="data"
                 type="date"
                 {...register("data")}
-                className="bg-background border-border text-foreground focus:border-primary/50"
+                className="h-11 sm:h-10 bg-background border-border text-foreground focus:border-primary/50"
             />
             {errors.data && <p className="text-xs text-red-500">{errors.data.message}</p>}
             </div>
@@ -141,7 +141,7 @@ export function SessaoForm({ defaultValues, availableProjects = [], busyProjects
                 id="hora"
                 type="time"
                 {...register("hora")}
-                className="bg-background border-border text-foreground focus:border-primary/50"
+                className="h-11 sm:h-10 bg-background border-border text-foreground focus:border-primary/50"
             />
             {errors.hora && <p className="text-xs text-red-500">{errors.hora.message}</p>}
             </div>
@@ -210,19 +210,19 @@ export function SessaoForm({ defaultValues, availableProjects = [], busyProjects
               )}
           </div>
 
-      <div className="flex justify-end gap-3 pt-4 border-t border-border">
+      <div className="flex flex-col sm:flex-row justify-end gap-2 sm:gap-3 pt-4 border-t border-border">
         <Button
           type="button"
           variant="outline"
           onClick={onCancel}
-          className="border-border text-muted-foreground hover:text-foreground hover:bg-muted"
+          className="w-full sm:w-auto border-border text-muted-foreground hover:text-foreground hover:bg-muted font-bold"
         >
           Cancelar
         </Button>
         <Button
           type="submit"
           disabled={isPending}
-          className="bg-primary hover:bg-primary/90 text-primary-foreground shadow-sm"
+          className="w-full sm:w-auto bg-primary hover:bg-primary/90 text-primary-foreground shadow-sm font-bold px-8"
         >
           {isPending ? "Salvando..." : "Salvar Sessão"}
         </Button>

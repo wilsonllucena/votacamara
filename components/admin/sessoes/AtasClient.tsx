@@ -15,6 +15,7 @@ import {
 import { GenerateAtasDialog } from "./GenerateAtasDialog"
 import { cn } from "@/lib/utils"
 import { Pagination } from "@/components/admin/Pagination"
+import { Tooltip } from "@/components/ui/tooltip"
 
 interface Ata {
   id: string
@@ -106,48 +107,57 @@ export function AtasClient({ slug, initialAtas, pagination }: AtasClientProps) {
               ) : (
                 initialAtas.map((ata) => (
                   <tr key={ata.id} className="hover:bg-accent/30 transition-colors group">
-                    <td className="px-6 py-4">
-                      <div className="flex items-center gap-3">
-                        <div className="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center text-primary">
-                          <FileText className="w-5 h-5" />
+                    <td className="px-4 sm:px-6 py-4">
+                      <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+                        <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-lg bg-primary/10 flex items-center justify-center text-primary shrink-0">
+                          <FileText className="w-4 h-4 sm:w-5 sm:h-5" />
                         </div>
-                        <span className="font-semibold text-foreground">{ata.nome}</span>
+                        <span className="font-semibold text-foreground text-sm sm:text-base truncate max-w-[150px] sm:max-w-none" title={ata.nome}>{ata.nome}</span>
                       </div>
                     </td>
-                    <td className="px-6 py-4 text-sm text-muted-foreground">
+                    <td className="px-4 sm:px-6 py-4 text-xs sm:text-sm text-muted-foreground whitespace-nowrap">
                       {new Date(ata.data).toLocaleDateString('pt-BR')}
                     </td>
-                    <td className="px-6 py-4">
+                    <td className="px-4 sm:px-6 py-4 hidden sm:table-cell">
                       <div className={cn(
-                        "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold",
+                        "inline-flex items-center gap-1.5 px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-full text-[10px] sm:text-xs font-bold",
                         ata.arquivo_url
                           ? "bg-green-500/10 text-green-500 border border-green-500/20" 
                           : "bg-amber-500/10 text-amber-500 border border-amber-500/20"
                       )}>
-                        {ata.arquivo_url ? <CheckCircle2 className="w-3.5 h-3.5" /> : <Clock className="w-3.5 h-3.5" />}
+                        {ata.arquivo_url ? <CheckCircle2 className="w-3 sm:w-3.5 h-3 sm:h-3.5" /> : <Clock className="w-3 sm:w-3.5 h-3 sm:h-3.5" />}
                         {ata.arquivo_url ? "Gerada" : "Pendente"}
                       </div>
                     </td>
-                    <td className="px-6 py-4 text-right">
-                      <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <td className="px-4 sm:px-6 py-4 text-right">
+                      <div className="flex items-center justify-end gap-1 sm:gap-2">
                         {ata.arquivo_url && (
                           <>
-                            <Button variant="ghost" size="sm" className="h-8 w-8 p-0" title="Ver Ata">
-                              <Eye className="w-4 h-4" />
-                            </Button>
-                            <Button variant="ghost" size="sm" className="h-8 w-8 p-0" title="Download PDF">
-                              <Download className="w-4 h-4" />
-                            </Button>
+                            <Tooltip content="Visualizar Ata">
+                              <Button variant="ghost" size="sm" className="h-8 w-8 p-0" asChild>
+                                <a href={ata.arquivo_url} target="_blank" rel="noopener noreferrer">
+                                  <Eye className="w-4 h-4" />
+                                </a>
+                              </Button>
+                            </Tooltip>
+                            <Tooltip content="Download PDF">
+                              <Button variant="ghost" size="sm" className="h-8 w-8 p-0" asChild>
+                                <a href={ata.arquivo_url} download>
+                                  <Download className="w-4 h-4" />
+                                </a>
+                              </Button>
+                            </Tooltip>
                           </>
                         )}
                         {!ata.arquivo_url && (
                           <Button 
                             variant="outline" 
                             size="sm" 
-                            className="h-8 px-3 text-xs font-bold hover:bg-primary hover:text-white border-primary/20"
+                            className="h-8 px-2 sm:px-3 text-[10px] sm:text-xs font-bold hover:bg-primary hover:text-white border-primary/20"
                             onClick={() => setIsDialogOpen(true)}
                           >
-                            Gerar Agora
+                            <span className="sm:inline hidden">Gerar Agora</span>
+                            <span className="sm:hidden">GERAR</span>
                           </Button>
                         )}
                       </div>

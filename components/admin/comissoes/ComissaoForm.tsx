@@ -217,9 +217,9 @@ export function ComissaoForm({ slug, vereadores, materias, onSuccess }: Comissao
                       <button 
                         type="button" 
                         onClick={() => removeMembro(index)}
-                        className="absolute -right-2 -top-2 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity shadow-lg"
+                        className="absolute -right-2 -top-2 w-7 h-7 bg-red-500 text-white rounded-full flex items-center justify-center sm:opacity-0 group-hover:opacity-100 transition-opacity shadow-lg z-10"
                       >
-                        <X className="w-3.5 h-3.5" />
+                        <X className="w-4 h-4" />
                       </button>
                     )}
                   </div>
@@ -286,12 +286,12 @@ export function ComissaoForm({ slug, vereadores, materias, onSuccess }: Comissao
           </div>
         </div>
 
-        <div className="flex items-center justify-between pt-6 border-t border-border">
-            <div className="flex items-center gap-2 text-muted-foreground">
+        <div className="flex flex-col-reverse sm:flex-row items-center justify-between gap-4 pt-6 border-t border-border">
+            <div className="flex items-center gap-2 text-muted-foreground w-full sm:w-auto justify-center sm:justify-start">
                <ShieldCheck className="w-4 h-4 text-green-500" />
-               <span className="text-xs">Todos os dados serão salvos como rascunho oficial.</span>
+               <span className="text-xs">Dados salvos como rascunho oficial.</span>
             </div>
-            <Button type="submit" disabled={isPending} className="px-10 font-bold bg-primary hover:bg-primary/90">
+            <Button type="submit" disabled={isPending} className="w-full sm:w-auto px-10 h-11 font-bold bg-primary hover:bg-primary/90 text-primary-foreground">
               {isPending ? "Gravando..." : "Salvar Comissão"}
             </Button>
         </div>

@@ -13,6 +13,7 @@ import { format } from "date-fns"
 import { ptBR } from "date-fns/locale"
 import { ConfirmDialog } from "@/components/ui/confirm-dialog"
 import { Pagination } from "@/components/admin/Pagination"
+import { Tooltip } from "@/components/ui/tooltip"
 
 interface Sessao {
   id: string
@@ -209,10 +210,10 @@ export function SessoesClient({ sessoes, slug, availableProjects, busyProjects, 
                   ) : (
                     sessoes.map((sessao) => (
                       <tr key={sessao.id} className="hover:bg-muted/50 transition-colors group">
-                        <td className="px-6 py-4 font-medium text-foreground">
-                          <div className="flex flex-col">
-                            <span className="font-bold text-base">{sessao.titulo}</span>
-                            <span className="text-xs text-muted-foreground md:hidden capitalize">{sessao.tipo}</span>
+                        <td className="px-4 sm:px-6 py-4 font-medium text-foreground">
+                          <div className="flex flex-col max-w-[150px] sm:max-w-none">
+                            <span className="font-bold text-sm sm:text-base truncate">{sessao.titulo}</span>
+                            <span className="text-[10px] text-muted-foreground md:hidden capitalize">{sessao.tipo}</span>
                           </div>
                         </td>
                         <td className="px-6 py-4 hidden md:table-cell">
@@ -220,49 +221,55 @@ export function SessoesClient({ sessoes, slug, availableProjects, busyProjects, 
                             {sessao.tipo}
                           </Badge>
                         </td>
-                        <td className="px-6 py-4 text-muted-foreground">
-                          <div className="flex flex-col gap-1">
-                            <div className="flex items-center gap-2">
-                              <Calendar className="h-3.5 w-3.5 text-primary/70" />
-                              <span className="text-xs">
-                                {sessao.data ? format(new Date(sessao.data + 'T00:00:00'), "dd/MM/yyyy", { locale: ptBR }) : 'Data não informada'}
+                        <td className="px-4 sm:px-6 py-4 text-muted-foreground">
+                          <div className="flex flex-col gap-0.5 sm:gap-1">
+                            <div className="flex items-center gap-1.5 sm:gap-2">
+                              <Calendar className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-primary/70" />
+                              <span className="text-[10px] sm:text-xs">
+                                {sessao.data ? format(new Date(sessao.data + 'T00:00:00'), "dd/MM", { locale: ptBR }) : '??'}
+                                <span className="hidden sm:inline">/{sessao.data?.split('-')[0]}</span>
                               </span>
                             </div>
-                            <div className="flex items-center gap-2">
-                              <Clock className="h-3.5 w-3.5 text-primary/70" />
-                              <span className="text-xs">{sessao.hora}h</span>
+                            <div className="flex items-center gap-1.5 sm:gap-2">
+                              <Clock className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-primary/70" />
+                              <span className="text-[10px] sm:text-xs">{sessao.hora}h</span>
                             </div>
                           </div>
                         </td>
                         <td className="px-6 py-4 hidden sm:table-cell">
                           {getStatusBadge(sessao.status)}
                         </td>
-                        <td className="px-6 py-4 text-right">
-                          <div className="flex justify-end gap-2">
+                        <td className="px-4 sm:px-6 py-4 text-right">
+                          <div className="flex justify-end items-center gap-1 sm:gap-2">
                             <Link href={`/admin/${slug}/sessoes/${sessao.id}/manager`}>
-                              <Button variant="outline" size="sm" className="bg-primary/5 text-primary border-primary/20 hover:bg-primary/10 h-8 font-bold text-xs uppercase shadow-none">
-                                Gerenciar
+                              <Button variant="outline" size="sm" className="bg-primary/5 text-primary border-primary/20 hover:bg-primary/10 h-7 sm:h-8 font-bold text-[9px] sm:text-xs uppercase shadow-none px-2 sm:px-4">
+                                <span className="sm:inline hidden">Gerenciar</span>
+                                <span className="sm:hidden">GER.</span>
                               </Button>
                             </Link>
-                            <button 
-                              type="button"
-                              onClick={() => {
-                                setEditingSessao(sessao)
-                                setActiveTab("form")
-                              }}
-                              className="p-2 text-muted-foreground hover:text-primary transition-colors hover:bg-muted rounded-md"
-                              title="Editar"
-                            >
-                              <Edit2 className="h-4 w-4" />
-                            </button>
-                            <button 
-                              type="button"
-                              onClick={() => handleDelete(sessao.id)}
-                              className="p-2 text-muted-foreground hover:text-red-500 transition-colors hover:bg-red-500/10 rounded-md"
-                              title="Excluir"
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </button>
+
+                            <Tooltip content="Editar Sessão">
+                              <button 
+                                type="button"
+                                onClick={() => {
+                                  setEditingSessao(sessao)
+                                  setActiveTab("form")
+                                }}
+                                className="p-1.5 sm:p-2 text-muted-foreground hover:text-primary transition-colors hover:bg-muted rounded-md"
+                              >
+                                <Edit2 className="h-4 w-4" />
+                              </button>
+                            </Tooltip>
+
+                            <Tooltip content="Excluir Sessão">
+                              <button 
+                                type="button"
+                                onClick={() => handleDelete(sessao.id)}
+                                className="p-1.5 sm:p-2 text-muted-foreground hover:text-red-500 transition-colors hover:bg-red-500/10 rounded-md"
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </button>
+                            </Tooltip>
                           </div>
                         </td>
                       </tr>

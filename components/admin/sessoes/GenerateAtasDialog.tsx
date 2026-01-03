@@ -55,7 +55,7 @@ export function GenerateAtasDialog({ isOpen, onClose, onGenerated }: GenerateAta
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && resetAndClose()}>
-      <DialogContent className="sm:max-w-[500px] border-border bg-card">
+      <DialogContent className="w-[95vw] sm:max-w-[500px] border-border bg-card p-4 sm:p-6 overflow-hidden">
         {step === "list" && (
           <>
             <DialogHeader>
@@ -107,12 +107,12 @@ export function GenerateAtasDialog({ isOpen, onClose, onGenerated }: GenerateAta
               </div>
             </div>
 
-            <DialogFooter className="gap-2 sm:gap-0">
-              <Button variant="ghost" onClick={resetAndClose} className="font-bold">Cancelar</Button>
+            <DialogFooter className="flex flex-col-reverse sm:flex-row gap-2 sm:gap-0 mt-6 border-t border-border/50 pt-4">
+              <Button variant="ghost" onClick={resetAndClose} className="font-bold w-full sm:w-auto">Cancelar</Button>
               <Button 
                 onClick={handleGenerate} 
                 disabled={!selectedSessao} 
-                className="bg-primary hover:bg-primary/90 font-bold px-8"
+                className="bg-primary hover:bg-primary/90 font-bold px-8 w-full sm:w-auto"
               >
                 Gerar Ata Oficial
               </Button>

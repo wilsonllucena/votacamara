@@ -30,7 +30,7 @@ export function AdminLayoutWrapper({ sidebar, header, children }: AdminLayoutWra
         )}
       >
         {header}
-        <div className="px-8 pb-8 h-full bg-background min-h-[calc(100vh-56px)]">
+        <div className="px-4 md:px-8 pb-8 h-full bg-background min-h-[calc(100vh-56px)]">
           {children}
         </div>
       </main>

@@ -17,6 +17,7 @@ import {
   Sparkles
 } from "lucide-react"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Tooltip } from "@/components/ui/tooltip"
 import { cn } from "@/lib/utils"
 import { createSituacao, updateSituacao, deleteSituacao } from "@/app/admin/_actions/situacoes"
 import { ConfirmDialog } from "@/components/ui/confirm-dialog"
@@ -248,37 +249,42 @@ export function SituacoesClient({ slug, situacoes, pagination }: SituacoesClient
                   ) : (
                     situacoes.map((sit) => (
                       <tr key={sit.id} className="hover:bg-muted/50 transition-colors group">
-                        <td className="px-6 py-4 font-bold text-foreground">
+                        <td className="px-4 sm:px-6 py-4 font-bold text-foreground">
                           <div className="flex items-center gap-2">
-                             <CheckCircle2 className="w-4 h-4 text-green-500/60" />
-                             {sit.nome}
+                             <CheckCircle2 className="w-4 h-4 text-green-500/60 shrink-0" />
+                             <span className="truncate max-w-[120px] sm:max-w-none">{sit.nome}</span>
                           </div>
                         </td>
-                        <td className="px-6 py-4 font-mono text-xs text-primary bg-primary/5 rounded-md mx-2 my-1 inline-block">
-                           {sit.label}
+                        <td className="px-4 sm:px-6 py-4">
+                           <span className="px-2 py-0.5 font-mono text-[10px] sm:text-xs text-primary bg-primary/5 rounded-md border border-primary/10">
+                              {sit.label}
+                           </span>
                         </td>
                         <td className="px-6 py-4 text-muted-foreground hidden md:table-cell max-w-xs truncate">
                           {sit.descricao || "Sem descrição"}
                         </td>
-                        <td className="px-6 py-4 text-right">
-                          <div className="flex justify-end gap-2">
-                            <button 
-                              onClick={() => handleEdit(sit)}
-                              className="p-2 text-muted-foreground hover:text-primary transition-colors hover:bg-muted rounded-md"
-                              title="Editar"
-                            >
-                              <Edit2 className="h-4 w-4" />
-                            </button>
-                            <button 
-                              onClick={() => {
-                                setSituacaoToDelete(sit.id)
-                                setIsDeleteDialogOpen(true)
-                              }}
-                              className="p-2 text-muted-foreground hover:text-red-500 transition-colors hover:bg-red-500/10 rounded-md"
-                              title="Excluir"
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </button>
+                        <td className="px-4 sm:px-6 py-4 text-right">
+                          <div className="flex justify-end gap-1 sm:gap-2">
+                            <Tooltip content="Editar Situação">
+                              <button 
+                                onClick={() => handleEdit(sit)}
+                                className="p-1.5 sm:p-2 text-muted-foreground hover:text-primary transition-colors hover:bg-muted rounded-md"
+                              >
+                                <Edit2 className="h-4 w-4" />
+                              </button>
+                            </Tooltip>
+                            
+                            <Tooltip content="Excluir Situação">
+                              <button 
+                                onClick={() => {
+                                  setSituacaoToDelete(sit.id)
+                                  setIsDeleteDialogOpen(true)
+                                }}
+                                className="p-1.5 sm:p-2 text-muted-foreground hover:text-red-500 transition-colors hover:bg-red-500/10 rounded-md"
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </button>
+                            </Tooltip>
                           </div>
                         </td>
                       </tr>
