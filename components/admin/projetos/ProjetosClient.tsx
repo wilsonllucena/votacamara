@@ -29,7 +29,12 @@ interface Projeto {
     id: string
     nome: string
   } | null
+  projeto_situacoes?: {
+    id: string
+    nome: string
+  } | null
   categoria_id?: string | null
+  situacao_id?: string | null
 }
 
 interface ProjetosClientProps {
@@ -37,13 +42,14 @@ interface ProjetosClientProps {
   slug: string
   vereadores: { id: string, nome: string, partido: string }[]
   categorias: { id: string, nome: string }[]
+  situacoes: { id: string, nome: string }[]
   pagination: {
     currentPage: number
     totalPages: number
   }
 }
 
-export function ProjetosClient({ projetos, slug, vereadores, categorias, pagination }: ProjetosClientProps) {
+export function ProjetosClient({ projetos, slug, vereadores, categorias, situacoes, pagination }: ProjetosClientProps) {
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
   const [activeTab, setActiveTab] = useState("list")
@@ -214,7 +220,7 @@ export function ProjetosClient({ projetos, slug, vereadores, categorias, paginat
                         <div className="flex items-center gap-2 mb-1 flex-wrap">
                           <h3 className="font-bold text-foreground text-lg">{projeto.numero || "S/N"}</h3>
                           <Badge variant="outline" className={`capitalize ${getStatusColor(projeto.status)} shadow-none`}>
-                            {formatStatus(projeto.status)}
+                            {projeto.projeto_situacoes?.nome || formatStatus(projeto.status)}
                           </Badge>
                           {projeto.projeto_categorias && (
                             <Badge variant="secondary" className="bg-primary/10 text-primary border-primary/20 shadow-none font-bold uppercase tracking-widest text-[10px] gap-1.5">
@@ -251,8 +257,9 @@ export function ProjetosClient({ projetos, slug, vereadores, categorias, paginat
                             ementa: projeto.ementa,
                             autores_ids: authorsIds,
                             texto_url: projeto.texto_url || undefined,
-                            status: formatStatus(projeto.status) as MateriaInputs["status"],
-                            categoria_id: projeto.categoria_id || undefined
+                            status: projeto.status,
+                            categoria_id: projeto.categoria_id || undefined,
+                            situacao_id: projeto.situacao_id || undefined
                           })
                           setActiveTab("form")
                         }}
@@ -319,6 +326,7 @@ export function ProjetosClient({ projetos, slug, vereadores, categorias, paginat
                isPending={isPending}
                vereadores={vereadores}
                categorias={categorias}
+               situacoes={situacoes}
                onSubmit={handleCreateOrUpdate}
                onCancel={() => {
                  setEditingProjeto(null)

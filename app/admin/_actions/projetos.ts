@@ -117,11 +117,12 @@ const projetoSchema = z.object({
   numero: z.string().min(1, "Número é obrigatório"),
   titulo: z.string().min(3, "Título deve ter pelo menos 3 caracteres"),
   ementa: z.string().min(10, "Ementa deve ser detalhada"),
-  autor: z.string().optional(), // Mantido por compatibilidade temporária
+  autor: z.string().optional(),
   autores_ids: z.array(z.string().uuid("Vereador selecionado inválido")).min(1, "Selecione pelo menos um autor"),
   texto_url: z.string().url("URL do texto deve ser válida").optional().or(z.literal("")),
-  status: z.enum(["Rascunho", "Em Pauta", "Votado"]),
+  status: z.string().optional(),
   categoria_id: z.string().uuid("Categoria selecionada inválida").optional().or(z.literal("")),
+  situacao_id: z.string().uuid("Situação selecionada inválida").optional().or(z.literal("")),
 })
 
 export async function createProjeto(slug: string, prevState: unknown, formData: FormData) {
@@ -149,13 +150,14 @@ export async function createProjeto(slug: string, prevState: unknown, formData: 
     texto_url: formData.get("texto_url"),
     status: formData.get("status"),
     categoria_id: formData.get("categoria_id"),
+    situacao_id: formData.get("situacao_id"),
   })
 
   if (!validatedFields.success) {
     return { errors: validatedFields.error.flatten().fieldErrors }
   }
 
-  const { numero, titulo, ementa, autores_ids: autores, texto_url, status, categoria_id } = validatedFields.data
+  const { numero, titulo, ementa, autores_ids: autores, texto_url, status, categoria_id, situacao_id } = validatedFields.data
 
   const { data: newProjeto, error } = await supabase.from("projetos").insert({
     camara_id: camara.id,
@@ -163,8 +165,9 @@ export async function createProjeto(slug: string, prevState: unknown, formData: 
     titulo,
     ementa,
     texto_url: texto_url || null,
-    status: status === "Em Pauta" ? "em_pauta" : status.toLowerCase(),
-    categoria_id: categoria_id || null
+    status: status ? (status === "Em Pauta" ? "em_pauta" : status.toLowerCase()) : "rascunho",
+    categoria_id: categoria_id || null,
+    situacao_id: situacao_id || null
   }).select("id").single()
 
   if (error) {
@@ -203,7 +206,7 @@ export async function updateProjeto(slug: string, id: string, data: z.infer<type
         return { error: validatedFields.error.message }
     }
 
-    const { numero, titulo, ementa, autores_ids: autores, texto_url, status, categoria_id } = validatedFields.data
+    const { numero, titulo, ementa, autores_ids: autores, texto_url, status, categoria_id, situacao_id } = validatedFields.data
 
     const { error } = await supabase
         .from("projetos")
@@ -212,8 +215,9 @@ export async function updateProjeto(slug: string, id: string, data: z.infer<type
             titulo,
             ementa,
             texto_url: texto_url || null,
-            status: status === "Em Pauta" ? "em_pauta" : status.toLowerCase(),
-            categoria_id: categoria_id || null
+            status: status ? (status === "Em Pauta" ? "em_pauta" : status.toLowerCase()) : undefined,
+            categoria_id: categoria_id || null,
+            situacao_id: situacao_id || null
         })
         .eq("id", id)
 

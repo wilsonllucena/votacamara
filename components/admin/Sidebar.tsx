@@ -58,6 +58,11 @@ export function Sidebar({ slug, userProfile }: SidebarProps) {
           label: "Categorias",
           href: `/admin/${slug}/projetos/categorias`,
           active: pathname === `/admin/${slug}/projetos/categorias`,
+        },
+        {
+          label: "Situação",
+          href: `/admin/${slug}/projetos/situacoes`,
+          active: pathname === `/admin/${slug}/projetos/situacoes`,
         }
       ]
     },

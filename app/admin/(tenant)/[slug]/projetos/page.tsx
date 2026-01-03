@@ -42,7 +42,14 @@ export default async function ProjetosPage({
     .eq("camara_id", camara.id)
     .order("nome")
 
-  // 4. Query Materias (Projetos) with authors and category
+  // 4. Fetch Situations
+  const { data: situacoes } = await supabase
+    .from("projeto_situacoes")
+    .select("id, nome")
+    .eq("camara_id", camara.id)
+    .order("nome")
+
+  // 5. Query Materias (Projetos) with authors, category and situation
   const currentPage = Number(page) || 1
   const from = (currentPage - 1) * ITEMS_PER_PAGE
   const to = from + ITEMS_PER_PAGE - 1
@@ -52,6 +59,10 @@ export default async function ProjetosPage({
     .select(`
       *,
       projeto_categorias (
+        id,
+        nome
+      ),
+      projeto_situacoes (
         id,
         nome
       ),
@@ -82,6 +93,7 @@ export default async function ProjetosPage({
             slug={slug} 
             vereadores={vereadores || []}
             categorias={categorias || []}
+            situacoes={situacoes || []}
             pagination={{
                 currentPage,
                 totalPages

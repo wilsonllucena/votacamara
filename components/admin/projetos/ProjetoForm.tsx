@@ -19,8 +19,9 @@ const materiaSchema = z.object({
   ementa: z.string().min(10, "Ementa deve ser detalhada"),
   autores_ids: z.array(z.string().uuid("Vereador selecionado inválido")).min(1, "Selecione pelo menos um autor"),
   texto_url: z.string().url("URL do texto deve ser válida").optional().or(z.literal("")),
-  status: z.enum(["Rascunho", "Em Pauta", "Votado"]),
+  status: z.string().optional(),
   categoria_id: z.string().uuid("Categoria selecionada inválida").optional().or(z.literal("")),
+  situacao_id: z.string().uuid("Situação selecionada inválida").optional().or(z.literal("")),
 })
 
 export type MateriaInputs = z.infer<typeof materiaSchema>
@@ -32,9 +33,10 @@ interface MateriaFormProps {
   isPending?: boolean
   vereadores: { id: string, nome: string, partido: string }[]
   categorias: { id: string, nome: string }[]
+  situacoes: { id: string, nome: string }[]
 }
 
-export function ProjetoForm({ defaultValues, onSubmit, onCancel, isPending, vereadores, categorias }: MateriaFormProps) {
+export function ProjetoForm({ defaultValues, onSubmit, onCancel, isPending, vereadores, categorias, situacoes }: MateriaFormProps) {
   const {
     register,
     handleSubmit,
@@ -49,8 +51,9 @@ export function ProjetoForm({ defaultValues, onSubmit, onCancel, isPending, vere
       ementa: defaultValues?.ementa || "",
       autores_ids: defaultValues?.autores_ids || [],
       texto_url: defaultValues?.texto_url || "",
-      status: (defaultValues?.status as MateriaInputs["status"]) || "Rascunho",
+      status: defaultValues?.status || "rascunho",
       categoria_id: defaultValues?.categoria_id || "",
+      situacao_id: defaultValues?.situacao_id || "",
     }
 })
 
@@ -196,17 +199,18 @@ export function ProjetoForm({ defaultValues, onSubmit, onCancel, isPending, vere
       </div>
 
       <div className="space-y-2">
-          <label className="text-sm font-medium text-muted-foreground" htmlFor="status">Status</label>
+          <label className="text-sm font-medium text-muted-foreground" htmlFor="situacao_id">Situação</label>
           <select 
-            {...register("status")}
-            id="status"
-            className={`w-full bg-background border ${errors.status ? 'border-red-500' : 'border-border'} rounded-lg px-4 py-2 text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all`}
+            {...register("situacao_id")}
+            id="situacao_id"
+            className={`w-full bg-background border ${errors.situacao_id ? 'border-red-500' : 'border-border'} rounded-lg px-4 py-2 text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all text-xs font-bold uppercase`}
           >
-            <option value="Rascunho">Rascunho</option>
-            <option value="Em Pauta">Em Pauta</option>
-            <option value="Votado">Votado</option>
+            <option value="">SELECIONE UMA SITUAÇÃO...</option>
+            {situacoes.map(sit => (
+              <option key={sit.id} value={sit.id}>{sit.nome}</option>
+            ))}
           </select>
-          {errors.status && <p className="text-xs text-red-500 mt-1">{errors.status.message}</p>}
+          {errors.situacao_id && <p className="text-xs text-red-500 mt-1">{errors.situacao_id.message}</p>}
       </div>
 
       <div className="space-y-4 p-4 border border-dashed border-border rounded-xl bg-muted/30">
