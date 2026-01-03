@@ -154,7 +154,7 @@ export async function interruptVoting(slug: string, sessaoId: string, votacaoId:
 /**
  * Registra o voto de um vereador.
  */
-export async function registrarVoto(votacaoId: string, valor: 'SIM' | 'NAO' | 'ABSTENCAO' | 'AUSENTE') {
+export async function registrarVoto(votacaoId: string, valor: 'SIM' | 'NAO' | 'FAVORAVEL' | 'CONTRA' | 'ABSTENCAO' | 'AUSENTE') {
     const supabase = await createClient()
     
     const { data: { user } } = await supabase.auth.getUser()

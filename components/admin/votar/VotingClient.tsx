@@ -167,7 +167,7 @@ export function VotingClient({ vereador, slug, initialActiveVoting, camaraId, in
         return (timeLeft / total) * 100
     }
 
-    const handleVote = async (valor: 'SIM' | 'NAO' | 'ABSTENCAO') => {
+    const handleVote = async (valor: 'FAVORAVEL' | 'CONTRA' | 'ABSTENCAO') => {
         if (!activeVoting || isPending) return
         
         startTransition(async () => {
@@ -254,43 +254,43 @@ export function VotingClient({ vereador, slug, initialActiveVoting, camaraId, in
                     <div className="flex flex-col gap-4">
                         <h4 className="text-muted-foreground text-sm font-bold uppercase tracking-widest text-center mb-2">Selecione sua opção de voto</h4>
                         
-                        {/* Vote SIM */}
+                        {/* Vote FAVORAVEL */}
                         <button 
-                            onClick={() => handleVote('SIM')}
+                            onClick={() => handleVote('FAVORAVEL')}
                             disabled={isPending || myVote !== null}
                             className={cn(
                                 "group relative w-full h-24 rounded-2xl border-2 transition-all flex items-center justify-between px-8",
-                                myVote === 'SIM' 
+                                myVote === 'FAVORAVEL' 
                                     ? "bg-green-500/10 border-green-500 text-green-500 shadow-lg shadow-green-500/10" 
                                     : "bg-transparent border-border text-muted-foreground hover:border-green-500/50 hover:bg-green-500/5 hover:text-green-500"
                             )}
                         >
-                            <span className="text-2xl font-black italic tracking-tighter uppercase">SIM</span>
+                            <span className="text-2xl font-black italic tracking-tighter uppercase">FAVORÁVEL</span>
                             <div className={cn(
                                 "w-10 h-10 rounded-full border-2 flex items-center justify-center transition-all",
-                                myVote === 'SIM' ? "bg-green-500 border-green-500 text-white" : "border-border group-hover:border-green-500/50"
+                                myVote === 'FAVORAVEL' ? "bg-green-500 border-green-500 text-white" : "border-border group-hover:border-green-500/50"
                             )}>
-                                {myVote === 'SIM' && <Check className="w-6 h-6 stroke-[3]" />}
+                                {myVote === 'FAVORAVEL' && <Check className="w-6 h-6 stroke-[3]" />}
                             </div>
                         </button>
  
-                        {/* Vote NAO */}
+                        {/* Vote CONTRA */}
                         <button 
-                            onClick={() => handleVote('NAO')}
+                            onClick={() => handleVote('CONTRA')}
                             disabled={isPending || myVote !== null}
                             className={cn(
                                 "group relative w-full h-24 rounded-2xl border-2 transition-all flex items-center justify-between px-8",
-                                myVote === 'NAO' 
+                                myVote === 'CONTRA' 
                                     ? "bg-red-500/10 border-red-500 text-red-500 shadow-lg shadow-red-500/10" 
                                     : "bg-transparent border-border text-muted-foreground hover:border-red-500/50 hover:bg-red-500/5 hover:text-red-500"
                             )}
                         >
-                            <span className="text-2xl font-black italic tracking-tighter uppercase">NÃO</span>
+                            <span className="text-2xl font-black italic tracking-tighter uppercase">CONTRA</span>
                             <div className={cn(
                                 "w-10 h-10 rounded-full border-2 flex items-center justify-center transition-all",
-                                myVote === 'NAO' ? "bg-red-500 border-red-500 text-white" : "border-border group-hover:border-red-500/50"
+                                myVote === 'CONTRA' ? "bg-red-500 border-red-500 text-white" : "border-border group-hover:border-red-500/50"
                             )}>
-                                {myVote === 'NAO' && <Check className="w-6 h-6 stroke-[3]" />}
+                                {myVote === 'CONTRA' && <Check className="w-6 h-6 stroke-[3]" />}
                             </div>
                         </button>
  

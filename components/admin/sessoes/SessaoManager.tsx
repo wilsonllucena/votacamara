@@ -452,11 +452,15 @@ export function SessaoManager({ sessao, councilors, pautaItems, activeVoting: in
                                         {voto ? (
                                             <Badge className={cn(
                                                 "w-20 justify-center font-bold text-[10px] tracking-wider",
-                                                voto.valor === 'SIM' ? 'bg-green-500/10 text-green-500 border-green-500/20' : 
-                                                voto.valor === 'NAO' ? 'bg-red-500/10 text-red-500 border-red-500/20' :
+                                                voto.valor === 'FAVORAVEL' ? 'bg-green-500/10 text-green-500 border-green-500/20' : 
+                                                voto.valor === 'CONTRA' ? 'bg-red-500/10 text-red-500 border-red-500/20' :
+                                                voto.valor === 'ABSTENCAO' ? 'bg-zinc-500/10 text-zinc-500 border-zinc-500/20' :
                                                 'bg-zinc-500/10 text-zinc-500 border-zinc-500/20'
                                             )}>
-                                                {voto.valor}
+                                                {voto.valor === 'FAVORAVEL' ? 'FAVORÁVEL' : 
+                                                 voto.valor === 'CONTRA' ? 'CONTRA' : 
+                                                 voto.valor === 'ABSTENCAO' ? 'ABSTENÇÃO' : 
+                                                 voto.valor}
                                             </Badge>
                                         ) : (
                                             <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground font-bold italic px-2">
@@ -474,16 +478,16 @@ export function SessaoManager({ sessao, councilors, pautaItems, activeVoting: in
                             <h4 className="text-xs font-bold text-primary uppercase tracking-widest text-center">Apuração Parcial</h4>
                             <div className="grid grid-cols-3 gap-2">
                                 <div className="text-center">
-                                    <p className="text-lg font-black text-green-500">{votes.filter(v => v.valor === 'SIM').length}</p>
-                                    <p className="text-[10px] font-bold text-muted-foreground">SIM</p>
+                                    <p className="text-lg font-black text-green-500">{votes.filter(v => v.valor === 'FAVORAVEL').length}</p>
+                                    <p className="text-[10px] font-bold text-muted-foreground uppercase">FAVORÁVEL</p>
                                 </div>
                                 <div className="text-center border-x border-primary/10">
-                                    <p className="text-lg font-black text-red-500">{votes.filter(v => v.valor === 'NAO').length}</p>
-                                    <p className="text-[10px] font-bold text-muted-foreground">NÃO</p>
+                                    <p className="text-lg font-black text-red-500">{votes.filter(v => v.valor === 'CONTRA').length}</p>
+                                    <p className="text-[10px] font-bold text-muted-foreground uppercase">CONTRA</p>
                                 </div>
                                 <div className="text-center">
                                     <p className="text-lg font-black text-zinc-400">{votes.filter(v => v.valor === 'ABSTENCAO').length}</p>
-                                    <p className="text-[10px] font-bold text-muted-foreground">ABS</p>
+                                    <p className="text-[10px] font-bold text-muted-foreground uppercase">ABSTENÇÃO</p>
                                 </div>
                             </div>
                         </div>

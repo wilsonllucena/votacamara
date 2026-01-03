@@ -26,8 +26,8 @@ interface PublicVotingClientProps {
 }
 
 interface VoteResult {
-    SIM: number
-    NAO: number
+    FAVORAVEL: number
+    CONTRA: number
     ABSTENCAO: number
     AUSENTE: number
 }
@@ -44,8 +44,8 @@ export function PublicVotingClient({
     const [currentSession, setCurrentSession] = useState(activeSession)
     const [votes, setVotes] = useState<any[]>([])
     const [voteResults, setVoteResults] = useState<VoteResult>({
-        SIM: 0,
-        NAO: 0,
+        FAVORAVEL: 0,
+        CONTRA: 0,
         ABSTENCAO: 0,
         AUSENTE: 0
     })
@@ -149,19 +149,19 @@ export function PublicVotingClient({
         const results = voteData.reduce((acc, vote) => {
             acc[vote.valor as keyof VoteResult] = (acc[vote.valor as keyof VoteResult] || 0) + 1
             return acc
-        }, { SIM: 0, NAO: 0, ABSTENCAO: 0, AUSENTE: 0 })
+        }, { FAVORAVEL: 0, CONTRA: 0, ABSTENCAO: 0, AUSENTE: 0 })
 
         setVoteResults(results)
     }
 
-    const totalVotes = voteResults.SIM + voteResults.NAO + voteResults.ABSTENCAO + voteResults.AUSENTE
+    const totalVotes = voteResults.FAVORAVEL + voteResults.CONTRA + voteResults.ABSTENCAO + voteResults.AUSENTE
     const totalCouncilors = councilors.length
     const participationRate = totalVotes > 0 ? Math.round((totalVotes / totalCouncilors) * 100) : 0
 
     const getVoteColor = (voteType: keyof VoteResult) => {
         switch (voteType) {
-            case 'SIM': return 'bg-green-500'
-            case 'NAO': return 'bg-red-500'
+            case 'FAVORAVEL': return 'bg-green-500'
+            case 'CONTRA': return 'bg-red-500'
             case 'ABSTENCAO': return 'bg-yellow-500'
             case 'AUSENTE': return 'bg-gray-500'
             default: return 'bg-gray-500'
@@ -170,8 +170,8 @@ export function PublicVotingClient({
 
     const getVoteBgColor = (voteType: keyof VoteResult) => {
         switch (voteType) {
-            case 'SIM': return 'bg-green-500/10 border-green-500/20 text-green-500'
-            case 'NAO': return 'bg-red-500/10 border-red-500/20 text-red-500'
+            case 'FAVORAVEL': return 'bg-green-500/10 border-green-500/20 text-green-500'
+            case 'CONTRA': return 'bg-red-500/10 border-red-500/20 text-red-500'
             case 'ABSTENCAO': return 'bg-yellow-500/10 border-yellow-500/20 text-yellow-500'
             case 'AUSENTE': return 'bg-gray-500/10 border-gray-500/20 text-gray-500'
             default: return 'bg-gray-500/10 border-gray-500/20 text-gray-500'
@@ -291,7 +291,7 @@ export function PublicVotingClient({
                                         {count}
                                     </div>
                                     <p className="text-zinc-400 text-sm font-medium uppercase tracking-wider">
-                                        {type === 'SIM' ? 'Sim' : type === 'NAO' ? 'Não' : type === 'ABSTENCAO' ? 'Abstenção' : 'Ausente'}
+                                        {type === 'FAVORAVEL' ? 'Favorável' : type === 'CONTRA' ? 'Contra' : type === 'ABSTENCAO' ? 'Abstenção' : 'Ausente'}
                                     </p>
                                 </div>
                             ))}
@@ -339,7 +339,10 @@ export function PublicVotingClient({
                                             "px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider",
                                             voteType ? getVoteBgColor(voteType) : "bg-zinc-800 text-zinc-500"
                                         )}>
-                                            {voteType ? voteType : 'Aguardando'}
+                                            {voteType === 'FAVORAVEL' ? 'FAVORÁVEL' : 
+                                             voteType === 'CONTRA' ? 'CONTRA' : 
+                                             voteType === 'ABSTENCAO' ? 'ABSTENÇÃO' : 
+                                             voteType ? voteType : 'Aguardando'}
                                         </div>
                                     </div>
                                 )
