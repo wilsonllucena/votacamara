@@ -30,17 +30,88 @@ export async function startSession(slug: string, sessaoId: string) {
 export async function endSession(slug: string, sessaoId: string) {
     const supabase = await createClient()
 
-    const { error } = await supabase
+    // 1. Encerrar a sessão no banco
+    const { data: sessao, error: sError } = await supabase
         .from("sessoes")
         .update({ 
             status: "encerrada",
             encerrou_em: new Date().toISOString()
         })
         .eq("id", sessaoId)
+        .select("camara_id")
+        .single()
 
-    if (error) return { error: error.message }
+    if (sError) return { error: sError.message }
+
+    // 2. Automação de Presença
+    try {
+        const camaraId = sessao.camara_id
+
+        // Buscar todos os vereadores ativos (que não são do executivo)
+        const { data: vereadores } = await supabase
+            .from("vereadores")
+            .select("id")
+            .eq("camara_id", camaraId)
+            .eq("ativo", true)
+            .eq("is_executivo", false)
+
+        // Buscar votações desta sessão
+        const { data: votacoes } = await supabase
+            .from("votacoes")
+            .select("id")
+            .eq("sessao_id", sessaoId)
+
+        const votacaoIds = votacoes?.map(v => v.id) || []
+
+        // Buscar vereadores que votaram
+        let votantes: string[] = []
+        if (votacaoIds.length > 0) {
+            const { data: votos } = await supabase
+                .from("votos")
+                .select("vereador_id")
+                .in("votacao_id", votacaoIds)
+            
+            votantes = Array.from(new Set(votos?.map(v => v.vereador_id) || []))
+        }
+
+        // Buscar presenças existentes (para respeitar justificativas já registradas)
+        const { data: presencasExistem } = await supabase
+            .from("sessao_presencas")
+            .select("vereador_id, status")
+            .eq("sessao_id", sessaoId)
+
+        // Preparar registros
+        const presencaBatch = vereadores?.map(v => {
+            const jaExiste = presencasExistem?.find(p => p.vereador_id === v.id)
+            
+            const votou = votantes.includes(v.id)
+            let status: 'presente' | 'ausente' | 'justificado' = votou ? 'presente' : 'ausente'
+            
+            // Se não votou mas já estava justificado, mantém a justificativa
+            if (!votou && jaExiste?.status === 'justificado') {
+                status = 'justificado'
+            }
+
+            return {
+                camara_id: camaraId,
+                sessao_id: sessaoId,
+                vereador_id: v.id,
+                status,
+                updated_at: new Date().toISOString()
+            }
+        }) || []
+
+        if (presencaBatch.length > 0) {
+            await supabase
+                .from("sessao_presencas")
+                .upsert(presencaBatch, { onConflict: 'sessao_id,vereador_id' })
+        }
+    } catch (err) {
+        console.error("Erro na automação de presença:", err)
+    }
 
     revalidatePath(`/admin/${slug}/sessoes/${sessaoId}/manager`)
+    revalidatePath(`/admin/${slug}/sessoes/presencas`)
     return { success: true }
 }
 
