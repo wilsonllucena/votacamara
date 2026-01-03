@@ -99,86 +99,98 @@ export function PresencaDialog({
 
     return (
         <Dialog open={isOpen} onOpenChange={onClose}>
-            <DialogContent className="max-w-3xl max-h-[90vh] flex flex-col p-0 overflow-hidden border-border bg-card">
-                <DialogHeader className="p-6 border-b border-border bg-muted/30">
-                    <DialogTitle className="text-2xl font-black flex items-center gap-3">
-                        <UserCheck className="w-6 h-6 text-primary" />
+            <DialogContent className="w-[95vw] sm:max-w-3xl max-h-[90vh] flex flex-col p-0 overflow-hidden border-border bg-card rounded-2xl sm:rounded-3xl">
+                <DialogHeader className="p-4 sm:p-6 border-b border-border bg-muted/30">
+                    <DialogTitle className="text-xl sm:text-2xl font-black flex items-center gap-3">
+                        <UserCheck className="w-5 h-5 sm:w-6 sm:h-6 text-primary" />
                         Lista de Presença
                     </DialogTitle>
-                    <DialogDescription className="font-medium">
+                    <DialogDescription className="font-medium text-xs sm:text-sm truncate">
                         {session?.titulo} - {session?.iniciou_em ? new Date(session.iniciou_em).toLocaleDateString('pt-BR') : ''}
                     </DialogDescription>
                 </DialogHeader>
 
-                <div className="flex-1 overflow-y-auto p-6 space-y-4">
+                <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-4">
                     {isLoading ? (
                         <div className="flex flex-col items-center justify-center py-20 gap-4">
                             <Loader2 className="w-10 h-10 text-primary animate-spin" />
-                            <p className="text-sm font-bold text-muted-foreground uppercase tracking-widest">Carregando parlamentares...</p>
+                            <p className="text-xs sm:text-sm font-bold text-muted-foreground uppercase tracking-widest text-center">Carregando parlamentares...</p>
                         </div>
                     ) : error ? (
                         <div className="flex items-center gap-3 p-4 bg-red-500/10 border border-red-500/20 rounded-xl text-red-500">
                             <AlertCircle className="w-5 h-5 shrink-0" />
-                            <p className="text-sm font-bold">{error}</p>
+                            <p className="text-xs sm:text-sm font-bold">{error}</p>
                         </div>
                     ) : (
                         <div className="grid grid-cols-1 gap-3">
                             {presencas.map((p) => (
-                                <div key={p.id} className="group flex items-center justify-between p-4 rounded-2xl border border-border bg-muted/20 hover:bg-muted/40 transition-all">
+                                <div key={p.id} className="group flex flex-col sm:flex-row sm:items-center justify-between p-4 rounded-2xl border border-border bg-muted/20 hover:bg-muted/40 transition-all gap-4">
                                     <div className="flex items-center gap-4">
-                                        <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center text-primary font-bold shadow-inner">
+                                        <div className="w-12 h-12 shrink-0 rounded-xl bg-primary/10 flex items-center justify-center text-primary font-bold shadow-inner overflow-hidden">
                                             {p.vereadores?.foto_url ? (
-                                                <img src={p.vereadores.foto_url} alt="" className="w-full h-full object-cover rounded-xl" />
+                                                <img src={p.vereadores.foto_url} alt="" className="w-full h-full object-cover" />
                                             ) : (
                                                 <User className="w-6 h-6" />
                                             )}
                                         </div>
-                                        <div>
-                                            <p className="font-black text-foreground">{p.vereadores?.nome}</p>
-                                            <p className="text-xs font-bold text-muted-foreground uppercase tracking-tighter">{p.vereadores?.partido}</p>
+                                        <div className="min-w-0 flex-1">
+                                            <p className="font-black text-foreground text-sm sm:text-base truncate leading-tight" title={p.vereadores?.nome}>
+                                                {p.vereadores?.nome}
+                                            </p>
+                                            <p className="text-[10px] sm:text-xs font-bold text-muted-foreground uppercase tracking-tighter truncate opacity-70">
+                                                {p.vereadores?.partido}
+                                            </p>
                                         </div>
                                     </div>
                                     
-                                    <div className="flex items-center gap-2">
-                                        <Button
-                                            variant="ghost"
-                                            size="sm"
-                                            onClick={() => handleStatusChange(p.vereador_id, 'presente')}
-                                            className={cn(
-                                                "h-10 px-4 rounded-xl font-bold text-[10px] uppercase tracking-widest gap-2 transition-all",
-                                                p.status === 'presente' 
-                                                    ? "bg-green-500 text-white hover:bg-green-600 shadow-md shadow-green-500/20" 
-                                                    : "text-muted-foreground hover:bg-green-500/10 hover:text-green-500"
-                                            )}
-                                        >
-                                            <UserCheck className="w-3.5 h-3.5" /> Presente
-                                        </Button>
-                                        <Button
-                                            variant="ghost"
-                                            size="sm"
-                                            onClick={() => handleStatusChange(p.vereador_id, 'ausente')}
-                                            className={cn(
-                                                "h-10 px-4 rounded-xl font-bold text-[10px] uppercase tracking-widest gap-2 transition-all",
-                                                p.status === 'ausente' 
-                                                    ? "bg-red-500 text-white hover:bg-red-600 shadow-md shadow-red-500/20" 
-                                                    : "text-muted-foreground hover:bg-red-500/10 hover:text-red-500"
-                                            )}
-                                        >
-                                            <UserX className="w-3.5 h-3.5" /> Ausente
-                                        </Button>
-                                        <Button
-                                            variant="ghost"
-                                            size="sm"
-                                            onClick={() => handleStatusChange(p.vereador_id, 'justificado')}
-                                            className={cn(
-                                                "h-10 px-4 rounded-xl font-bold text-[10px] uppercase tracking-widest gap-2 transition-all",
-                                                p.status === 'justificado' 
-                                                    ? "bg-amber-500 text-white hover:bg-amber-600 shadow-md shadow-amber-500/20" 
-                                                    : "text-muted-foreground hover:bg-amber-500/10 hover:text-amber-500"
-                                            )}
-                                        >
-                                            <FileWarning className="w-3.5 h-3.5" /> Justificar
-                                        </Button>
+                                    <div className="flex items-center sm:flex-row justify-between gap-2">
+                                        <div className="grid grid-cols-3 sm:flex items-center gap-1.5 w-full sm:w-auto">
+                                            <Button
+                                                variant="ghost"
+                                                size="sm"
+                                                onClick={() => handleStatusChange(p.vereador_id, 'presente')}
+                                                className={cn(
+                                                    "h-10 sm:h-9 px-2 sm:px-4 rounded-xl font-bold text-[10px] uppercase tracking-widest gap-2 transition-all flex items-center justify-center",
+                                                    p.status === 'presente' 
+                                                        ? "bg-green-500 text-white hover:bg-green-600 shadow-md shadow-green-500/20" 
+                                                        : "text-muted-foreground hover:bg-green-500/10 hover:text-green-500 border border-transparent hover:border-green-500/20"
+                                                )}
+                                                title="Presente"
+                                            >
+                                                <UserCheck className="w-4 h-4 sm:w-3.5 sm:h-3.5" />
+                                                <span className="hidden sm:inline">Presente</span>
+                                            </Button>
+                                            <Button
+                                                variant="ghost"
+                                                size="sm"
+                                                onClick={() => handleStatusChange(p.vereador_id, 'ausente')}
+                                                className={cn(
+                                                    "h-10 sm:h-9 px-2 sm:px-4 rounded-xl font-bold text-[10px] uppercase tracking-widest gap-2 transition-all flex items-center justify-center",
+                                                    p.status === 'ausente' 
+                                                        ? "bg-red-500 text-white hover:bg-red-600 shadow-md shadow-red-500/20" 
+                                                        : "text-muted-foreground hover:bg-red-500/10 hover:text-red-500 border border-transparent hover:border-red-500/20"
+                                                )}
+                                                title="Ausente"
+                                            >
+                                                <UserX className="w-4 h-4 sm:w-3.5 sm:h-3.5" />
+                                                <span className="hidden sm:inline">Ausente</span>
+                                            </Button>
+                                            <Button
+                                                variant="ghost"
+                                                size="sm"
+                                                onClick={() => handleStatusChange(p.vereador_id, 'justificado')}
+                                                className={cn(
+                                                    "h-10 sm:h-9 px-2 sm:px-4 rounded-xl font-bold text-[10px] uppercase tracking-widest gap-2 transition-all flex items-center justify-center",
+                                                    p.status === 'justificado' 
+                                                        ? "bg-amber-500 text-white hover:bg-amber-600 shadow-md shadow-amber-500/20" 
+                                                        : "text-muted-foreground hover:bg-amber-500/10 hover:text-amber-500 border border-transparent hover:border-amber-500/20"
+                                                )}
+                                                title="Justificar"
+                                            >
+                                                <FileWarning className="w-4 h-4 sm:w-3.5 sm:h-3.5" />
+                                                <span className="hidden sm:inline">Justificar</span>
+                                            </Button>
+                                        </div>
                                     </div>
                                 </div>
                             ))}
@@ -186,11 +198,11 @@ export function PresencaDialog({
                     )}
                 </div>
 
-                <DialogFooter className="p-6 border-t border-border bg-muted/30">
-                    <Button variant="outline" onClick={onClose} disabled={isPending} className="rounded-xl font-bold uppercase tracking-widest text-[10px]">
+                <DialogFooter className="p-4 sm:p-6 border-t border-border bg-muted/30 flex flex-col-reverse sm:flex-row gap-3 sm:gap-2">
+                    <Button variant="outline" onClick={onClose} disabled={isPending} className="w-full sm:w-auto h-11 sm:h-10 rounded-xl font-bold uppercase tracking-widest text-[10px]">
                         Cancelar
                     </Button>
-                    <Button onClick={handleSave} disabled={isPending || isLoading} className="rounded-xl font-bold uppercase tracking-widest text-[10px] gap-2 px-8">
+                    <Button onClick={handleSave} disabled={isPending || isLoading} className="w-full sm:w-auto h-11 sm:h-10 rounded-xl font-bold uppercase tracking-widest text-[10px] gap-2 px-8">
                         {isPending ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Save className="w-3.5 h-3.5" />}
                         Salvar Presenças
                     </Button>
