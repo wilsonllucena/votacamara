@@ -1,35 +1,33 @@
 import { AtasClient } from "@/components/admin/sessoes/AtasClient"
+import { getAtas } from "@/app/admin/_actions/atas"
 
-interface AtasPageProps {
-  params: Promise<{
-    slug: string
-  }>
-}
+const ITEMS_PER_PAGE = 10
 
-export default async function AtasPage({ params }: AtasPageProps) {
+export default async function AtasPage({ 
+    params,
+    searchParams 
+}: { 
+    params: Promise<{ slug: string }> 
+    searchParams: Promise<{ [key: string]: string | string[] | undefined }>
+}) {
   const { slug } = await params
+  const { page = "1", search = "" } = await searchParams
 
-  // Mock data for initial implementation
-  const initialAtas = [
-    {
-      id: "1",
-      sessao_nome: "Sessão Ordinária 01/2024",
-      data: "2024-01-10",
-      status: "Gerada",
-      arquivo_url: "#",
-    },
-    {
-      id: "2",
-      sessao_nome: "Sessão Ordinária 02/2024",
-      data: "2024-01-17",
-      status: "Pendente",
-      arquivo_url: null,
-    }
-  ]
+  const currentPage = Number(page) || 1
+  const { data: atas, count } = await getAtas(slug, 'sessao', currentPage, search as string, ITEMS_PER_PAGE)
+  
+  const totalPages = count ? Math.ceil(count / ITEMS_PER_PAGE) : 1
 
   return (
     <div className="p-6">
-      <AtasClient slug={slug} initialAtas={initialAtas} />
+      <AtasClient 
+        slug={slug} 
+        initialAtas={(atas as any[]) || []} 
+        pagination={{
+            currentPage,
+            totalPages
+        }}
+      />
     </div>
   )
 }

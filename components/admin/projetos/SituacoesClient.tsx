@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useTransition } from "react"
+import { useState, useTransition, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -24,6 +24,9 @@ import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { z } from "zod"
 
+import { Pagination } from "@/components/admin/Pagination"
+import { useSearchParams } from "next/navigation"
+
 const situacaoSchema = z.object({
   nome: z.string().min(2, "O nome deve ter pelo menos 2 caracteres"),
   label: z.string().min(2, "O label deve ter pelo menos 2 caracteres"),
@@ -43,22 +46,47 @@ interface Situacao {
 interface SituacoesClientProps {
   slug: string
   situacoes: Situacao[]
+  pagination: {
+    currentPage: number
+    totalPages: number
+  }
 }
 
-export function SituacoesClient({ slug, situacoes }: SituacoesClientProps) {
+export function SituacoesClient({ slug, situacoes, pagination }: SituacoesClientProps) {
   const router = useRouter()
+  const searchParams = useSearchParams()
   const [isPending, startTransition] = useTransition()
   const [activeTab, setActiveTab] = useState("list")
   const [editingSituacao, setEditingSituacao] = useState<Situacao | null>(null)
-  const [searchTerm, setSearchTerm] = useState("")
+  const [searchTerm, setSearchTerm] = useState(searchParams.get("search") || "")
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
   const [situacaoToDelete, setSituacaoToDelete] = useState<string | null>(null)
   const [message, setMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null)
+
+  // Sync search term with URL
+  const handleSearch = () => {
+    const params = new URLSearchParams(searchParams.toString())
+    if (searchTerm) {
+      params.set("search", searchTerm)
+    } else {
+      params.delete("search")
+    }
+    params.set("page", "1") // Reset to page 1 on new search
+    router.push(`?${params.toString()}`)
+  }
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      handleSearch()
+    }
+  }
 
   const {
     register,
     handleSubmit,
     reset,
+    setValue,
+    watch,
     formState: { errors },
   } = useForm<SituacaoInputs>({
     resolver: zodResolver(situacaoSchema),
@@ -68,6 +96,27 @@ export function SituacoesClient({ slug, situacoes }: SituacoesClientProps) {
       descricao: "",
     }
   })
+
+  // Watch for changes in 'nome' to auto-generate 'label'
+  const nomeValue = watch("nome")
+
+  const generateLabel = (text: string) => {
+    return text
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "") // Remove accents
+      .replace(/ç/gi, 'c') // Ç -> C
+      .replace(/[^a-zA-Z0-9\s]/g, "") // Remove special chars
+      .trim()
+      .replace(/\s+/g, "_") // Spaces to underscores
+      .toUpperCase()
+  }
+
+  // Effect to sync label with nome
+  useEffect(() => {
+    if (nomeValue && !editingSituacao) {
+      setValue("label", generateLabel(nomeValue))
+    }
+  }, [nomeValue, setValue, editingSituacao])
 
   const handleEdit = (situacao: Situacao) => {
     setEditingSituacao(situacao)
@@ -122,9 +171,6 @@ export function SituacoesClient({ slug, situacoes }: SituacoesClientProps) {
     })
   }
 
-  const filteredSituacoes = situacoes.filter(c => 
-    c.nome.toLowerCase().includes(searchTerm.toLowerCase())
-  )
 
   return (
     <div className="space-y-6">
@@ -171,10 +217,14 @@ export function SituacoesClient({ slug, situacoes }: SituacoesClientProps) {
                 type="text"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                placeholder="Buscar por nome..."
+                onKeyDown={handleKeyDown}
+                placeholder="Buscar por nome ou label..."
                 className="w-full bg-background border border-border rounded-lg pl-10 pr-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all font-medium"
               />
             </div>
+            <Button onClick={handleSearch} variant="secondary" className="md:w-32">
+                Buscar
+            </Button>
           </div>
 
           <div className="bg-card border border-border rounded-xl overflow-hidden shadow-sm">
@@ -189,14 +239,14 @@ export function SituacoesClient({ slug, situacoes }: SituacoesClientProps) {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border">
-                  {filteredSituacoes.length === 0 ? (
+                  {situacoes.length === 0 ? (
                     <tr>
                       <td colSpan={4} className="px-6 py-12 text-center text-muted-foreground italic">
                         Nenhuma situação encontrada.
                       </td>
                     </tr>
                   ) : (
-                    filteredSituacoes.map((sit) => (
+                    situacoes.map((sit) => (
                       <tr key={sit.id} className="hover:bg-muted/50 transition-colors group">
                         <td className="px-6 py-4 font-bold text-foreground">
                           <div className="flex items-center gap-2">
@@ -238,6 +288,11 @@ export function SituacoesClient({ slug, situacoes }: SituacoesClientProps) {
               </table>
             </div>
           </div>
+
+          <Pagination 
+            currentPage={pagination.currentPage}
+            totalPages={pagination.totalPages}
+          />
         </TabsContent>
 
         <TabsContent value="form" className="animate-in slide-in-from-right-4 duration-500">
@@ -259,17 +314,15 @@ export function SituacoesClient({ slug, situacoes }: SituacoesClientProps) {
                 <div className="space-y-2">
                   <label className="text-sm font-bold text-foreground flex items-center gap-2">
                     <Sparkles className="w-4 h-4 text-primary" />
-                    Label do Sistema (Uppercase + Underscore)
+                    Label do Sistema (Gerado Automaticamente)
                   </label>
                   <Input 
                     {...register("label")}
-                    placeholder="Ex: EM_TRAMITACAO, APROVADA..."
-                    className="h-11 font-mono uppercase bg-muted/20"
-                    onChange={(e) => {
-                        e.target.value = e.target.value.toUpperCase().replace(/\s+/g, '_');
-                    }}
+                    placeholder="Gerado automaticamente..."
+                    className="h-11 font-mono uppercase bg-muted/20 cursor-not-allowed opacity-80"
+                    readOnly
                   />
-                  <p className="text-[10px] text-muted-foreground italic">Este valor é usado internamente para lógica do sistema.</p>
+                  <p className="text-[10px] text-muted-foreground italic">Este valor é usado internamente e não pode ser editado manualmente.</p>
                   {errors.label && <p className="text-xs text-red-500 font-medium">{errors.label.message}</p>}
                 </div>
 

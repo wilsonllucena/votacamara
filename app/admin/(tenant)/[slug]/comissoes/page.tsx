@@ -1,57 +1,77 @@
 import { ComissoesClient } from "@/components/admin/comissoes/ComissoesClient"
+import { createClient } from "@/utils/supabase/server"
+import { redirect } from "next/navigation"
 
-interface ComissoesPageProps {
-  params: Promise<{
-    slug: string
-  }>
-}
+const ITEMS_PER_PAGE = 10
 
-export default async function ComissoesPage({ params }: ComissoesPageProps) {
+export default async function ComissoesPage({ 
+    params,
+    searchParams 
+}: { 
+    params: Promise<{ slug: string }> 
+    searchParams: Promise<{ [key: string]: string | string[] | undefined }>
+}) {
   const { slug } = await params
+  const { page = "1", search = "" } = await searchParams
+  const supabase = await createClient()
 
-  // Mock data for initial implementation
-  const initialComissoes = [
-    {
-      id: "1",
-      nome: "Comissão de Constituição e Justiça",
-      tipo: "Permanente",
-      descricao: "Análise da legalidade e constitucionalidade das propostas.",
-      membros_count: 5,
-      materias_count: 3,
-    },
-    {
-      id: "2",
-      nome: "Comissão de Finanças e Orçamento",
-      tipo: "Permanente",
-      descricao: "Acompanhamento orçamentário e financeiro do município.",
-      membros_count: 3,
-      materias_count: 1,
-    }
-  ]
+  // 1. Get Camara ID
+  const { data: camara } = await supabase
+    .from("camaras")
+    .select("id")
+    .eq("slug", slug)
+    .single()
 
-  // Mock vereadores for selection
-  const vereadores = [
-    { id: "v1", nome: "João Silva", partido: "PT", isMesa: true, cargoMesa: "Presidente" },
-    { id: "v2", nome: "Maria Oliveira", partido: "PL", isMesa: true, cargoMesa: "Secretária" },
-    { id: "v3", nome: "Carlos Souza", partido: "MDB", isMesa: false },
-    { id: "v4", nome: "Ana Santos", partido: "PSDB", isMesa: false },
-    { id: "v5", nome: "Pedro Lima", partido: "PSD", isMesa: false },
-  ]
+  if (!camara) {
+    redirect("/admin/dashboard")
+  }
 
-  // Mock materias for selection
-  const materias = [
-    { id: "m1", numero: "001/2024", titulo: "Projeto de Lei - Reforma Administrativa" },
-    { id: "m2", numero: "015/2024", titulo: "Indicação - Pavimentação Rua Principal" },
-    { id: "m3", numero: "042/2024", titulo: "Decreto Legislativo - Título Honorário" },
-  ]
+  // 2. Paginação
+  const currentPage = Number(page) || 1
+  const from = (currentPage - 1) * ITEMS_PER_PAGE
+  const to = from + ITEMS_PER_PAGE - 1
+
+  // 3. Buscar comissões
+  let comissoesQuery = supabase
+    .from("comissoes")
+    .select("*, comissao_membros(id, cargo, vereadores(id, nome))", { count: "exact" })
+    .eq("camara_id", camara.id)
+    .order("nome", { ascending: true })
+
+  if (search) {
+    comissoesQuery = comissoesQuery.ilike("nome", `%${search}%`)
+  }
+
+  const { data: comissoes, count } = await comissoesQuery.range(from, to)
+  const totalPages = count ? Math.ceil(count / ITEMS_PER_PAGE) : 1
+
+  // 4. Buscar vereadores para seleção (ativos e não executivos para membros)
+  const { data: vereadores } = await supabase
+    .from("vereadores_view")
+    .select("id, nome, partido")
+    .eq("camara_id", camara.id)
+    .eq("ativo", true)
+    .neq("cargo", "CHEFE DO EXECUTIVO")
+    .order("nome", { ascending: true })
+
+  // 5. Buscar matérias para seleção (opcional, se o formulário pedir)
+  const { data: materias } = await supabase
+    .from("projetos")
+    .select("id, numero, titulo")
+    .eq("camara_id", camara.id)
+    .order("created_at", { ascending: false })
 
   return (
-    <div className="p-6">
+    <div className="container mx-auto py-4">
       <ComissoesClient 
         slug={slug} 
-        initialComissoes={initialComissoes} 
-        vereadores={vereadores}
-        materias={materias}
+        initialComissoes={(comissoes as any[]) || []} 
+        vereadores={vereadores || []}
+        materias={materias || []}
+        pagination={{
+            currentPage,
+            totalPages
+        }}
       />
     </div>
   )

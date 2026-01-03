@@ -9,6 +9,7 @@ import { Edit2, Trash2, FileText, User, ScrollText, Plus, List, Search, Tag } fr
 import { ProjetoForm, MateriaInputs } from "./ProjetoForm"
 import { createProjeto, updateProjeto, deleteProjeto } from "@/app/admin/_actions/projetos"
 import { ConfirmDialog } from "@/components/ui/confirm-dialog"
+import { Pagination } from "@/components/admin/Pagination"
 
 interface Projeto {
   id: string
@@ -282,37 +283,10 @@ export function ProjetosClient({ projetos, slug, vereadores, categorias, situaco
               })
             )}
 
-            {pagination.totalPages > 1 && (
-              <div className="flex items-center justify-between px-6 py-4 bg-muted/20 border border-border rounded-xl">
-                <div className="text-xs text-muted-foreground font-medium">
-                  Página {pagination.currentPage} de {pagination.totalPages}
-                </div>
-                <div className="flex gap-2">
-                  <button 
-                    onClick={() => {
-                      const params = new URLSearchParams(searchParams.toString())
-                      params.set("page", (pagination.currentPage - 1).toString())
-                      router.push(`?${params.toString()}`)
-                    }}
-                    disabled={pagination.currentPage === 1}
-                    className="px-3 py-1.5 text-xs font-bold bg-background border border-border rounded-lg disabled:opacity-50 hover:bg-muted transition-colors"
-                  >
-                    Anterior
-                  </button>
-                  <button 
-                    onClick={() => {
-                      const params = new URLSearchParams(searchParams.toString())
-                      params.set("page", (pagination.currentPage + 1).toString())
-                      router.push(`?${params.toString()}`)
-                    }}
-                    disabled={pagination.currentPage === pagination.totalPages}
-                    className="px-3 py-1.5 text-xs font-bold bg-background border border-border rounded-lg disabled:opacity-50 hover:bg-muted transition-colors"
-                  >
-                    Próxima
-                  </button>
-                </div>
-              </div>
-            )}
+            <Pagination 
+              currentPage={pagination.currentPage}
+              totalPages={pagination.totalPages}
+            />
           </div>
         </TabsContent>
 

@@ -1,13 +1,14 @@
 "use client"
 
 import { useState, useTransition } from "react"
-import { useRouter } from "next/navigation"
+import { useRouter, useSearchParams } from "next/navigation"
 import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Plus, List, Search, Edit2, UserX, Power, User } from "lucide-react"
 import { CouncilorForm } from "./CouncilorForm"
 import { toggleVereadorStatus, updateVereador, createVereador } from "@/app/admin/_actions/vereadores"
 import { ConfirmDialog } from "@/components/ui/confirm-dialog"
+import { Pagination } from "@/components/admin/Pagination"
 
 interface CouncilorsClientProps {
   councilors: any[]
@@ -19,10 +20,11 @@ interface CouncilorsClientProps {
 }
 export function CouncilorsClient({ councilors, slug, pagination }: CouncilorsClientProps) {
   const router = useRouter()
+  const searchParams = useSearchParams()
   const [isPending, startTransition] = useTransition()
   const [activeTab, setActiveTab] = useState("list")
   const [editingCouncilor, setEditingCouncilor] = useState<any | null>(null)
-  const [searchTerm, setSearchTerm] = useState("")
+  const [searchTerm, setSearchTerm] = useState(searchParams.get("search") || "")
 
   // ConfirmDialog State
   const [confirmConfig, setConfirmConfig] = useState<{
@@ -88,7 +90,7 @@ export function CouncilorsClient({ councilors, slug, pagination }: CouncilorsCli
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault()
-    const params = new URLSearchParams(window.location.search)
+    const params = new URLSearchParams(searchParams.toString())
     if (searchTerm) {
       params.set("search", searchTerm)
     } else {
@@ -241,37 +243,10 @@ export function CouncilorsClient({ councilors, slug, pagination }: CouncilorsCli
               </table>
             </div>
 
-            {pagination.totalPages > 1 && (
-              <div className="flex items-center justify-between px-6 py-4 bg-muted/20 border-t border-border">
-                <div className="text-xs text-muted-foreground font-medium">
-                  Página {pagination.currentPage} de {pagination.totalPages}
-                </div>
-                <div className="flex gap-2">
-                  <button 
-                    onClick={() => {
-                      const params = new URLSearchParams(window.location.search)
-                      params.set("page", (pagination.currentPage - 1).toString())
-                      router.push(`?${params.toString()}`)
-                    }}
-                    disabled={pagination.currentPage === 1}
-                    className="px-3 py-1.5 text-xs font-bold bg-background border border-border rounded-lg disabled:opacity-50 hover:bg-muted transition-colors"
-                  >
-                    Anterior
-                  </button>
-                  <button 
-                    onClick={() => {
-                      const params = new URLSearchParams(window.location.search)
-                      params.set("page", (pagination.currentPage + 1).toString())
-                      router.push(`?${params.toString()}`)
-                    }}
-                    disabled={pagination.currentPage === pagination.totalPages}
-                    className="px-3 py-1.5 text-xs font-bold bg-background border border-border rounded-lg disabled:opacity-50 hover:bg-muted transition-colors"
-                  >
-                    Próxima
-                  </button>
-                </div>
-              </div>
-            )}
+            <Pagination 
+              currentPage={pagination.currentPage}
+              totalPages={pagination.totalPages}
+            />
           </div>
         </TabsContent>
 

@@ -23,6 +23,10 @@ import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { z } from "zod"
 
+import { Pagination } from "@/components/admin/Pagination"
+import { useSearchParams } from "next/navigation"
+import { useEffect } from "react"
+
 const categoriaSchema = z.object({
   nome: z.string().min(2, "O nome deve ter pelo menos 2 caracteres"),
   descricao: z.string().optional().or(z.literal("")),
@@ -40,17 +44,40 @@ interface Categoria {
 interface CategoriasClientProps {
   slug: string
   categorias: Categoria[]
+  pagination: {
+    currentPage: number
+    totalPages: number
+  }
 }
 
-export function CategoriasClient({ slug, categorias }: CategoriasClientProps) {
+export function CategoriasClient({ slug, categorias, pagination }: CategoriasClientProps) {
   const router = useRouter()
+  const searchParams = useSearchParams()
   const [isPending, startTransition] = useTransition()
   const [activeTab, setActiveTab] = useState("list")
   const [editingCategoria, setEditingCategoria] = useState<Categoria | null>(null)
-  const [searchTerm, setSearchTerm] = useState("")
+  const [searchTerm, setSearchTerm] = useState(searchParams.get("search") || "")
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
   const [categoriaToDelete, setCategoriaToDelete] = useState<string | null>(null)
   const [message, setMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null)
+
+  // Sync search term with URL
+  const handleSearch = () => {
+    const params = new URLSearchParams(searchParams.toString())
+    if (searchTerm) {
+      params.set("search", searchTerm)
+    } else {
+      params.delete("search")
+    }
+    params.set("page", "1") // Reset to page 1 on new search
+    router.push(`?${params.toString()}`)
+  }
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      handleSearch()
+    }
+  }
 
   const {
     register,
@@ -117,9 +144,6 @@ export function CategoriasClient({ slug, categorias }: CategoriasClientProps) {
     })
   }
 
-  const filteredCategorias = categorias.filter(c => 
-    c.nome.toLowerCase().includes(searchTerm.toLowerCase())
-  )
 
   return (
     <div className="space-y-6">
@@ -166,10 +190,14 @@ export function CategoriasClient({ slug, categorias }: CategoriasClientProps) {
                 type="text"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
+                onKeyDown={handleKeyDown}
                 placeholder="Buscar por nome..."
                 className="w-full bg-background border border-border rounded-lg pl-10 pr-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all font-medium"
               />
             </div>
+            <Button onClick={handleSearch} variant="secondary" className="md:w-32">
+                Buscar
+            </Button>
           </div>
 
           <div className="bg-card border border-border rounded-xl overflow-hidden shadow-sm">
@@ -183,14 +211,14 @@ export function CategoriasClient({ slug, categorias }: CategoriasClientProps) {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border">
-                  {filteredCategorias.length === 0 ? (
+                  {categorias.length === 0 ? (
                     <tr>
                       <td colSpan={3} className="px-6 py-12 text-center text-muted-foreground italic">
                         Nenhuma categoria encontrada.
                       </td>
                     </tr>
                   ) : (
-                    filteredCategorias.map((cat) => (
+                    categorias.map((cat) => (
                       <tr key={cat.id} className="hover:bg-muted/50 transition-colors group">
                         <td className="px-6 py-4 font-bold text-foreground">
                           <div className="flex items-center gap-2">
@@ -229,6 +257,11 @@ export function CategoriasClient({ slug, categorias }: CategoriasClientProps) {
               </table>
             </div>
           </div>
+
+          <Pagination 
+            currentPage={pagination.currentPage}
+            totalPages={pagination.totalPages}
+          />
         </TabsContent>
 
         <TabsContent value="form" className="animate-in slide-in-from-right-4 duration-500">
