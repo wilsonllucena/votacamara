@@ -44,7 +44,7 @@ export async function upsertMesaMember(slug: string, camaraId: string, data: { i
       camara_id: camaraId,
       cargo_id: data.cargo_id,
       vereador_id: data.vereador_id
-    }, { onConflict: 'camara_id, cargo_id' })
+    }, { onConflict: data.id ? 'id' : 'camara_id, cargo_id' })
 
   if (error) {
     console.error("Error upserting mesa member:", error)

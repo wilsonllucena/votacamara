@@ -138,7 +138,7 @@ export function Sidebar({ slug, userProfile }: SidebarProps) {
   useEffect(() => {
     const activeParents = routes
       .filter(r => r.active && r.subItems)
-      .map(r => r.href)
+      .map(r => r.label)
     
     setExpandedMenus((prev: string[]) => {
         const newExpanded = [...prev]
@@ -149,9 +149,9 @@ export function Sidebar({ slug, userProfile }: SidebarProps) {
     })
   }, [pathname])
 
-  const toggleMenu = (href: string) => {
+  const toggleMenu = (label: string) => {
     setExpandedMenus((prev: string[]) => 
-      prev.includes(href) ? prev.filter(h => h !== href) : [...prev, href]
+      prev.includes(label) ? prev.filter(l => l !== label) : [...prev, label]
     )
   }
 
@@ -194,13 +194,13 @@ export function Sidebar({ slug, userProfile }: SidebarProps) {
       {/* Navigation */}
       <div className="flex-1 px-2 py-2 space-y-1 overflow-y-auto">
         {routes.map((route) => {
-          const isExpanded = expandedMenus.includes(route.href)
+          const isExpanded = expandedMenus.includes(route.label)
           
           return (
             <div key={route.label} className="space-y-1">
                 {route.subItems ? (
                   <div
-                    onClick={() => !isCollapsed && toggleMenu(route.href)}
+                    onClick={() => !isCollapsed && toggleMenu(route.label)}
                     className={cn(
                       "flex items-center justify-between px-3 py-2 text-sm font-medium rounded-md transition-colors cursor-pointer",
                       route.active 
