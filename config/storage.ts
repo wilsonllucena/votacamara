@@ -5,5 +5,5 @@ export const STORAGE_BUCKETS = {
 
 export const STORAGE_CONFIG = {
   MAX_FILE_SIZE: 10 * 1024 * 1024, // 10MB
-  ALLOWED_MIME_TYPES: ["application/pdf"],
+  ALLOWED_MIME_TYPES: ["application/pdf", "application/msword", "application/vnd.openxmlformats-officedocument.wordprocessingml.document"],
 };
