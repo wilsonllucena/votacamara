@@ -38,10 +38,10 @@ export default async function PublicVotingPage({ params }: PublicVotingPageProps
     // 4. Get all councilors for this chamber (excluding executive)
     const { data: councilors } = await supabase
         .from("vereadores")
-        .select("id, nome, partido, foto_url, cargo")
+        .select("id, nome, partido, foto_url, user_id")
         .eq("camara_id", camara.id)
         .eq("ativo", true)
-        .neq("cargo", "CHEFE DO EXECUTIVO")
+        .eq("is_executivo", false)
         .order("nome")
 
     return (

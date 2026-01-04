@@ -16,6 +16,7 @@ import {
     Building2
 } from "lucide-react"
 import { cn } from "@/lib/utils"
+import { usePresenceStore } from "@/store/use-presence-store"
 
 interface PublicVotingClientProps {
     camara: any
@@ -49,6 +50,21 @@ export function PublicVotingClient({
         ABSTENCAO: 0,
         AUSENTE: 0
     })
+    const { onlineUsers, initialize: initPresence, cleanup: cleanupPresence } = usePresenceStore()
+
+    // Initialize Presence
+    useEffect(() => {
+        if (!camara?.id) return
+        // Public view doesn't "track" its own user usually, 
+        // but we can use a random or specific ID for the viewer 
+        // to just "watch" the presence channel.
+        // However, for online status of councilors, we just need to listen.
+        initPresence(camara.id, `viewer-${Math.random().toString(36).substring(7)}`)
+
+        return () => {
+            cleanupPresence()
+        }
+    }, [camara?.id])
 
     // Monitor voting changes in real-time
     useEffect(() => {
@@ -158,13 +174,22 @@ export function PublicVotingClient({
     const totalCouncilors = councilors.length
     const participationRate = totalVotes > 0 ? Math.round((totalVotes / totalCouncilors) * 100) : 0
 
+    // Helper function to get first and second name
+    const getShortName = (fullName: string) => {
+        const names = fullName.trim().split(' ')
+        if (names.length >= 2) {
+            return `${names[0]} ${names[1]}`
+        }
+        return names[0] || fullName
+    }
+
     const getVoteColor = (voteType: keyof VoteResult) => {
         switch (voteType) {
-            case 'FAVORAVEL': return 'bg-green-500'
-            case 'CONTRA': return 'bg-red-500'
-            case 'ABSTENCAO': return 'bg-yellow-500'
-            case 'AUSENTE': return 'bg-gray-500'
-            default: return 'bg-gray-500'
+            case 'FAVORAVEL': return 'text-green-500'
+            case 'CONTRA': return 'text-red-500'
+            case 'ABSTENCAO': return 'text-amber-500'
+            case 'AUSENTE': return 'text-zinc-500'
+            default: return 'text-zinc-500'
         }
     }
 
@@ -172,9 +197,9 @@ export function PublicVotingClient({
         switch (voteType) {
             case 'FAVORAVEL': return 'bg-green-500/10 border-green-500/20 text-green-500'
             case 'CONTRA': return 'bg-red-500/10 border-red-500/20 text-red-500'
-            case 'ABSTENCAO': return 'bg-yellow-500/10 border-yellow-500/20 text-yellow-500'
-            case 'AUSENTE': return 'bg-gray-500/10 border-gray-500/20 text-gray-500'
-            default: return 'bg-gray-500/10 border-gray-500/20 text-gray-500'
+            case 'ABSTENCAO': return 'bg-amber-500/10 border-amber-500/20 text-amber-500'
+            case 'AUSENTE': return 'bg-zinc-500/10 border-zinc-500/20 text-zinc-500'
+            default: return 'bg-zinc-500/10 border-zinc-500/20 text-zinc-500'
         }
     }
 
@@ -225,128 +250,167 @@ export function PublicVotingClient({
     }
 
     return (
-        <div className="min-h-screen p-6">
-            {/* Header */}
-            <div className="max-w-7xl mx-auto mb-8">
-                <div className="flex items-center justify-between mb-6">
-                    <div className="flex items-center gap-4">
-                        <div className="w-12 h-12 rounded-full bg-indigo-500/10 flex items-center justify-center">
-                            <Building2 className="w-6 h-6 text-indigo-500" />
-                        </div>
-                        <div>
-                            <h1 className="text-2xl font-bold text-white">{camara?.nome}</h1>
-                            <p className="text-zinc-400 text-sm">Acompanhamento Público de Votações</p>
-                        </div>
-                    </div>
-                    <div className="flex items-center gap-3">
-                        <Badge className="bg-green-500/10 text-green-500 border-green-500/20 px-4 py-1.5 font-bold tracking-widest text-[10px] uppercase flex items-center gap-2">
-                            <div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
-                            Votação Aberta
-                        </Badge>
-                        <div className="text-zinc-400 text-sm flex items-center gap-2">
-                            <Eye className="w-4 h-4" />
-                            <span>Público</span>
-                        </div>
-                    </div>
-                </div>
+        <div className="min-h-screen bg-[#020617] text-white font-sans selection:bg-primary selection:text-primary-foreground px-2 sm:px-4 flex items-center justify-center">
+            {/* Background pattern/glow */}
+            <div className="fixed inset-0 pointer-events-none overflow-hidden">
+                <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-indigo-500/10 blur-[120px] rounded-full" />
+                <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-purple-500/10 blur-[120px] rounded-full" />
             </div>
 
-            <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-3 gap-8">
-                {/* Main Voting Info */}
-                <div className="lg:col-span-2 space-y-6">
-                    {/* Project Info */}
-                    <div className="bg-[#111827] rounded-2xl p-8 border border-white/5">
-                        <div className="space-y-4">
-                            <div className="flex items-center gap-3">
-                                <Badge className="bg-indigo-500/10 text-indigo-500 border-indigo-500/20">
+            <div className="w-full max-w-[1600px] bg-[#0f172a] rounded-[2rem] border border-white/5 shadow-2xl relative overflow-hidden flex flex-col">
+                
+                {/* Header Section */}
+                <div className="p-8 sm:p-12 border-b border-white/5">
+                    <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-8">
+                        <div className="space-y-6 flex-1">
+                            <div className="flex items-center gap-4 flex-wrap">
+                                <Badge className="bg-emerald-500/10 text-emerald-400 border-emerald-500/20 px-4 py-1.5 font-black tracking-[0.1em] text-[10px] uppercase flex items-center gap-2 rounded-full shadow-sm">
+                                    <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                                    Votação em Andamento
+                                </Badge>
+                                <span className="text-zinc-500 font-bold tracking-widest text-xs uppercase">
                                     {currentVoting.projetos?.numero || "PL 000/2024"}
-                                </Badge>
-                                <Badge className="bg-green-500/10 text-green-500 border-green-500/20">
-                                    Em Votação
-                                </Badge>
+                                </span>
                             </div>
-                            <h2 className="text-3xl font-black text-white leading-tight">
-                                {currentVoting.projetos?.titulo || "Projeto em Votação"}
-                            </h2>
-                            <p className="text-zinc-400 text-lg leading-relaxed">
-                                {currentVoting.projetos?.ementa || "Descrição detalhada do projeto de lei sendo votado..."}
-                            </p>
+                            <div className="space-y-5">
+                                <h1 className="text-xl sm:text-2xl lg:text-3xl font-black tracking-tight leading-[1.2] text-zinc-100 max-w-4xl">
+                                    {currentVoting.projetos?.titulo || "Projeto em Votação"}
+                                </h1>
+                                <p className="text-zinc-400 text-sm sm:text-base font-medium leading-relaxed max-w-5xl italic opacity-90 border-l-2 border-white/10 pl-4 py-1">
+                                    {currentVoting.projetos?.ementa || "Aguardando detalhes da ementa..."}
+                                </p>
+                            </div>
                         </div>
-                    </div>
 
-                    {/* Results */}
-                    <div className="bg-[#111827] rounded-2xl p-8 border border-white/5">
-                        <h3 className="text-xl font-bold text-white mb-6 flex items-center gap-3">
-                            <Vote className="w-6 h-6 text-indigo-500" />
-                            Resultado Parcial
-                        </h3>
-                        
-                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-                            {Object.entries(voteResults).map(([type, count]) => (
-                                <div key={type} className="text-center">
-                                    <div className={cn(
-                                        "w-16 h-16 rounded-full mx-auto mb-2 flex items-center justify-center text-2xl font-black text-white",
-                                        getVoteColor(type as keyof VoteResult)
-                                    )}>
-                                        {count}
-                                    </div>
-                                    <p className="text-zinc-400 text-sm font-medium uppercase tracking-wider">
-                                        {type === 'FAVORAVEL' ? 'Favorável' : type === 'CONTRA' ? 'Contra' : type === 'ABSTENCAO' ? 'Abstenção' : 'Ausente'}
-                                    </p>
+                        {/* Real-time Counter Header - Right side on desktop, below on mobile */}
+                        <div className="flex items-center justify-center gap-4 sm:gap-8 bg-black/20 p-4 sm:p-6 rounded-3xl border border-white/5 shadow-inner w-full md:w-auto">
+                            <div className="text-center group">
+                                <div className="text-3xl sm:text-4xl font-black text-emerald-500 transition-transform group-hover:scale-110 duration-300">
+                                    {voteResults.FAVORAVEL}
                                 </div>
-                            ))}
-                        </div>
-
-                        <div className="space-y-4">
-                            <div className="flex items-center justify-between text-sm">
-                                <span className="text-zinc-400">Participação</span>
-                                <span className="text-white font-medium">{participationRate}%</span>
+                                <div className="text-[10px] sm:text-[11px] font-black tracking-[0.2em] text-zinc-500 uppercase mt-1">Favorável</div>
                             </div>
-                            <Progress value={participationRate} className="h-3 bg-zinc-800" />
-                            <div className="flex items-center justify-between text-xs text-zinc-500">
-                                <span>{totalVotes} de {totalCouncilors} vereadores</span>
-                                <span>Votação em tempo real</span>
+                            <div className="text-center group">
+                                <div className="text-3xl sm:text-4xl font-black text-red-500 transition-transform group-hover:scale-110 duration-300">
+                                    {voteResults.CONTRA}
+                                </div>
+                                <div className="text-[10px] sm:text-[11px] font-black tracking-[0.2em] text-zinc-500 uppercase mt-1">Contra</div>
+                            </div>
+                            <div className="text-center group">
+                                <div className="text-3xl sm:text-4xl font-black text-amber-500 transition-transform group-hover:scale-110 duration-300">
+                                    {voteResults.ABSTENCAO}
+                                </div>
+                                <div className="text-[10px] sm:text-[11px] font-black tracking-[0.2em] text-zinc-500 uppercase mt-1">Abst</div>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                {/* Councilors Votes */}
-                <div className="lg:col-span-1">
-                    <div className="bg-[#111827] rounded-2xl p-6 border border-white/5">
-                        <h3 className="text-xl font-bold text-white mb-6 flex items-center gap-3">
-                            <Users className="w-6 h-6 text-indigo-500" />
-                            Votos dos Vereadores
-                        </h3>
-                        
-                        <div className="space-y-3 max-h-[600px] overflow-y-auto">
-                            {councilors.map((councilor) => {
-                                const vote = votes.find(v => v.vereador_id === councilor.id)
-                                const voteType = vote?.valor as keyof VoteResult | undefined
-                                
-                                return (
-                                    <div key={councilor.id} className="flex items-center justify-between p-3 rounded-xl bg-white/5 border border-white/10">
-                                        <div className="flex items-center gap-3">
-                                            <div className="w-10 h-10 rounded-full bg-indigo-500/20 flex items-center justify-center text-indigo-400 font-bold text-sm">
-                                                {councilor.nome?.substring(0, 2).toUpperCase()}
-                                            </div>
-                                            <div>
-                                                <p className="text-white font-medium text-sm">{councilor.nome}</p>
-                                                <p className="text-zinc-500 text-xs">{councilor.partido}</p>
-                                            </div>
+                {/* Grid Section */}
+                <div className="flex-1 p-8 sm:p-12 bg-black/10">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
+                        {councilors.map((councilor) => {
+                            const vote = votes.find(v => v.vereador_id === councilor.id)
+                            const voteType = vote?.valor as keyof VoteResult | undefined
+                            const hasVoted = !!voteType
+                            const isOnline = !!onlineUsers[councilor.user_id]
+                            
+                            return (
+                                <div 
+                                    key={councilor.id} 
+                                    className={cn(
+                                        "group relative flex items-center justify-between p-5 rounded-2xl transition-all duration-300 border border-white/5",
+                                        hasVoted ? "bg-white/[0.03] border-white/10" : "bg-black/20 border-white/[0.02]"
+                                    )}
+                                >
+                                    <div className="flex items-center gap-4 min-w-0">
+                                        <div className="relative flex-shrink-0">
+                                            {councilor.foto_url ? (
+                                                <img 
+                                                    src={councilor.foto_url} 
+                                                    alt={councilor.nome} 
+                                                    className={cn(
+                                                        "w-12 h-12 rounded-full object-cover aspect-square border-2 transition-colors",
+                                                        isOnline ? "border-emerald-500/50" : "border-white/10 grayscale-[0.5]"
+                                                    )}
+                                                />
+                                            ) : (
+                                                <div className={cn(
+                                                    "w-12 h-12 rounded-full aspect-square flex items-center justify-center text-zinc-400 font-black text-sm border-2",
+                                                    isOnline ? "bg-emerald-500/5 border-emerald-500/20" : "bg-zinc-800 border-white/5"
+                                                )}>
+                                                    {councilor.nome?.substring(0, 1).toUpperCase()}
+                                                </div>
+                                            )}
+                                            
+                                            {/* Presence Indicator */}
+                                            <div className={cn(
+                                                "absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full border-2 border-[#0f172a] shadow-lg",
+                                                isOnline ? "bg-emerald-500 shadow-emerald-500/20" : "bg-red-500 shadow-red-500/20"
+                                            )} />
                                         </div>
-                                        <div className={cn(
-                                            "px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider",
-                                            voteType ? getVoteBgColor(voteType) : "bg-zinc-800 text-zinc-500"
-                                        )}>
-                                            {voteType === 'FAVORAVEL' ? 'FAVORÁVEL' : 
-                                             voteType === 'CONTRA' ? 'CONTRA' : 
-                                             voteType === 'ABSTENCAO' ? 'ABSTENÇÃO' : 
-                                             voteType ? voteType : 'Aguardando'}
+                                        <div className="min-w-0">
+                                            <p className="font-bold text-zinc-100 text-xs truncate leading-tight transition-colors">
+                                                {getShortName(councilor.nome)}
+                                            </p>
+                                            <p className="text-[9px] font-black text-zinc-500 uppercase tracking-widest mt-0.5">
+                                                {councilor.partido}
+                                            </p>
                                         </div>
                                     </div>
-                                )
-                            })}
+
+                                    {hasVoted ? (
+                                        <div className={cn(
+                                            "px-2 py-1 rounded-lg text-[8px] font-black uppercase tracking-wider shadow-lg border",
+                                            getVoteBgColor(voteType as keyof VoteResult)
+                                        )}>
+                                            {voteType === 'FAVORAVEL' ? 'Favorável' : 
+                                             voteType === 'CONTRA' ? 'Contra' : 
+                                             voteType === 'ABSTENCAO' ? 'Abst' : voteType}
+                                        </div>
+                                    ) : (
+                                        <div className="flex items-center gap-1.5 text-[9px] font-black text-zinc-600 uppercase tracking-widest italic pr-2">
+                                            <Clock className="w-3 h-3" />
+                                            ...
+                                        </div>
+                                    )}
+                                </div>
+                            )
+                        })}
+                    </div>
+                </div>
+
+                {/* Footer Status Bar */}
+                <div className="p-6 sm:p-8 bg-black/30 border-t border-white/5 flex flex-col sm:flex-row justify-between items-center gap-6">
+                    <div className="flex items-center gap-8">
+                        <div className="flex items-center gap-3">
+                            <div className="p-2.5 bg-zinc-800 rounded-xl">
+                                <Timer className="w-4 h-4 text-zinc-400" />
+                            </div>
+                            <div>
+                                <p className="text-[10px] font-black text-zinc-500 uppercase tracking-widest">Tempo de Votação</p>
+                                <p className="text-sm font-bold text-zinc-300">04:32</p>
+                            </div>
+                        </div>
+                        <div className="h-8 w-px bg-white/5 hidden sm:block" />
+                        <div className="flex items-center gap-3">
+                            <div className="p-2.5 bg-zinc-800 rounded-xl">
+                                <Users className="w-4 h-4 text-zinc-400" />
+                            </div>
+                            <div>
+                                <p className="text-[10px] font-black text-zinc-500 uppercase tracking-widest">Quórum</p>
+                                <p className="text-sm font-bold text-zinc-300">{totalVotes}/{totalCouncilors}</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="flex items-center gap-4">
+                        <div className="text-right hidden sm:block">
+                            <p className="text-[10px] font-black text-zinc-500 uppercase tracking-widest">Câmara Municipal de</p>
+                            <p className="text-sm font-bold text-zinc-300">{camara?.nome}</p>
+                        </div>
+                        <div className="w-12 h-12 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center p-2">
+                             <img src="/logo.png" alt="Logo" className="w-full h-full object-contain opacity-50" />
                         </div>
                     </div>
                 </div>
