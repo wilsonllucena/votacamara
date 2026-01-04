@@ -21,7 +21,7 @@ export default async function PresencasPage({ params, searchParams }: PresencasP
     // 1. Get Camara info
     const { data: camara } = await supabase
         .from("camaras")
-        .select("id")
+        .select("id, nome")
         .eq("slug", slug)
         .single()
 
@@ -62,6 +62,7 @@ export default async function PresencasPage({ params, searchParams }: PresencasP
             <PresencasClient 
                 slug={slug}
                 camaraId={camara.id}
+                camaraName={camara.nome}
                 initialSessions={sessionsResult.data || []}
                 count={sessionsResult.count || 0}
                 totalPages={sessionsResult.totalPages || 0}

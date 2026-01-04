@@ -12,16 +12,26 @@ import {
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { 
-    UserCheck, 
-    UserX, 
-    FileWarning, 
-    Save, 
-    Loader2, 
-    AlertCircle,
-    User
+    User,
+    Download,
+    FileDown,
+    FileSpreadsheet,
+    UserCheck,
+    UserX,
+    FileWarning,
+    Save,
+    Loader2,
+    AlertCircle
 } from "lucide-react"
 import { getPresencas, upsertPresencasBatch, initializePresencas } from "@/app/admin/_actions/presencas"
 import { cn } from "@/lib/utils"
+import { 
+    DropdownMenu, 
+    DropdownMenuContent, 
+    DropdownMenuItem, 
+    DropdownMenuTrigger 
+} from "@/components/ui/dropdown-menu"
+import { exportToPDF, exportToExcel } from "@/lib/export-utils"
 
 interface PresencaDialogProps {
     isOpen: boolean
@@ -29,6 +39,7 @@ interface PresencaDialogProps {
     session: any
     slug: string
     camaraId: string
+    camaraName: string
 }
 
 export function PresencaDialog({ 
@@ -36,7 +47,8 @@ export function PresencaDialog({
     onClose, 
     session, 
     slug, 
-    camaraId 
+    camaraId,
+    camaraName
 }: PresencaDialogProps) {
     const [isPending, startTransition] = useTransition()
     const [isLoading, setIsLoading] = useState(true)
@@ -95,6 +107,27 @@ export function PresencaDialog({
                 onClose()
             }
         })
+    }
+
+    const handleExport = (format: 'pdf' | 'excel') => {
+        const columns = ["Nome do Parlamentar", "Partido", "Status"]
+        const rows = presencas.map(p => [
+            p.vereadores?.nome,
+            p.vereadores?.partido,
+            p.status.toUpperCase()
+        ])
+
+        const exportData = {
+            title: `Lista de Presença - ${session.titulo}`,
+            camaraName: camaraName,
+            date: session.iniciou_em ? new Date(session.iniciou_em).toLocaleDateString('pt-BR') : '',
+            columns,
+            rows,
+            fileName: `Presenca_${session.titulo.replace(/\s/g, '_')}`
+        }
+
+        if (format === 'pdf') exportToPDF(exportData)
+        else exportToExcel(exportData)
     }
 
     return (
@@ -198,7 +231,25 @@ export function PresencaDialog({
                     )}
                 </div>
 
-                <DialogFooter className="p-4 sm:p-6 border-t border-border bg-muted/30 flex flex-col-reverse sm:flex-row gap-3 sm:gap-2">
+                <DialogFooter className="p-4 sm:p-6 border-t border-border bg-muted/30 flex flex-col sm:flex-row gap-3 sm:gap-2">
+                    <DropdownMenu>
+                        <DropdownMenuTrigger asChild disabled={isLoading || presencas.length === 0}>
+                            <Button variant="outline" className="w-full sm:w-auto h-11 sm:h-10 rounded-xl font-bold uppercase tracking-widest text-[10px] gap-2">
+                                <Download className="w-3.5 h-3.5" /> Exportar
+                            </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="start" className="rounded-xl border-border bg-card">
+                            <DropdownMenuItem onClick={() => handleExport('pdf')} className="gap-2 font-bold text-[10px] uppercase tracking-wider cursor-pointer">
+                                <FileDown className="w-4 h-4 text-red-500" /> PDF
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => handleExport('excel')} className="gap-2 font-bold text-[10px] uppercase tracking-wider cursor-pointer">
+                                <FileSpreadsheet className="w-4 h-4 text-green-500" /> Excel
+                            </DropdownMenuItem>
+                        </DropdownMenuContent>
+                    </DropdownMenu>
+
+                    <div className="flex-1" />
+
                     <Button variant="outline" onClick={onClose} disabled={isPending} className="w-full sm:w-auto h-11 sm:h-10 rounded-xl font-bold uppercase tracking-widest text-[10px]">
                         Cancelar
                     </Button>

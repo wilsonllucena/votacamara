@@ -11,10 +11,18 @@ import {
     UserCheck,
     List,
     ChevronRight,
-    PieChart as PieChartIcon
+    PieChart as PieChartIcon,
+    FileDown,
+    FileSpreadsheet
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
+import { 
+    DropdownMenu, 
+    DropdownMenuContent, 
+    DropdownMenuItem, 
+    DropdownMenuTrigger 
+} from "@/components/ui/dropdown-menu"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { 
     PieChart, 
@@ -29,6 +37,7 @@ import { format } from "date-fns"
 import { ptBR } from "date-fns/locale"
 import { Pagination } from "@/components/admin/Pagination"
 import { PresencaDialog } from "./PresencaDialog"
+import { exportToPDF, exportToExcel } from "@/lib/export-utils"
 
 interface Session {
     id: string
@@ -55,6 +64,7 @@ interface CouncilorStats {
 interface PresencasClientProps {
     slug: string
     camaraId: string
+    camaraName: string
     initialSessions: Session[]
     count: number
     totalPages: number
@@ -71,6 +81,7 @@ interface PresencasClientProps {
 export function PresencasClient({ 
     slug, 
     camaraId,
+    camaraName,
     initialSessions, 
     count, 
     totalPages, 
@@ -116,6 +127,29 @@ export function PresencasClient({
     const formatRate = (part: number, total: number) => {
         if (total === 0) return 0
         return Math.round((part / total) * 100)
+    }
+
+    const handleExport = (format: 'pdf' | 'excel') => {
+        const columns = ["Nome do Parlamentar", "Presente", "Ausente", "Justificado", "% Presença"]
+        const rows = globalStats.byCouncilor.map(c => [
+            c.nome,
+            c.presente,
+            c.ausente,
+            c.justificado,
+            `${formatRate(c.presente, c.total)}%`
+        ])
+
+        const exportData = {
+            title: "Relatório Consolidado de Presidência",
+            camaraName: camaraName,
+            date: `Período: ${selectedYear}${selectedType ? ` - ${selectedType}` : ''}`,
+            columns,
+            rows,
+            fileName: `PresencaConsolidada_${camaraName.replace(/\s/g, '_')}_${selectedYear}`
+        }
+
+        if (format === 'pdf') exportToPDF(exportData)
+        else exportToExcel(exportData)
     }
 
     return (
@@ -181,9 +215,21 @@ export function PresencasClient({
                     Filtrar
                 </Button>
 
-                <Button variant="outline" className="rounded-xl border-dashed border-primary/30 text-primary font-bold uppercase tracking-widest text-[10px] ml-auto">
-                    <Download className="w-3.5 h-3.5 mr-2" /> Exportar
-                </Button>
+                <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                        <Button variant="outline" className="rounded-xl border-dashed border-primary/30 text-primary font-bold uppercase tracking-widest text-[10px] ml-auto">
+                            <Download className="w-3.5 h-3.5 mr-2" /> Exportar Relatório
+                        </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end" className="rounded-xl border-border bg-card">
+                        <DropdownMenuItem onClick={() => handleExport('pdf')} className="gap-2 font-bold text-[10px] uppercase tracking-wider cursor-pointer">
+                            <FileDown className="w-4 h-4 text-red-500" /> Baixar em PDF
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => handleExport('excel')} className="gap-2 font-bold text-[10px] uppercase tracking-wider cursor-pointer">
+                            <FileSpreadsheet className="w-4 h-4 text-green-500" /> Baixar em Excel
+                        </DropdownMenuItem>
+                    </DropdownMenuContent>
+                </DropdownMenu>
             </form>
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -320,6 +366,7 @@ export function PresencasClient({
                 session={selectedSession}
                 slug={slug}
                 camaraId={camaraId}
+                camaraName={camaraName}
             />
         </div>
     )
