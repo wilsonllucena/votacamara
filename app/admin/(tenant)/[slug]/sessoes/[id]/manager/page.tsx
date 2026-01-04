@@ -28,7 +28,7 @@ export default async function SessionManagerPage({
         .select("*")
         .eq("camara_id", sessao.camara_id)
         .eq("ativo", true)
-        .neq("cargo", "CHEFE DO EXECUTIVO")
+        .eq("is_executivo", false)
         .order("nome")
 
     // 3. Get Pauta Items (projects to be voted)
@@ -56,6 +56,17 @@ export default async function SessionManagerPage({
         .eq("status", "aberta")
         .maybeSingle()
 
+    // 5. Get Mesa Diretora for sorting and display
+    const { data: mesaDiretora } = await supabase
+        .from("mesa_diretora")
+        .select(`
+            vereador_id,
+            cargos (
+                nome
+            )
+        `)
+        .eq("camara_id", sessao.camara_id)
+
     return (
         <div className="space-y-6">
             <div className="flex items-center gap-4">
@@ -75,6 +86,7 @@ export default async function SessionManagerPage({
                 councilors={councilors || []}
                 pautaItems={pautaItems || []}
                 activeVoting={activeVoting}
+                mesaDiretora={mesaDiretora || []}
                 slug={slug}
             />
         </div>

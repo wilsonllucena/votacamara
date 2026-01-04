@@ -35,10 +35,18 @@ interface SessaoManagerProps {
     councilors: any[]
     pautaItems: any[]
     activeVoting: any
+    mesaDiretora: any[]
     slug: string
 }
 
-export function SessaoManager({ sessao, councilors, pautaItems, activeVoting: initialActiveVoting, slug }: SessaoManagerProps) {
+export function SessaoManager({ 
+    sessao, 
+    councilors, 
+    pautaItems, 
+    activeVoting: initialActiveVoting, 
+    mesaDiretora,
+    slug 
+}: SessaoManagerProps) {
     const router = useRouter()
     const supabase = createClient()
     const [isPending, startTransition] = useTransition()
@@ -199,8 +207,20 @@ export function SessaoManager({ sessao, councilors, pautaItems, activeVoting: in
         })
     }
 
+    // Sort councilors to put Mesa Diretora first
+    const sortedCouncilors = [...councilors].sort((a, b) => {
+        const aMesa = mesaDiretora.some(m => m.vereador_id === a.id)
+        const bMesa = mesaDiretora.some(m => m.vereador_id === b.id)
+        
+        if (aMesa && !bMesa) return -1
+        if (!aMesa && bMesa) return 1
+        
+        // Secondary sort by name
+        return a.nome.localeCompare(b.nome)
+    })
+
     const totalVoted = votes.length
-    const allVoted = totalVoted === councilors.length && councilors.length > 0
+    const allVoted = totalVoted === sortedCouncilors.length && sortedCouncilors.length > 0
 
     return (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -328,9 +348,9 @@ export function SessaoManager({ sessao, councilors, pautaItems, activeVoting: in
                                         <div className="space-y-2 mb-8">
                                             <div className="flex justify-between text-sm font-medium">
                                                 <span className="text-muted-foreground">Progresso da Votação</span>
-                                                <span className="text-primary">{totalVoted} de {councilors.length} Votos</span>
+                                                <span className="text-primary">{totalVoted} de {sortedCouncilors.length} Votos</span>
                                             </div>
-                                            <Progress value={(totalVoted / councilors.length) * 100} className="h-2 bg-muted transition-all" />
+                                            <Progress value={(totalVoted / sortedCouncilors.length) * 100} className="h-2 bg-muted transition-all" />
                                             {allVoted && (
                                                 <div className="flex items-center gap-2 text-green-500 text-xs font-bold bg-green-500/5 p-2 rounded-lg border border-green-500/20">
                                                     <CheckCircle2 className="w-4 h-4" />
@@ -422,32 +442,46 @@ export function SessaoManager({ sessao, councilors, pautaItems, activeVoting: in
                     <div className="flex items-center justify-between mb-6">
                         <h3 className="text-lg font-semibold text-foreground">Presença e Votos</h3>
                         <Badge variant="outline" className="bg-muted text-muted-foreground font-mono">
-                            {totalVoted}/{councilors.length}
-                        </Badge>
-                    </div>
+                        {totalVoted}/{sortedCouncilors.length}
+                    </Badge>
+                </div>
 
-                    <div className="space-y-3">
-                        {councilors.map((vereador) => {
-                            const voto = votes.find(v => v.vereador_id === vereador.id)
-                            const isOnline = !!onlineUsers[vereador.user_id]
-                            
-                            return (
-                                <div key={vereador.id} className="flex items-center justify-between p-3 rounded-xl bg-muted/30 border border-border hover:bg-muted/50 transition-colors">
-                                    <div className="flex items-center gap-3">
-                                        <div className="relative">
-                                            <div className="w-8 h-8 rounded-full bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center text-indigo-500 font-bold text-[10px]">
-                                                {vereador.nome.substring(0, 2).toUpperCase()}
-                                            </div>
-                                            <div className={cn(
-                                                "absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full border-2 border-background",
-                                                isOnline ? "bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.5)]" : "bg-red-500"
-                                            )} />
+                <div className="space-y-3">
+                    {sortedCouncilors.map((vereador) => {
+                        const voto = votes.find(v => v.vereador_id === vereador.id)
+                        const isOnline = !!onlineUsers[vereador.user_id]
+                        const mesaMember = mesaDiretora.find(m => m.vereador_id === vereador.id)
+                        
+                        return (
+                            <div key={vereador.id} className={cn(
+                                "flex items-center justify-between p-3 rounded-xl transition-colors",
+                                mesaMember ? "bg-primary/5 border-primary/20 shadow-sm" : "bg-muted/30 border-border hover:bg-muted/50"
+                            )}>
+                                <div className="flex items-center gap-3">
+                                    <div className="relative">
+                                        <div className={cn(
+                                            "w-8 h-8 rounded-full border flex items-center justify-center font-bold text-[10px]",
+                                            mesaMember ? "bg-primary/10 border-primary/30 text-primary" : "bg-indigo-500/10 border-indigo-500/20 text-indigo-500"
+                                        )}>
+                                            {vereador.nome.substring(0, 2).toUpperCase()}
                                         </div>
-                                        <div>
-                                            <p className="text-sm font-bold text-foreground line-clamp-1 leading-none mb-1">{vereador.nome}</p>
-                                            <p className="text-[10px] text-muted-foreground uppercase font-semibold">{vereador.partido}</p>
-                                        </div>
+                                        <div className={cn(
+                                            "absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full border-2 border-background",
+                                            isOnline ? "bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.5)]" : "bg-red-500"
+                                        )} />
                                     </div>
+                                    <div>
+                                        <p className="text-sm font-bold text-foreground line-clamp-1 leading-none mb-1">
+                                            {vereador.nome}
+                                            {mesaMember && (
+                                                <span className="ml-2 text-[8px] px-1.5 py-0.5 bg-primary text-primary-foreground rounded uppercase font-black">
+                                                    {mesaMember.cargos?.nome}
+                                                </span>
+                                            )}
+                                        </p>
+                                        <p className="text-[10px] text-muted-foreground uppercase font-semibold">{vereador.partido}</p>
+                                    </div>
+                                </div>
                                     <div>
                                         {voto ? (
                                             <Badge className={cn(

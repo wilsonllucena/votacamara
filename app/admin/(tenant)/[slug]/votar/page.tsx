@@ -40,7 +40,7 @@ export default async function VotarPage({
         }
     }
 
-    if (vereador?.cargo === 'CHEFE DO EXECUTIVO') {
+    if (vereador?.is_executivo) {
         return (
             <div className="flex flex-col items-center justify-center min-h-[60vh] text-center space-y-4">
                 <div className="w-16 h-16 bg-amber-500/10 rounded-full flex items-center justify-center mb-2">

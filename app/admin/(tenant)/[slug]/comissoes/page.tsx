@@ -51,7 +51,7 @@ export default async function ComissoesPage({
     .select("id, nome, partido")
     .eq("camara_id", camara.id)
     .eq("ativo", true)
-    .neq("cargo", "CHEFE DO EXECUTIVO")
+    .eq("is_executivo", false)
     .order("nome", { ascending: true })
 
   // 5. Buscar matérias para seleção (opcional, se o formulário pedir)
