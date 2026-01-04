@@ -5,7 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Edit2, Trash2, FileText, User, ScrollText, Plus, List, Search, Tag } from "lucide-react"
+import { Edit2, Trash2, FileText, User, ScrollText, Plus, List, Search, Tag, Eye } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Tooltip } from "@/components/ui/tooltip"
 import { ProjetoForm, MateriaInputs } from "./ProjetoForm"
@@ -198,7 +198,7 @@ export function ProjetosClient({ projetos, slug, vereadores, categorias, situaco
             <List className="w-4 h-4" />
             Listar Materias
           </TabsTrigger>
-          {can('manage', 'Materia') && (
+          {(can('create', 'Materia') || editingProjeto) && (
             <TabsTrigger value="form" className="flex items-center gap-2">
               <Plus className="w-4 h-4" />
               {editingProjeto ? "Editar Materia" : "Nova Materia"}
@@ -275,7 +275,18 @@ export function ProjetosClient({ projetos, slug, vereadores, categorias, situaco
                     </div>
       
                      <div className="flex gap-2 w-full md:w-auto mt-3 md:mt-0 justify-end md:justify-start border-t md:border-t-0 pt-3 md:pt-0 border-border/50">
-                      {can('manage', 'Materia') && (
+                      <Tooltip content="Visualizar Matéria">
+                        <Button 
+                          onClick={() => router.push(`/admin/${slug}/projetos/${projeto.id}`)}
+                          variant="outline" 
+                          className="border-border bg-background text-foreground hover:bg-muted font-medium h-8 sm:h-9 shadow-none px-2 sm:px-4 flex-1 md:flex-none"
+                        >
+                          <Eye className="h-3.5 w-3.5 sm:h-4 sm:w-4 sm:mr-2" />
+                          <span className="hidden sm:inline">Visualizar</span>
+                        </Button>
+                      </Tooltip>
+
+                      {can('update', { ...projeto, autores_ids: authorsIds } as any) && (
                         <Tooltip content="Editar Matéria">
                           <Button 
                             onClick={() => {

@@ -18,7 +18,7 @@ export type AppAbility = MongoAbility<[Action, Subject]>;
 /**
  * Define as regras de abilidade baseadas no papel (role) do usuário
  */
-export function defineAbilityFor(role: string) {
+export function defineAbilityFor(role: string, vereadorId: string | null = null) {
   const { can, cannot, build } = new AbilityBuilder<AppAbility>(createMongoAbility);
 
   if (role === 'ADMIN') {
@@ -48,9 +48,16 @@ export function defineAbilityFor(role: string) {
     // Pode votar
     can('votar', 'Sessao');
     
-    // Pode criar/editar matérias (geralmente permitido a todos os parlamentares)
+    // Pode criar matérias
     can('create', 'Materia');
-    can('update', 'Materia');
+
+    // Pode editar matérias que ele é autor
+    if (vereadorId) {
+      can('update', 'Materia', { autores_ids: { $in: [vereadorId] } } as any);
+    } else {
+      // Se não tiver ID de vereador vinculado, não pode editar (segurança)
+      cannot('update', 'Materia');
+    }
   } 
   
   else {

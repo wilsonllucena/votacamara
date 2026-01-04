@@ -102,8 +102,19 @@ export default async function ProjetosPage({
       .eq("user_id", user?.id)
       .single()
 
+  // 6.1 Get Vereador ID if role is VEREADOR
+  let vereadorId = null
+  if (profile?.role === 'VEREADOR') {
+    const { data: v } = await supabase
+        .from("vereadores")
+        .select("id")
+        .eq("user_id", user?.id)
+        .single()
+    vereadorId = v?.id || null
+  }
+
   const { defineAbilityFor } = await import("@/lib/casl/ability")
-  const ability = defineAbilityFor(profile?.role || 'PUBLICO')
+  const ability = defineAbilityFor(profile?.role || 'PUBLICO', vereadorId)
   const rules = ability.rules
 
   return (
