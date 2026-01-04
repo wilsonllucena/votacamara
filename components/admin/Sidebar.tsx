@@ -11,9 +11,7 @@ import {
   Gavel,
   Vote,
   Settings,
-  ChevronsUpDown,
   LogOut,
-  Calendar,
   Menu,
   ChevronLeft,
   ChevronDown,
@@ -58,18 +56,21 @@ export function Sidebar({ slug, userProfile }: SidebarProps) {
           label: "Categorias",
           href: `/admin/${slug}/projetos/categorias`,
           active: pathname === `/admin/${slug}/projetos/categorias`,
+          adminOnly: true,
         },
         {
           label: "Situação",
           href: `/admin/${slug}/projetos/situacoes`,
           active: pathname === `/admin/${slug}/projetos/situacoes`,
+          adminOnly: true,
         },
         {
           label: "Tipos de Matéria",
           href: `/admin/${slug}/projetos/tipos`,
           active: pathname === `/admin/${slug}/projetos/tipos`,
+          adminOnly: true,
         }
-      ]
+      ].filter(item => !item.adminOnly || userProfile?.role === 'ADMIN')
     },
      {
       label: "Comissões",
@@ -109,26 +110,30 @@ export function Sidebar({ slug, userProfile }: SidebarProps) {
             label: "Lista de Presença",
             href: `/admin/${slug}/sessoes/presencas`,
             active: pathname === `/admin/${slug}/sessoes/presencas`,
+            adminOnly: true,
         }
-      ]
+      ].filter(item => !item.adminOnly || userProfile?.role === 'ADMIN')
     },
-   {
+    {
       label: "Cargos",
       icon: Briefcase,
       href: `/admin/${slug}/cargos`,
       active: pathname.startsWith(`/admin/${slug}/cargos`),
+      adminOnly: true,
     },
     {
       label: "Mesa Diretora",
       icon: Table,
       href: `/admin/${slug}/mesa-diretora`,
       active: pathname.startsWith(`/admin/${slug}/mesa-diretora`),
+      adminOnly: true,
     },
     {
       label: "Vereadores",
       icon: Users,
       href: `/admin/${slug}/vereadores`,
       active: pathname.startsWith(`/admin/${slug}/vereadores`),
+      adminOnly: true,
     },
     {
       label: "Votação",
@@ -136,14 +141,14 @@ export function Sidebar({ slug, userProfile }: SidebarProps) {
       href: `/admin/${slug}/votar`,
       active: pathname.startsWith(`/admin/${slug}/votar`),
     },
- 
+
     {
       label: "Configurações",
       icon: Settings,
       href: `/admin/${slug}/configuracoes`,
       active: pathname.startsWith(`/admin/${slug}/configuracoes`),
     },
-  ]
+  ].filter(route => !route.adminOnly || userProfile?.role === 'ADMIN')
 
   useEffect(() => {
     const activeParents = routes

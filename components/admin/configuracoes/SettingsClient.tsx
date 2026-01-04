@@ -22,7 +22,8 @@ interface SettingsClientProps {
 }
 
 export function SettingsClient({ slug, camara, userRole }: SettingsClientProps) {
-  const [activeTab, setActiveTab] = useState<"geral" | "seguranca">("geral")
+  const isAdmin = userRole === 'ADMIN'
+  const [activeTab, setActiveTab] = useState<"geral" | "seguranca">(isAdmin ? "geral" : "seguranca")
   const [isPending, startTransition] = useTransition()
   const [message, setMessage] = useState<{ type: "success" | "error", text: string } | null>(null)
 
@@ -58,17 +59,19 @@ export function SettingsClient({ slug, camara, userRole }: SettingsClientProps) 
       </div>
 
       <div className="flex justify-start border-b border-border">
-        <button
-          onClick={() => { setActiveTab("geral"); setMessage(null); }}
-          className={cn(
-            "flex items-center gap-2 px-6 py-4 text-sm font-medium transition-all relative",
-            activeTab === "geral" ? "text-primary" : "text-muted-foreground hover:text-foreground"
-          )}
-        >
-          <Building className="h-4 w-4" />
-          Perfil da Câmara
-          {activeTab === "geral" && <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary" />}
-        </button>
+        {isAdmin && (
+          <button
+            onClick={() => { setActiveTab("geral"); setMessage(null); }}
+            className={cn(
+              "flex items-center gap-2 px-6 py-4 text-sm font-medium transition-all relative",
+              activeTab === "geral" ? "text-primary" : "text-muted-foreground hover:text-foreground"
+            )}
+          >
+            <Building className="h-4 w-4" />
+            Perfil da Câmara
+            {activeTab === "geral" && <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary" />}
+          </button>
+        )}
         <button
           onClick={() => { setActiveTab("seguranca"); setMessage(null); }}
           className={cn(
