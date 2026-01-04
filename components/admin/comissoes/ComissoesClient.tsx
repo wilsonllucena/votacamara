@@ -14,10 +14,14 @@ import {
   MoreVertical, 
   Search 
 } from "lucide-react"
-import { ComissaoForm } from "./ComissaoForm"
+import { ComissaoForm } from "@/components/admin/comissoes/ComissaoForm"
 import { Pagination } from "@/components/admin/Pagination"
 import { Tooltip } from "@/components/ui/tooltip"
 import { cn } from "@/lib/utils"
+
+import { createMongoAbility, RawRuleOf, MongoAbility } from "@casl/ability"
+import { Action, Subject } from "@/lib/casl/ability"
+import { useMemo } from "react"
 
 interface Comissao {
   id: string
@@ -36,13 +40,18 @@ interface ComissoesClientProps {
     currentPage: number
     totalPages: number
   }
+  rules?: RawRuleOf<MongoAbility<[Action, Subject]>>[]
 }
 
-export function ComissoesClient({ slug, initialComissoes, vereadores, materias, pagination }: ComissoesClientProps) {
+export function ComissoesClient({ slug, initialComissoes, vereadores, materias, pagination, rules = [] }: ComissoesClientProps) {
   const router = useRouter()
   const searchParams = useSearchParams()
   const [activeTab, setActiveTab] = useState("list")
   const [searchTerm, setSearchTerm] = useState(searchParams.get("search") || "")
+
+  // Reconstruir abilidade no cliente de forma estável
+  const ability = useMemo(() => createMongoAbility<[Action, Subject]>(rules), [rules])
+  const can = (action: Action, subject: Subject) => ability.can(action, subject)
 
   const handleSearch = () => {
     const params = new URLSearchParams(searchParams.toString())
@@ -81,10 +90,12 @@ export function ComissoesClient({ slug, initialComissoes, vereadores, materias, 
             <List className="w-4 h-4" />
             Listar Comissões
           </TabsTrigger>
-          <TabsTrigger value="new" className="flex items-center gap-2">
-            <Plus className="w-4 h-4" />
-            Nova Comissão
-          </TabsTrigger>
+          {can('manage', 'Comissao') && (
+            <TabsTrigger value="new" className="flex items-center gap-2">
+              <Plus className="w-4 h-4" />
+              Nova Comissão
+            </TabsTrigger>
+          )}
         </TabsList>
 
         <TabsContent value="list" className="space-y-4 animate-in fade-in duration-500">
@@ -154,11 +165,13 @@ export function ComissoesClient({ slug, initialComissoes, vereadores, materias, 
                           </div>
                         </td>
                         <td className="px-4 sm:px-6 py-4 text-right">
-                          <Tooltip content="Gerenciar Comissão">
-                            <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-                              <MoreVertical className="w-4 h-4" />
-                            </Button>
-                          </Tooltip>
+                          {can('manage', 'Comissao') && (
+                            <Tooltip content="Gerenciar Comissão">
+                              <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                                <MoreVertical className="w-4 h-4" />
+                              </Button>
+                            </Tooltip>
+                          )}
                         </td>
                       </tr>
                     ))

@@ -45,6 +45,18 @@ export default async function CargosPage({
   
   const totalPages = count ? Math.ceil(count / ITEMS_PER_PAGE) : 1
 
+  // 3. Fetch Role and Define Abilities
+  const { data: { user } } = await supabase.auth.getUser()
+  const { data: profile } = await supabase
+      .from("profiles")
+      .select("role")
+      .eq("user_id", user?.id)
+      .single()
+
+  const { defineAbilityFor } = await import("@/lib/casl/ability")
+  const ability = defineAbilityFor(profile?.role || 'PUBLICO')
+  const rules = ability.rules
+
   return (
     <div className="space-y-6">
       <CargosClient 
@@ -54,6 +66,7 @@ export default async function CargosPage({
             currentPage,
             totalPages
         }}
+        rules={rules as any}
       />
     </div>
   )

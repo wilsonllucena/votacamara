@@ -26,6 +26,10 @@ import {
     DialogDescription,
 } from "@/components/ui/dialog"
 
+import { createMongoAbility, RawRuleOf, MongoAbility } from "@casl/ability"
+import { Action, Subject } from "@/lib/casl/ability"
+import { useMemo } from "react"
+
 interface Projeto {
     id: string
     titulo: string
@@ -48,11 +52,17 @@ interface Sessao {
 
 interface AgendaSchedulerProps {
   initialSessoes: Sessao[]
+  rules?: RawRuleOf<MongoAbility<[Action, Subject]>>[]
 }
 
-export function AgendaScheduler({ initialSessoes }: AgendaSchedulerProps) {
+export function AgendaScheduler({ initialSessoes, rules = [] }: AgendaSchedulerProps) {
   const [selectedDay, setSelectedDay] = useState<Date | undefined>(new Date())
   const [selectedSessao, setSelectedSessao] = useState<Sessao | null>(null)
+  
+  // Reconstruir abilidade no cliente de forma estável
+  const ability = useMemo(() => createMongoAbility<[Action, Subject]>(rules), [rules])
+  const can = (action: Action, subject: Subject) => ability.can(action, subject)
+
   const [isModalOpen, setIsModalOpen] = useState(false)
   
   const calendarRef = useRef<FullCalendar>(null)

@@ -5,6 +5,10 @@ import { Badge } from "@/components/ui/badge"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../../ui/table"
 import { Tag, Info } from "lucide-react"
 
+import { createMongoAbility, RawRuleOf, MongoAbility } from "@casl/ability"
+import { Action, Subject } from "@/lib/casl/ability"
+import { useMemo } from "react"
+
 interface TipoMateria {
     id: string
     nome: string
@@ -14,9 +18,13 @@ interface TipoMateria {
 
 interface TiposMateriaClientProps {
     tipos: TipoMateria[]
+    rules?: RawRuleOf<MongoAbility<[Action, Subject]>>[]
 }
 
-export function TiposMateriaClient({ tipos }: TiposMateriaClientProps) {
+export function TiposMateriaClient({ tipos, rules = [] }: TiposMateriaClientProps) {
+    // Reconstruir abilidade no cliente de forma estável
+    const ability = useMemo(() => createMongoAbility<[Action, Subject]>(rules), [rules])
+    const can = (action: Action, subject: Subject) => ability.can(action, subject)
     return (
         <div className="space-y-6 animate-in fade-in duration-500">
             <div className="flex flex-col gap-2">

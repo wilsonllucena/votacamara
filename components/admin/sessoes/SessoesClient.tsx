@@ -15,6 +15,10 @@ import { ConfirmDialog } from "@/components/ui/confirm-dialog"
 import { Pagination } from "@/components/admin/Pagination"
 import { Tooltip } from "@/components/ui/tooltip"
 
+import { createMongoAbility, RawRuleOf, MongoAbility } from "@casl/ability"
+import { Action, Subject } from "@/lib/casl/ability"
+import { useMemo } from "react"
+
 interface Sessao {
   id: string
   titulo: string
@@ -36,15 +40,20 @@ interface SessoesClientProps {
     currentPage: number
     totalPages: number
   }
+  rules?: RawRuleOf<MongoAbility<[Action, Subject]>>[]
 }
 
-export function SessoesClient({ sessoes, slug, availableProjects, busyProjects, pagination }: SessoesClientProps) {
+export function SessoesClient({ sessoes, slug, availableProjects, busyProjects, pagination, rules = [] }: SessoesClientProps) {
   const router = useRouter()
   const searchParams = useSearchParams()
   const [isPending, startTransition] = useTransition()
   const [activeTab, setActiveTab] = useState("list")
   const [editingSessao, setEditingSessao] = useState<Sessao | null>(null)
   const [searchTerm, setSearchTerm] = useState(searchParams.get("search") || "")
+
+  // Reconstruir abilidade no cliente de forma estável
+  const ability = useMemo(() => createMongoAbility<[Action, Subject]>(rules), [rules])
+  const can = (action: Action, subject: Subject) => ability.can(action, subject)
 
   // ConfirmDialog State
   const [confirmConfig, setConfirmConfig] = useState<{
@@ -165,10 +174,12 @@ export function SessoesClient({ sessoes, slug, availableProjects, busyProjects, 
             <List className="w-4 h-4" />
             Listar Sessões
           </TabsTrigger>
-          <TabsTrigger value="form" className="flex items-center gap-2">
-            <Plus className="w-4 h-4" />
-            {editingSessao ? "Editar Sessão" : "Nova Sessão"}
-          </TabsTrigger>
+          {can('manage', 'Sessao') && (
+            <TabsTrigger value="form" className="flex items-center gap-2">
+              <Plus className="w-4 h-4" />
+              {editingSessao ? "Editar Sessão" : "Nova Sessão"}
+            </TabsTrigger>
+          )}
         </TabsList>
 
         <TabsContent value="list" className="space-y-4 animate-in fade-in duration-500">
@@ -248,28 +259,32 @@ export function SessoesClient({ sessoes, slug, availableProjects, busyProjects, 
                               </Button>
                             </Link>
 
-                            <Tooltip content="Editar Sessão">
-                              <button 
-                                type="button"
-                                onClick={() => {
-                                  setEditingSessao(sessao)
-                                  setActiveTab("form")
-                                }}
-                                className="p-1.5 sm:p-2 text-muted-foreground hover:text-primary transition-colors hover:bg-muted rounded-md"
-                              >
-                                <Edit2 className="h-4 w-4" />
-                              </button>
-                            </Tooltip>
+                            {can('manage', 'Sessao') && (
+                              <Tooltip content="Editar Sessão">
+                                <button 
+                                  type="button"
+                                  onClick={() => {
+                                    setEditingSessao(sessao)
+                                    setActiveTab("form")
+                                  }}
+                                  className="p-1.5 sm:p-2 text-muted-foreground hover:text-primary transition-colors hover:bg-muted rounded-md"
+                                >
+                                  <Edit2 className="h-4 w-4" />
+                                </button>
+                              </Tooltip>
+                            )}
 
-                            <Tooltip content="Excluir Sessão">
-                              <button 
-                                type="button"
-                                onClick={() => handleDelete(sessao.id)}
-                                className="p-1.5 sm:p-2 text-muted-foreground hover:text-red-500 transition-colors hover:bg-red-500/10 rounded-md"
-                              >
-                                <Trash2 className="h-4 w-4" />
-                              </button>
-                            </Tooltip>
+                            {can('delete', 'Sessao') && (
+                              <Tooltip content="Excluir Sessão">
+                                <button 
+                                  type="button"
+                                  onClick={() => handleDelete(sessao.id)}
+                                  className="p-1.5 sm:p-2 text-muted-foreground hover:text-red-500 transition-colors hover:bg-red-500/10 rounded-md"
+                                >
+                                  <Trash2 className="h-4 w-4" />
+                                </button>
+                              </Tooltip>
+                            )}
                           </div>
                         </td>
                       </tr>

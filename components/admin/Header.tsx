@@ -5,6 +5,8 @@ import { Button } from "@/components/ui/button"
 import { MobileSidebar } from "./MobileSidebar"
 import { ThemeToggle } from "./ThemeToggle"
 import { Tooltip } from "@/components/ui/tooltip"
+import { createMongoAbility, RawRuleOf, MongoAbility } from "@casl/ability"
+import { Action, Subject } from "@/lib/casl/ability"
 
 interface HeaderProps {
     slug: string
@@ -13,12 +15,13 @@ interface HeaderProps {
         role: string
     }
     camaraNome?: string
+    rules?: RawRuleOf<MongoAbility<[Action, Subject]>>[]
 }
 
-export function Header({ slug, userProfile, camaraNome }: HeaderProps) {
+export function Header({ slug, userProfile, camaraNome, rules = [] }: HeaderProps) {
   return (
     <div className="flex items-center h-14 px-6 justify-between md:justify-end bg-transparent z-50 border-t border-b border-border/90">
-        <MobileSidebar slug={slug} userProfile={userProfile} />
+        <MobileSidebar slug={slug} userProfile={userProfile} rules={rules} />
         
         <div className="flex items-center gap-x-4">
              {camaraNome && (

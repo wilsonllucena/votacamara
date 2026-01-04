@@ -18,17 +18,9 @@ const camaraSettingsSchema = z.object({
 export async function updateCamaraSettings(slug: string, data: any) {
   const supabase = await createClient()
   const adminClient = createAdminClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) return { error: "Não autorizado" }
-
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("role")
-    .eq("user_id", user.id)
-    .single()
-
-  if (profile?.role !== 'ADMIN') {
-    return { error: "Apenas administradores podem alterar as configurações da Câmara" }
+  const { checkAbility } = await import("./auth_ability")
+  if (!await checkAbility('update', 'Configuracao')) {
+    return { error: "Sem permissão para alterar as configurações da Câmara" }
   }
 
   const validated = camaraSettingsSchema.safeParse(data)

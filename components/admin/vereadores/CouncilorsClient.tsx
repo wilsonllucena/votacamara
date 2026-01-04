@@ -12,6 +12,10 @@ import { ConfirmDialog } from "@/components/ui/confirm-dialog"
 import { Pagination } from "@/components/admin/Pagination"
 import { Tooltip } from "@/components/ui/tooltip"
 
+import { createMongoAbility, RawRuleOf, MongoAbility } from "@casl/ability"
+import { Action, Subject } from "@/lib/casl/ability"
+import { useMemo } from "react"
+
 interface CouncilorsClientProps {
   councilors: any[]
   slug: string
@@ -19,14 +23,19 @@ interface CouncilorsClientProps {
     currentPage: number
     totalPages: number
   }
+  rules?: RawRuleOf<MongoAbility<[Action, Subject]>>[]
 }
-export function CouncilorsClient({ councilors, slug, pagination }: CouncilorsClientProps) {
+export function CouncilorsClient({ councilors, slug, pagination, rules = [] }: CouncilorsClientProps) {
   const router = useRouter()
   const searchParams = useSearchParams()
   const [isPending, startTransition] = useTransition()
   const [activeTab, setActiveTab] = useState("list")
   const [editingCouncilor, setEditingCouncilor] = useState<any | null>(null)
   const [searchTerm, setSearchTerm] = useState(searchParams.get("search") || "")
+
+  // Reconstruir abilidade no cliente de forma estável
+  const ability = useMemo(() => createMongoAbility<[Action, Subject]>(rules), [rules])
+  const can = (action: Action, subject: Subject) => ability.can(action, subject)
 
   // ConfirmDialog State
   const [confirmConfig, setConfirmConfig] = useState<{
@@ -120,10 +129,12 @@ export function CouncilorsClient({ councilors, slug, pagination }: CouncilorsCli
             <List className="w-4 h-4" />
             Listar Vereadores
           </TabsTrigger>
-          <TabsTrigger value="form" className="flex items-center gap-2">
-            <Plus className="w-4 h-4" />
-            {editingCouncilor ? "Editar Vereador" : "Novo Vereador"}
-          </TabsTrigger>
+          {can('manage', 'Vereador') && (
+            <TabsTrigger value="form" className="flex items-center gap-2">
+              <Plus className="w-4 h-4" />
+              {editingCouncilor ? "Editar Vereador" : "Novo Vereador"}
+            </TabsTrigger>
+          )}
         </TabsList>
 
         <TabsContent value="list" className="space-y-4 animate-in fade-in duration-500">
@@ -211,39 +222,43 @@ export function CouncilorsClient({ councilors, slug, pagination }: CouncilorsCli
                         </td>
                         <td className="px-4 sm:px-6 py-4 text-right">
                           <div className="flex justify-end gap-1 sm:gap-2 items-center">
-                            <Tooltip content="Editar Parlamentar">
-                              <button 
-                                type="button"
-                                onClick={() => {
-                                  const flatVereador = {
-                                    ...vereador,
-                                    email: vereador.profile_email,
-                                    telefone: vereador.profile_telefone,
-                                    isPresidente: vereador.is_presidente
-                                  }
-                                  setEditingCouncilor(flatVereador)
-                                  setActiveTab("form")
-                                }}
-                                className="p-1.5 sm:p-2 text-muted-foreground hover:text-primary transition-colors hover:bg-muted rounded-md"
-                              >
-                                <Edit2 className="h-4 w-4" />
-                              </button>
-                            </Tooltip>
+                            {can('manage', 'Vereador') && (
+                              <>
+                                <Tooltip content="Editar Parlamentar">
+                                  <button 
+                                    type="button"
+                                    onClick={() => {
+                                      const flatVereador = {
+                                        ...vereador,
+                                        email: vereador.profile_email,
+                                        telefone: vereador.profile_telefone,
+                                        isPresidente: vereador.is_presidente
+                                      }
+                                      setEditingCouncilor(flatVereador)
+                                      setActiveTab("form")
+                                    }}
+                                    className="p-1.5 sm:p-2 text-muted-foreground hover:text-primary transition-colors hover:bg-muted rounded-md"
+                                  >
+                                    <Edit2 className="h-4 w-4" />
+                                  </button>
+                                </Tooltip>
 
-                            <Tooltip content={vereador.ativo ? "Desativar Parlamentar" : "Ativar Parlamentar"}>
-                              <button 
-                                type="button"
-                                onClick={() => handleToggleStatus(vereador.id, vereador.ativo)}
-                                className={cn(
-                                    "p-1.5 sm:p-2 transition-colors rounded-md",
-                                    vereador.ativo 
-                                        ? 'text-muted-foreground hover:text-red-400 hover:bg-red-400/10' 
-                                        : 'text-muted-foreground hover:text-green-400 hover:bg-green-400/10'
-                                )}
-                              >
-                                {vereador.ativo ? <UserX className="h-4 w-4" /> : <Power className="h-4 w-4" />}
-                              </button>
-                            </Tooltip>
+                                <Tooltip content={vereador.ativo ? "Desativar Parlamentar" : "Ativar Parlamentar"}>
+                                  <button 
+                                    type="button"
+                                    onClick={() => handleToggleStatus(vereador.id, vereador.ativo)}
+                                    className={cn(
+                                        "p-1.5 sm:p-2 transition-colors rounded-md",
+                                        vereador.ativo 
+                                            ? 'text-muted-foreground hover:text-red-400 hover:bg-red-400/10' 
+                                            : 'text-muted-foreground hover:text-green-400 hover:bg-green-400/10'
+                                    )}
+                                  >
+                                    {vereador.ativo ? <UserX className="h-4 w-4" /> : <Power className="h-4 w-4" />}
+                                  </button>
+                                </Tooltip>
+                              </>
+                            )}
                           </div>
                         </td>
                       </tr>

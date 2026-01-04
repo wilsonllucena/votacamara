@@ -22,9 +22,18 @@ export default async function SettingsPage({ params }: { params: Promise<{ slug:
     return <div className="p-8 text-white">Câmara não encontrada</div>
   }
 
+  const { defineAbilityFor } = await import("@/lib/casl/ability")
+  const ability = defineAbilityFor(profile?.role || 'PUBLICO')
+  const rules = ability.rules
+
   return (
     <div className="py-6 px-4 md:px-8">
-      <SettingsClient slug={slug} camara={camara} userRole={profile?.role || 'USER'} />
+      <SettingsClient 
+        slug={slug} 
+        camara={camara} 
+        userRole={profile?.role || 'USER'} 
+        rules={rules as any}
+      />
     </div>
   )
 }

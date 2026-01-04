@@ -20,6 +20,9 @@ import {
 } from "lucide-react"
 import { signOutAction } from "@/app/(auth)/_actions"
 import { useSidebar } from "./SidebarProvider"
+import { createMongoAbility, RawRuleOf, MongoAbility } from "@casl/ability"
+import { Action, Subject } from "@/lib/casl/ability"
+import { useMemo } from "react"
 
 interface SidebarProps {
   slug: string
@@ -27,12 +30,17 @@ interface SidebarProps {
       name: string
       role: string
   }
+  rules?: RawRuleOf<MongoAbility<[Action, Subject]>>[]
 }
 
-export function Sidebar({ slug, userProfile }: SidebarProps) {
+export function Sidebar({ slug, userProfile, rules = [] }: SidebarProps) {
   const pathname = usePathname()
   const { isCollapsed, toggleSidebar } = useSidebar()
   const [expandedMenus, setExpandedMenus] = useState<string[]>([])
+
+  // Reconstruir abilidade no cliente de forma estável
+  const ability = useMemo(() => createMongoAbility<[Action, Subject]>(rules), [rules])
+  const can = (action: Action, subject: Subject) => ability.can(action, subject)
 
   const routes = [
     {
@@ -56,21 +64,21 @@ export function Sidebar({ slug, userProfile }: SidebarProps) {
           label: "Categorias",
           href: `/admin/${slug}/projetos/categorias`,
           active: pathname === `/admin/${slug}/projetos/categorias`,
-          adminOnly: true,
+          canView: can('configurar', 'Materia'),
         },
         {
           label: "Situação",
           href: `/admin/${slug}/projetos/situacoes`,
           active: pathname === `/admin/${slug}/projetos/situacoes`,
-          adminOnly: true,
+          canView: can('configurar', 'Materia'),
         },
         {
           label: "Tipos de Matéria",
           href: `/admin/${slug}/projetos/tipos`,
           active: pathname === `/admin/${slug}/projetos/tipos`,
-          adminOnly: true,
+          canView: can('configurar', 'Materia'),
         }
-      ].filter(item => !item.adminOnly || userProfile?.role === 'ADMIN')
+      ].filter(item => item.canView !== false)
     },
      {
       label: "Comissões",
@@ -110,36 +118,37 @@ export function Sidebar({ slug, userProfile }: SidebarProps) {
             label: "Lista de Presença",
             href: `/admin/${slug}/sessoes/presencas`,
             active: pathname === `/admin/${slug}/sessoes/presencas`,
-            adminOnly: true,
+            canView: can('manage', 'Sessao'),
         }
-      ].filter(item => !item.adminOnly || userProfile?.role === 'ADMIN')
+      ].filter(item => item.canView !== false)
     },
     {
       label: "Cargos",
       icon: Briefcase,
       href: `/admin/${slug}/cargos`,
       active: pathname.startsWith(`/admin/${slug}/cargos`),
-      adminOnly: true,
+      canView: can('configurar', 'all'),
     },
     {
       label: "Mesa Diretora",
       icon: Table,
       href: `/admin/${slug}/mesa-diretora`,
       active: pathname.startsWith(`/admin/${slug}/mesa-diretora`),
-      adminOnly: true,
+      canView: can('manage', 'MesaDiretora'),
     },
     {
       label: "Vereadores",
       icon: Users,
       href: `/admin/${slug}/vereadores`,
       active: pathname.startsWith(`/admin/${slug}/vereadores`),
-      adminOnly: true,
+      canView: (can('manage', 'Vereador') || can('read', 'Vereador')),
     },
     {
       label: "Votação",
       icon: Vote,
       href: `/admin/${slug}/votar`,
       active: pathname.startsWith(`/admin/${slug}/votar`),
+      canView: can('votar', 'Sessao'),
     },
 
     {
@@ -148,7 +157,7 @@ export function Sidebar({ slug, userProfile }: SidebarProps) {
       href: `/admin/${slug}/configuracoes`,
       active: pathname.startsWith(`/admin/${slug}/configuracoes`),
     },
-  ].filter(route => !route.adminOnly || userProfile?.role === 'ADMIN')
+  ].filter(route => (route as any).canView !== false)
 
   useEffect(() => {
     const activeParents = routes

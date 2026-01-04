@@ -46,6 +46,10 @@ interface Projeto {
   } | null
 }
 
+import { createMongoAbility, RawRuleOf, MongoAbility } from "@casl/ability"
+import { Action, Subject } from "@/lib/casl/ability"
+import { useMemo } from "react"
+
 interface ProjetosClientProps {
   projetos: Projeto[]
   slug: string
@@ -57,15 +61,20 @@ interface ProjetosClientProps {
     currentPage: number
     totalPages: number
   }
+  rules?: RawRuleOf<MongoAbility<[Action, Subject]>>[]
 }
 
-export function ProjetosClient({ projetos, slug, vereadores, categorias, situacoes, tiposMateria, pagination }: ProjetosClientProps) {
+export function ProjetosClient({ projetos, slug, vereadores, categorias, situacoes, tiposMateria, pagination, rules = [] }: ProjetosClientProps) {
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
   const [activeTab, setActiveTab] = useState("list")
   const [editingProjeto, setEditingProjeto] = useState<(MateriaInputs & { id: string }) | null>(null)
   const searchParams = useSearchParams()
   const [searchTerm, setSearchTerm] = useState(searchParams.get("search") || "")
+
+  // Reconstruir abilidade no cliente de forma estável
+  const ability = useMemo(() => createMongoAbility<[Action, Subject]>(rules), [rules])
+  const can = (action: Action, subject: Subject) => ability.can(action, subject)
 
   // ConfirmDialog State
   const [confirmConfig, setConfirmConfig] = useState<{
@@ -189,10 +198,12 @@ export function ProjetosClient({ projetos, slug, vereadores, categorias, situaco
             <List className="w-4 h-4" />
             Listar Materias
           </TabsTrigger>
-          <TabsTrigger value="form" className="flex items-center gap-2">
-            <Plus className="w-4 h-4" />
-            {editingProjeto ? "Editar Materia" : "Nova Materia"}
-          </TabsTrigger>
+          {can('manage', 'Materia') && (
+            <TabsTrigger value="form" className="flex items-center gap-2">
+              <Plus className="w-4 h-4" />
+              {editingProjeto ? "Editar Materia" : "Nova Materia"}
+            </TabsTrigger>
+          )}
         </TabsList>
 
         <TabsContent value="list" className="space-y-4 animate-in fade-in duration-500">
@@ -263,42 +274,46 @@ export function ProjetosClient({ projetos, slug, vereadores, categorias, situaco
                       </div>
                     </div>
       
-                    <div className="flex gap-2 w-full md:w-auto mt-3 md:mt-0 justify-end md:justify-start border-t md:border-t-0 pt-3 md:pt-0 border-border/50">
-                      <Tooltip content="Editar Matéria">
-                        <Button 
-                          onClick={() => {
-                            setEditingProjeto({
-                              id: projeto.id,
-                              numero: projeto.numero,
-                              titulo: projeto.titulo,
-                              ementa: projeto.ementa,
-                              autores_ids: authorsIds,
-                              texto_url: projeto.texto_url || undefined,
-                              status: projeto.status,
+                     <div className="flex gap-2 w-full md:w-auto mt-3 md:mt-0 justify-end md:justify-start border-t md:border-t-0 pt-3 md:pt-0 border-border/50">
+                      {can('manage', 'Materia') && (
+                        <Tooltip content="Editar Matéria">
+                          <Button 
+                            onClick={() => {
+                              setEditingProjeto({
+                                id: projeto.id,
+                                numero: projeto.numero,
+                                titulo: projeto.titulo,
+                                ementa: projeto.ementa,
+                                autores_ids: authorsIds,
+                                texto_url: projeto.texto_url || undefined,
+                                status: projeto.status,
                               categoria_id: projeto.categoria_id || undefined,
                               situacao_id: projeto.situacao_id || undefined,
-                              tipo_materia_id: projeto.tipo_materia_id || undefined
-                            })
-                            setActiveTab("form")
-                          }}
-                          variant="outline" 
-                          className="border-border bg-background text-foreground hover:bg-muted font-medium h-8 sm:h-9 shadow-none px-2 sm:px-4 flex-1 md:flex-none"
-                        >
-                          <Edit2 className="h-3.5 w-3.5 sm:h-4 sm:w-4 sm:mr-2" />
-                          <span className="hidden sm:inline">Editar</span>
-                        </Button>
-                      </Tooltip>
+                                tipo_materia_id: projeto.tipo_materia_id || undefined
+                              })
+                              setActiveTab("form")
+                            }}
+                            variant="outline" 
+                            className="border-border bg-background text-foreground hover:bg-muted font-medium h-8 sm:h-9 shadow-none px-2 sm:px-4 flex-1 md:flex-none"
+                          >
+                            <Edit2 className="h-3.5 w-3.5 sm:h-4 sm:w-4 sm:mr-2" />
+                            <span className="hidden sm:inline">Editar</span>
+                          </Button>
+                        </Tooltip>
+                      )}
 
-                      <Tooltip content="Excluir Matéria">
-                        <Button 
-                          onClick={() => handleDelete(projeto.id, projeto.titulo)}
-                          variant="ghost" 
-                          className="text-muted-foreground hover:text-red-500 hover:bg-red-500/10 h-8 sm:h-9 shadow-none px-2 sm:px-3 flex-1 md:flex-none"
-                        >
-                          <Trash2 className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-                          <span className="sm:hidden ml-2 text-xs">Excluir</span>
-                        </Button>
-                      </Tooltip>
+                      {can('delete', 'Materia') && (
+                        <Tooltip content="Excluir Matéria">
+                          <Button 
+                            onClick={() => handleDelete(projeto.id, projeto.titulo)}
+                            variant="ghost" 
+                            className="text-muted-foreground hover:text-red-500 hover:bg-red-500/10 h-8 sm:h-9 shadow-none px-2 sm:px-3 flex-1 md:flex-none"
+                          >
+                            <Trash2 className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                            <span className="sm:hidden ml-2 text-xs">Excluir</span>
+                          </Button>
+                        </Tooltip>
+                      )}
                     </div>
                   </div>
                 )

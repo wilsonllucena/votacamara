@@ -21,6 +21,10 @@ import { cn } from "@/lib/utils"
 import { useSessionStore } from "@/store/use-session-store"
 import { ConfirmDialog } from "@/components/ui/confirm-dialog"
 
+import { createMongoAbility, RawRuleOf, MongoAbility } from "@casl/ability"
+import { Action, Subject } from "@/lib/casl/ability"
+import { useMemo } from "react"
+
 interface VotingClientProps {
     vereador: any
     slug: string
@@ -28,12 +32,17 @@ interface VotingClientProps {
     camaraId: string
     initialSessaoStatus?: string
     sessaoId: string
+    rules?: RawRuleOf<MongoAbility<[Action, Subject]>>[]
 }
 
-export function VotingClient({ vereador, slug, initialActiveVoting, camaraId, initialSessaoStatus, sessaoId }: VotingClientProps) {
+export function VotingClient({ vereador, slug, initialActiveVoting, camaraId, initialSessaoStatus, sessaoId, rules = [] }: VotingClientProps) {
     const router = useRouter()
     const supabase = createClient()
     const [isPending, startTransition] = useTransition()
+
+    // Reconstruir abilidade no cliente de forma estável
+    const ability = useMemo(() => createMongoAbility<[Action, Subject]>(rules), [rules])
+    const can = (action: Action, subject: Subject) => ability.can(action, subject)
     
     // ConfirmDialog State
     const [confirmConfig, setConfirmConfig] = useState<{
@@ -257,7 +266,7 @@ export function VotingClient({ vereador, slug, initialActiveVoting, camaraId, in
                         {/* Vote FAVORAVEL */}
                         <button 
                             onClick={() => handleVote('FAVORAVEL')}
-                            disabled={isPending || myVote !== null}
+                            disabled={isPending || myVote !== null || !can('votar', 'Sessao')}
                             className={cn(
                                 "group relative w-full h-24 rounded-2xl border-2 transition-all flex items-center justify-between px-8",
                                 myVote === 'FAVORAVEL' 
@@ -277,7 +286,7 @@ export function VotingClient({ vereador, slug, initialActiveVoting, camaraId, in
                         {/* Vote CONTRA */}
                         <button 
                             onClick={() => handleVote('CONTRA')}
-                            disabled={isPending || myVote !== null}
+                            disabled={isPending || myVote !== null || !can('votar', 'Sessao')}
                             className={cn(
                                 "group relative w-full h-24 rounded-2xl border-2 transition-all flex items-center justify-between px-8",
                                 myVote === 'CONTRA' 
@@ -298,7 +307,7 @@ export function VotingClient({ vereador, slug, initialActiveVoting, camaraId, in
                         <Button 
                             variant="ghost" 
                             onClick={() => handleVote('ABSTENCAO')}
-                            disabled={isPending || myVote !== null}
+                            disabled={isPending || myVote !== null || !can('votar', 'Sessao')}
                             className={cn(
                                 "h-16 rounded-2xl border border-border text-muted-foreground font-bold uppercase tracking-widest hover:bg-accent hover:text-accent-foreground transition-all",
                                 myVote === 'ABSTENCAO' ? "bg-accent text-accent-foreground border-primary/20" : ""

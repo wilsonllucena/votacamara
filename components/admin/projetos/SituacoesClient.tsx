@@ -36,6 +36,10 @@ const situacaoSchema = z.object({
 
 type SituacaoInputs = z.infer<typeof situacaoSchema>
 
+import { createMongoAbility, RawRuleOf, MongoAbility } from "@casl/ability"
+import { Action, Subject } from "@/lib/casl/ability"
+import { useMemo } from "react"
+
 interface Situacao {
   id: string
   nome: string
@@ -51,12 +55,17 @@ interface SituacoesClientProps {
     currentPage: number
     totalPages: number
   }
+  rules?: RawRuleOf<MongoAbility<[Action, Subject]>>[]
 }
 
-export function SituacoesClient({ slug, situacoes, pagination }: SituacoesClientProps) {
+export function SituacoesClient({ slug, situacoes, pagination, rules = [] }: SituacoesClientProps) {
   const router = useRouter()
   const searchParams = useSearchParams()
   const [searchTerm, setSearchTerm] = useState(searchParams.get("search") || "")
+
+  // Reconstruir abilidade no cliente de forma estável
+  const ability = useMemo(() => createMongoAbility<[Action, Subject]>(rules), [rules])
+  const can = (action: Action, subject: Subject) => ability.can(action, subject)
 
   const handleSearch = () => {
     const params = new URLSearchParams(searchParams.toString())

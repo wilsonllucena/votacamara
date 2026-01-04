@@ -94,6 +94,18 @@ export default async function ProjetosPage({
 
   const totalPages = count ? Math.ceil(count / ITEMS_PER_PAGE) : 1
 
+  // 6. Fetch Role and Define Abilities
+  const { data: { user } } = await supabase.auth.getUser()
+  const { data: profile } = await supabase
+      .from("profiles")
+      .select("role")
+      .eq("user_id", user?.id)
+      .single()
+
+  const { defineAbilityFor } = await import("@/lib/casl/ability")
+  const ability = defineAbilityFor(profile?.role || 'PUBLICO')
+  const rules = ability.rules
+
   return (
     <div className="py-6">
       <Suspense fallback={<div className="text-white">Carregando materias...</div>}>
@@ -108,6 +120,7 @@ export default async function ProjetosPage({
                 currentPage,
                 totalPages
             }}
+            rules={rules as any}
           />
       </Suspense>
     </div>

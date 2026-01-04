@@ -23,6 +23,18 @@ export default async function AgendaPage({ params }: { params: Promise<{ slug: s
     .eq("camara_id", camara.id)
     .order("iniciou_em", { ascending: true })
 
+  // 3. Fetch Role and Define Abilities
+  const { data: { user } } = await supabase.auth.getUser()
+  const { data: profile } = await supabase
+      .from("profiles")
+      .select("role")
+      .eq("user_id", user?.id)
+      .single()
+
+  const { defineAbilityFor } = await import("@/lib/casl/ability")
+  const ability = defineAbilityFor(profile?.role || 'PUBLICO')
+  const rules = ability.rules
+
   return (
     <div className="py-6 space-y-6">
       <div className="flex justify-between items-center px-4">
@@ -32,7 +44,7 @@ export default async function AgendaPage({ params }: { params: Promise<{ slug: s
         </div>
       </div>
 
-      <AgendaScheduler initialSessoes={sessoes || []} />
+      <AgendaScheduler initialSessoes={sessoes || []} rules={rules as any} />
     </div>
   )
 }

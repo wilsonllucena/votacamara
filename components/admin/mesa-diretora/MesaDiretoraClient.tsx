@@ -9,19 +9,28 @@ import { MesaDiretoraForm } from "./MesaDiretoraForm"
 import { upsertMesaMember, removeMesaMember } from "@/app/admin/_actions/mesa_diretora"
 import { ConfirmDialog } from "@/components/ui/confirm-dialog"
 
+import { createMongoAbility, RawRuleOf, MongoAbility } from "@casl/ability"
+import { Action, Subject } from "@/lib/casl/ability"
+import { useMemo } from "react"
+
 interface MesaDiretoraClientProps {
   members: any[]
   cargos: any[]
   vereadores: any[]
   slug: string
   camaraId: string
+  rules?: RawRuleOf<MongoAbility<[Action, Subject]>>[]
 }
 
-export function MesaDiretoraClient({ members, cargos, vereadores, slug, camaraId }: MesaDiretoraClientProps) {
+export function MesaDiretoraClient({ members, cargos, vereadores, slug, camaraId, rules = [] }: MesaDiretoraClientProps) {
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
   const [activeTab, setActiveTab] = useState("list")
   const [editingMember, setEditingMember] = useState<any | null>(null)
+
+  // Reconstruir abilidade no cliente de forma estável
+  const ability = useMemo(() => createMongoAbility<[Action, Subject]>(rules), [rules])
+  const can = (action: Action, subject: Subject) => ability.can(action, subject)
 
   // ConfirmDialog State
   const [confirmConfig, setConfirmConfig] = useState<{
@@ -102,10 +111,12 @@ export function MesaDiretoraClient({ members, cargos, vereadores, slug, camaraId
             <List className="w-4 h-4" />
             Composição Atual
           </TabsTrigger>
-          <TabsTrigger value="form" className="flex items-center gap-2">
-            <Plus className="w-4 h-4" />
-            {editingMember ? "Editar Membro" : "Novo Membro"}
-          </TabsTrigger>
+          {can('manage', 'MesaDiretora') && (
+            <TabsTrigger value="form" className="flex items-center gap-2">
+              <Plus className="w-4 h-4" />
+              {editingMember ? "Editar Membro" : "Novo Membro"}
+            </TabsTrigger>
+          )}
         </TabsList>
 
         <TabsContent value="list" className="space-y-4 animate-in fade-in duration-500">
@@ -152,27 +163,31 @@ export function MesaDiretoraClient({ members, cargos, vereadores, slug, camaraId
                             {member.cargos?.nome}
                           </Badge>
                         </td>
-                        <td className="px-6 py-4 text-right">
+                         <td className="px-6 py-4 text-right">
                           <div className="flex justify-end gap-2">
-                            <button 
-                              type="button"
-                              onClick={() => {
-                                setEditingMember(member)
-                                setActiveTab("form")
-                              }}
-                              className="p-2 text-muted-foreground hover:text-primary transition-colors hover:bg-muted rounded-md"
-                              title="Editar"
-                            >
-                              <Edit2 className="h-4 w-4" />
-                            </button>
-                            <button 
-                              type="button"
-                              onClick={() => handleDelete(member.id)}
-                              className="p-2 text-muted-foreground hover:text-red-400 hover:bg-red-400/10 transition-colors rounded-md"
-                              title="Remover"
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </button>
+                            {can('manage', 'MesaDiretora') && (
+                              <>
+                                <button 
+                                  type="button"
+                                  onClick={() => {
+                                    setEditingMember(member)
+                                    setActiveTab("form")
+                                  }}
+                                  className="p-2 text-muted-foreground hover:text-primary transition-colors hover:bg-muted rounded-md"
+                                  title="Editar"
+                                >
+                                  <Edit2 className="h-4 w-4" />
+                                </button>
+                                <button 
+                                  type="button"
+                                  onClick={() => handleDelete(member.id)}
+                                  className="p-2 text-muted-foreground hover:text-red-400 hover:bg-red-400/10 transition-colors rounded-md"
+                                  title="Remover"
+                                >
+                                  <Trash2 className="h-4 w-4" />
+                                </button>
+                              </>
+                            )}
                           </div>
                         </td>
                       </tr>

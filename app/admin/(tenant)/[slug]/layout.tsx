@@ -47,13 +47,18 @@ export default async function DashboardLayout({
 
   const camaraNome = camara?.nome || ""
 
+  // 6. Define Abilities with CASL
+  const { defineAbilityFor } = await import("@/lib/casl/ability")
+  const ability = defineAbilityFor(profile?.role || 'PUBLICO')
+  const rules = ability.rules
+
   return (
     <AdminThemeProvider>
       <SidebarProvider>
         <GlobalPresence userId={user.id} camaraId={camaraId} />
         <AdminLayoutWrapper
-          sidebar={<Sidebar slug={slug} userProfile={userProfile} />}
-          header={<Header slug={slug} userProfile={userProfile} camaraNome={camaraNome} />}
+          sidebar={<Sidebar slug={slug} userProfile={userProfile} rules={rules as any} />}
+          header={<Header slug={slug} userProfile={userProfile} camaraNome={camaraNome} rules={rules as any} />}
         >
           {children}
         </AdminLayoutWrapper>

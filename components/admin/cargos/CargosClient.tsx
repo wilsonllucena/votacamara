@@ -8,6 +8,10 @@ import { createCargo, updateCargo, deleteCargo } from "@/app/admin/_actions/carg
 import { ConfirmDialog } from "@/components/ui/confirm-dialog"
 import { CargoForm, CargoInputs } from "./CargoForm"
 
+import { createMongoAbility, RawRuleOf, MongoAbility } from "@casl/ability"
+import { Action, Subject } from "@/lib/casl/ability"
+import { useMemo } from "react"
+
 interface CargosClientProps {
   cargos: any[]
   slug: string
@@ -15,13 +19,18 @@ interface CargosClientProps {
     currentPage: number
     totalPages: number
   }
+  rules?: RawRuleOf<MongoAbility<[Action, Subject]>>[]
 }
-export function CargosClient({ cargos, slug, pagination }: CargosClientProps) {
+export function CargosClient({ cargos, slug, pagination, rules = [] }: CargosClientProps) {
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
   const [activeTab, setActiveTab] = useState("list")
   const [editingCargo, setEditingCargo] = useState<any | null>(null)
   const [searchTerm, setSearchTerm] = useState("")
+
+  // Reconstruir abilidade no cliente de forma estável
+  const ability = useMemo(() => createMongoAbility<[Action, Subject]>(rules), [rules])
+  const can = (action: Action, subject: Subject) => ability.can(action, subject)
 
   // ConfirmDialog State
   const [confirmConfig, setConfirmConfig] = useState<{
@@ -118,10 +127,12 @@ export function CargosClient({ cargos, slug, pagination }: CargosClientProps) {
             <List className="w-4 h-4" />
             Listar Cargos
           </TabsTrigger>
-          <TabsTrigger value="form" className="flex items-center gap-2">
-            <Plus className="w-4 h-4" />
-            {editingCargo ? "Editar Cargo" : "Novo Cargo"}
-          </TabsTrigger>
+          {can('configurar', 'all') && (
+            <TabsTrigger value="form" className="flex items-center gap-2">
+              <Plus className="w-4 h-4" />
+              {editingCargo ? "Editar Cargo" : "Novo Cargo"}
+            </TabsTrigger>
+          )}
         </TabsList>
 
         <TabsContent value="list" className="space-y-4 animate-in fade-in duration-500">
@@ -173,25 +184,29 @@ export function CargosClient({ cargos, slug, pagination }: CargosClientProps) {
                         </td>
                         <td className="px-6 py-4 text-right">
                           <div className="flex justify-end gap-2">
-                            <button 
-                              type="button"
-                              onClick={() => {
-                                setEditingCargo(cargo)
-                                setActiveTab("form")
-                              }}
-                              className="p-2 text-muted-foreground hover:text-primary transition-colors hover:bg-muted rounded-md"
-                              title="Editar"
-                            >
-                              <Edit2 className="h-4 w-4" />
-                            </button>
-                            <button 
-                              type="button"
-                              onClick={() => handleDelete(cargo.id)}
-                              className="p-2 text-muted-foreground hover:text-red-400 hover:bg-red-400/10 transition-colors rounded-md"
-                              title="Excluir"
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </button>
+                            {can('configurar', 'all') && (
+                              <>
+                                <button 
+                                  type="button"
+                                  onClick={() => {
+                                    setEditingCargo(cargo)
+                                    setActiveTab("form")
+                                  }}
+                                  className="p-2 text-muted-foreground hover:text-primary transition-colors hover:bg-muted rounded-md"
+                                  title="Editar"
+                                >
+                                  <Edit2 className="h-4 w-4" />
+                                </button>
+                                <button 
+                                  type="button"
+                                  onClick={() => handleDelete(cargo.id)}
+                                  className="p-2 text-muted-foreground hover:text-red-400 hover:bg-red-400/10 transition-colors rounded-md"
+                                  title="Excluir"
+                                >
+                                  <Trash2 className="h-4 w-4" />
+                                </button>
+                              </>
+                            )}
                           </div>
                         </td>
                       </tr>

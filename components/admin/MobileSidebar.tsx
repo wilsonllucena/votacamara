@@ -6,15 +6,19 @@ import { Sheet, SheetContent, SheetTrigger, SheetTitle } from "@/components/ui/s
 import { Sidebar } from "@/components/admin/Sidebar"
 import { Button } from "@/components/ui/button"
 
+import { createMongoAbility, RawRuleOf, MongoAbility } from "@casl/ability"
+import { Action, Subject } from "@/lib/casl/ability"
+
 interface MobileSidebarProps {
     slug: string
     userProfile?: {
         name: string
         role: string
     }
+    rules?: RawRuleOf<MongoAbility<[Action, Subject]>>[]
 }
 
-export function MobileSidebar({ slug, userProfile }: MobileSidebarProps) {
+export function MobileSidebar({ slug, userProfile, rules = [] }: MobileSidebarProps) {
     const [isMounted, setIsMounted] = useState(false)
 
     useEffect(() => {
@@ -32,7 +36,7 @@ export function MobileSidebar({ slug, userProfile }: MobileSidebarProps) {
             </SheetTrigger>
             <SheetContent side="left" className="p-0 bg-card border-border w-72">
                 <SheetTitle className="sr-only">Menu de Navegação</SheetTitle>
-                <Sidebar slug={slug} userProfile={userProfile} />
+                <Sidebar slug={slug} userProfile={userProfile} rules={rules} />
             </SheetContent>
         </Sheet>
     )

@@ -80,6 +80,18 @@ export default async function SessoesPage({
       }
   })
 
+  // 6. Get User Role for CASL
+  const { data: { user } } = await supabase.auth.getUser()
+  const { data: profile } = await supabase
+      .from("profiles")
+      .select("role")
+      .eq("user_id", user?.id)
+      .single()
+
+  const { defineAbilityFor } = await import("@/lib/casl/ability")
+  const ability = defineAbilityFor(profile?.role || 'PUBLICO')
+  const rules = ability.rules
+
   return (
     <div className="py-6 space-y-6">
       <Suspense fallback={<div className="text-foreground">Carregando sessões...</div>}>
@@ -92,6 +104,7 @@ export default async function SessoesPage({
                 currentPage,
                 totalPages
             }}
+            rules={rules as any}
           />
       </Suspense>
     </div>

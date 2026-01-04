@@ -35,6 +35,10 @@ const categoriaSchema = z.object({
 
 type CategoriaInputs = z.infer<typeof categoriaSchema>
 
+import { createMongoAbility, RawRuleOf, MongoAbility } from "@casl/ability"
+import { Action, Subject } from "@/lib/casl/ability"
+import { useMemo } from "react"
+
 interface Categoria {
   id: string
   nome: string
@@ -49,12 +53,17 @@ interface CategoriasClientProps {
     currentPage: number
     totalPages: number
   }
+  rules?: RawRuleOf<MongoAbility<[Action, Subject]>>[]
 }
 
-export function CategoriasClient({ slug, categorias, pagination }: CategoriasClientProps) {
+export function CategoriasClient({ slug, categorias, pagination, rules = [] }: CategoriasClientProps) {
   const router = useRouter()
   const searchParams = useSearchParams()
   const [searchTerm, setSearchTerm] = useState(searchParams.get("search") || "")
+
+  // Reconstruir abilidade no cliente de forma estável
+  const ability = useMemo(() => createMongoAbility<[Action, Subject]>(rules), [rules])
+  const can = (action: Action, subject: Subject) => ability.can(action, subject)
 
   const handleSearch = () => {
     const params = new URLSearchParams(searchParams.toString())

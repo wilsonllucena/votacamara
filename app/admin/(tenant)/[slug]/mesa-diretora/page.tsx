@@ -35,6 +35,18 @@ export default async function MesaDiretoraPage({ params }: { params: Promise<{ s
   // 4. Fetch Current Mesa Diretora
   const currentMembers = await getMesaDiretora(camara.id)
 
+  // 5. Fetch Role and Define Abilities
+  const { data: { user } } = await supabase.auth.getUser()
+  const { data: profile } = await supabase
+      .from("profiles")
+      .select("role")
+      .eq("user_id", user?.id)
+      .single()
+
+  const { defineAbilityFor } = await import("@/lib/casl/ability")
+  const ability = defineAbilityFor(profile?.role || 'PUBLICO')
+  const rules = ability.rules
+
   return (
     <div className="space-y-6">
       <MesaDiretoraClient 
@@ -43,6 +55,7 @@ export default async function MesaDiretoraPage({ params }: { params: Promise<{ s
         vereadores={vereadores || []} 
         cargos={cargos || []}
         members={currentMembers || []} 
+        rules={rules as any}
       />
     </div>
   )

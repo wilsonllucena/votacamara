@@ -7,6 +7,10 @@ import { PasswordSettingsForm } from "./PasswordSettingsForm"
 import { updateCamaraSettings, updateUserPassword } from "@/app/admin/_actions/configuracoes"
 import { cn } from "@/lib/utils"
 
+import { createMongoAbility, RawRuleOf, MongoAbility } from "@casl/ability"
+import { Action, Subject } from "@/lib/casl/ability"
+import { useMemo } from "react"
+
 interface SettingsClientProps {
   slug: string
   camara: {
@@ -19,11 +23,14 @@ interface SettingsClientProps {
     uf: string | null
   }
   userRole: string
+  rules?: RawRuleOf<MongoAbility<[Action, Subject]>>[]
 }
 
-export function SettingsClient({ slug, camara, userRole }: SettingsClientProps) {
-  const isAdmin = userRole === 'ADMIN'
-  const [activeTab, setActiveTab] = useState<"geral" | "seguranca">(isAdmin ? "geral" : "seguranca")
+export function SettingsClient({ slug, camara, userRole, rules = [] }: SettingsClientProps) {
+  const ability = useMemo(() => createMongoAbility<[Action, Subject]>(rules), [rules])
+  const canUpdateConfig = ability.can('update', 'Configuracao')
+  
+  const [activeTab, setActiveTab] = useState<"geral" | "seguranca">(canUpdateConfig ? "geral" : "seguranca")
   const [isPending, startTransition] = useTransition()
   const [message, setMessage] = useState<{ type: "success" | "error", text: string } | null>(null)
 
@@ -59,7 +66,7 @@ export function SettingsClient({ slug, camara, userRole }: SettingsClientProps) 
       </div>
 
       <div className="flex justify-start border-b border-border">
-        {isAdmin && (
+        {canUpdateConfig && (
           <button
             onClick={() => { setActiveTab("geral"); setMessage(null); }}
             className={cn(
