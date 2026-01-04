@@ -123,6 +123,7 @@ const projetoSchema = z.object({
   status: z.string().optional(),
   categoria_id: z.string().uuid("Categoria selecionada inválida").optional().or(z.literal("")),
   situacao_id: z.string().uuid("Situação selecionada inválida").optional().or(z.literal("")),
+  tipo_materia_id: z.string().uuid("Tipo de matéria selecionado inválido").optional().or(z.literal("")),
 })
 
 export async function createProjeto(slug: string, prevState: unknown, formData: FormData) {
@@ -151,13 +152,14 @@ export async function createProjeto(slug: string, prevState: unknown, formData: 
     status: formData.get("status"),
     categoria_id: formData.get("categoria_id"),
     situacao_id: formData.get("situacao_id"),
+    tipo_materia_id: formData.get("tipo_materia_id"),
   })
 
   if (!validatedFields.success) {
     return { errors: validatedFields.error.flatten().fieldErrors }
   }
 
-  const { numero, titulo, ementa, autores_ids: autores, texto_url, status, categoria_id, situacao_id } = validatedFields.data
+  const { numero, titulo, ementa, autores_ids: autores, texto_url, status, categoria_id, situacao_id, tipo_materia_id } = validatedFields.data
 
   const { data: newProjeto, error } = await supabase.from("projetos").insert({
     camara_id: camara.id,
@@ -167,7 +169,8 @@ export async function createProjeto(slug: string, prevState: unknown, formData: 
     texto_url: texto_url || null,
     status: status ? (status === "Em Pauta" ? "em_pauta" : status.toLowerCase()) : "rascunho",
     categoria_id: categoria_id || null,
-    situacao_id: situacao_id || null
+    situacao_id: situacao_id || null,
+    tipo_materia_id: tipo_materia_id || null
   }).select("id").single()
 
   if (error) {
@@ -206,7 +209,7 @@ export async function updateProjeto(slug: string, id: string, data: z.infer<type
         return { error: validatedFields.error.message }
     }
 
-    const { numero, titulo, ementa, autores_ids: autores, texto_url, status, categoria_id, situacao_id } = validatedFields.data
+    const { numero, titulo, ementa, autores_ids: autores, texto_url, status, categoria_id, situacao_id, tipo_materia_id } = validatedFields.data
 
     const { error } = await supabase
         .from("projetos")
@@ -217,7 +220,8 @@ export async function updateProjeto(slug: string, id: string, data: z.infer<type
             texto_url: texto_url || null,
             status: status ? (status === "Em Pauta" ? "em_pauta" : status.toLowerCase()) : undefined,
             categoria_id: categoria_id || null,
-            situacao_id: situacao_id || null
+            situacao_id: situacao_id || null,
+            tipo_materia_id: tipo_materia_id || null
         })
         .eq("id", id)
 
@@ -297,4 +301,19 @@ export async function deleteProjeto(slug: string, id: string) {
 
     revalidatePath(`/admin/${slug}/projetos`)
     return { success: true }
+}
+
+export async function getTiposMateria() {
+    const supabase = await createClient()
+    const { data, error } = await supabase
+        .from("tipos_materia")
+        .select("*")
+        .order("nome")
+    
+    if (error) {
+        console.error("Erro ao buscar tipos de matéria:", error)
+        return []
+    }
+    
+    return data || []
 }

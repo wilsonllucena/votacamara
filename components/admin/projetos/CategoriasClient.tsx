@@ -54,15 +54,8 @@ interface CategoriasClientProps {
 export function CategoriasClient({ slug, categorias, pagination }: CategoriasClientProps) {
   const router = useRouter()
   const searchParams = useSearchParams()
-  const [isPending, startTransition] = useTransition()
-  const [activeTab, setActiveTab] = useState("list")
-  const [editingCategoria, setEditingCategoria] = useState<Categoria | null>(null)
   const [searchTerm, setSearchTerm] = useState(searchParams.get("search") || "")
-  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
-  const [categoriaToDelete, setCategoriaToDelete] = useState<string | null>(null)
-  const [message, setMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null)
 
-  // Sync search term with URL
   const handleSearch = () => {
     const params = new URLSearchParams(searchParams.toString())
     if (searchTerm) {
@@ -70,260 +63,84 @@ export function CategoriasClient({ slug, categorias, pagination }: CategoriasCli
     } else {
       params.delete("search")
     }
-    params.set("page", "1") // Reset to page 1 on new search
+    params.set("page", "1")
     router.push(`?${params.toString()}`)
   }
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter') {
-      handleSearch()
-    }
+    if (e.key === 'Enter') handleSearch()
   }
-
-  const {
-    register,
-    handleSubmit,
-    reset,
-    formState: { errors },
-  } = useForm<CategoriaInputs>({
-    resolver: zodResolver(categoriaSchema),
-    defaultValues: {
-      nome: "",
-      descricao: "",
-    }
-  })
-
-  // Sincronizar form ao editar
-  const handleEdit = (categoria: Categoria) => {
-    setEditingCategoria(categoria)
-    reset({
-      nome: categoria.nome,
-      descricao: categoria.descricao || "",
-    })
-    setActiveTab("form")
-  }
-
-  const onSubmit = async (data: CategoriaInputs) => {
-    startTransition(async () => {
-      let result
-      if (editingCategoria) {
-        result = await updateCategoria(slug, editingCategoria.id, data)
-      } else {
-        const formData = new FormData()
-        formData.append("nome", data.nome)
-        formData.append("descricao", data.descricao || "")
-        result = await createCategoria(slug, null, formData)
-      }
-
-      if (result.success) {
-        setMessage({ type: 'success', text: editingCategoria ? "Categoria atualizada!" : "Categoria criada!" })
-        setEditingCategoria(null)
-        reset()
-        setActiveTab("list")
-        router.refresh()
-        setTimeout(() => setMessage(null), 3000)
-      } else {
-        setMessage({ type: 'error', text: result.error || "Erro ao salvar" })
-      }
-    })
-  }
-
-  const handleDelete = async () => {
-    if (!categoriaToDelete) return
-    
-    startTransition(async () => {
-      const result = await deleteCategoria(slug, categoriaToDelete)
-      if (result.success) {
-        setMessage({ type: 'success', text: "Categoria excluída!" })
-        router.refresh()
-      } else {
-        setMessage({ type: 'error', text: result.error || "Erro ao excluir" })
-      }
-      setIsDeleteDialogOpen(false)
-      setCategoriaToDelete(null)
-      setTimeout(() => setMessage(null), 4000)
-    })
-  }
-
 
   return (
     <div className="space-y-6">
       <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
         <div className="space-y-1">
           <h1 className="text-3xl font-extrabold text-foreground tracking-tight">Categorias</h1>
-          <p className="text-muted-foreground text-sm">Organize suas matérias legislativas por temas específicos.</p>
+          <p className="text-muted-foreground text-sm flex items-center gap-2">
+            <Tag className="w-4 h-4" />
+            Temas e classificações globais para as matérias legislativas.
+          </p>
+        </div>
+      </div>
+      <div className="p-4 border border-dashed border-border rounded-lg bg-muted/20 text-xs text-muted-foreground">
+          <p>⚠️ <strong>Nota:</strong> As categorias são gerenciadas globalmente. Esta página é apenas para consulta.</p>
+      </div>
+      <div className="flex flex-col md:flex-row gap-4 mb-4">
+        <div className="relative flex-1">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <input
+            type="text"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            onKeyDown={handleKeyDown}
+            placeholder="Buscar por nome..."
+            className="w-full bg-background border border-border rounded-lg pl-10 pr-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all font-medium"
+          />
+        </div>
+        <Button onClick={handleSearch} variant="secondary" className="md:w-32">
+            Buscar
+        </Button>
+      </div>
+
+      <div className="bg-card border border-border rounded-xl overflow-hidden shadow-sm">
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm text-left">
+            <thead className="text-xs text-muted-foreground uppercase bg-muted/30 border-b border-border">
+              <tr>
+                <th className="px-6 py-4 font-bold tracking-wider">Nome</th>
+                <th className="px-6 py-4 font-bold tracking-wider hidden md:table-cell">Descrição</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-border">
+              {categorias.length === 0 ? (
+                <tr>
+                  <td colSpan={2} className="px-6 py-12 text-center text-muted-foreground italic">
+                    Nenhuma categoria encontrada.
+                  </td>
+                </tr>
+              ) : (
+                categorias.map((cat) => (
+                  <tr key={cat.id} className="hover:bg-muted/50 transition-colors group">
+                    <td className="px-4 sm:px-6 py-4 font-bold text-foreground">
+                      <div className="flex items-center gap-2">
+                         <Tag className="w-4 h-4 text-primary/60 shrink-0" />
+                         <span className="truncate max-w-[150px] sm:max-w-none">{cat.nome}</span>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 text-muted-foreground hidden md:table-cell max-w-xs truncate text-[10px] uppercase font-bold tracking-widest">
+                      {cat.descricao || "Sem descrição"}
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
         </div>
       </div>
 
-      {message && (
-        <div className={cn(
-          "flex items-center gap-2 p-4 rounded-lg animate-in fade-in slide-in-from-top-2 duration-300",
-          message.type === 'success' ? "bg-green-500/10 text-green-500 border border-green-500/20" : "bg-red-500/10 text-red-500 border border-red-500/20"
-        )}>
-          {message.type === 'success' ? <CheckCircle2 className="w-5 h-5" /> : <AlertCircle className="w-5 h-5" />}
-          <p className="text-sm font-bold">{message.text}</p>
-        </div>
-      )}
-
-      <Tabs value={activeTab} onValueChange={(v) => {
-        setActiveTab(v)
-        if (v === "list") {
-            setEditingCategoria(null)
-            reset({ nome: "", descricao: "" })
-        }
-      }} className="w-full">
-        <TabsList className="grid w-full grid-cols-2 lg:w-[400px] mb-8">
-          <TabsTrigger value="list" className="flex items-center gap-2">
-            <List className="w-4 h-4" />
-            Listar Categorias
-          </TabsTrigger>
-          <TabsTrigger value="form" className="flex items-center gap-2">
-            <Plus className="w-4 h-4" />
-            {editingCategoria ? "Editar Categoria" : "Nova Categoria"}
-          </TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="list" className="space-y-4 animate-in fade-in duration-500">
-          <div className="flex flex-col md:flex-row gap-4 mb-4">
-            <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <input
-                type="text"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                onKeyDown={handleKeyDown}
-                placeholder="Buscar por nome..."
-                className="w-full bg-background border border-border rounded-lg pl-10 pr-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all font-medium"
-              />
-            </div>
-            <Button onClick={handleSearch} variant="secondary" className="md:w-32">
-                Buscar
-            </Button>
-          </div>
-
-          <div className="bg-card border border-border rounded-xl overflow-hidden shadow-sm">
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm text-left">
-                <thead className="text-xs text-muted-foreground uppercase bg-muted/30 border-b border-border">
-                  <tr>
-                    <th className="px-6 py-4 font-bold tracking-wider">Nome</th>
-                    <th className="px-6 py-4 font-bold tracking-wider hidden md:table-cell">Descrição</th>
-                    <th className="px-6 py-4 font-bold tracking-wider text-right">Ações</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-border">
-                  {categorias.length === 0 ? (
-                    <tr>
-                      <td colSpan={3} className="px-6 py-12 text-center text-muted-foreground italic">
-                        Nenhuma categoria encontrada.
-                      </td>
-                    </tr>
-                  ) : (
-                    categorias.map((cat) => (
-                      <tr key={cat.id} className="hover:bg-muted/50 transition-colors group">
-                        <td className="px-4 sm:px-6 py-4 font-bold text-foreground">
-                          <div className="flex items-center gap-2">
-                             <Tag className="w-4 h-4 text-primary/60 shrink-0" />
-                             <span className="truncate max-w-[150px] sm:max-w-none">{cat.nome}</span>
-                          </div>
-                        </td>
-                        <td className="px-6 py-4 text-muted-foreground hidden md:table-cell max-w-xs truncate">
-                          {cat.descricao || "Sem descrição"}
-                        </td>
-                        <td className="px-4 sm:px-6 py-4 text-right">
-                          <div className="flex justify-end gap-1 sm:gap-2">
-                            <Tooltip content="Editar Categoria">
-                              <button 
-                                onClick={() => handleEdit(cat)}
-                                className="p-1.5 sm:p-2 text-muted-foreground hover:text-primary transition-colors hover:bg-muted rounded-md"
-                              >
-                                <Edit2 className="h-4 w-4" />
-                              </button>
-                            </Tooltip>
-                            
-                            <Tooltip content="Excluir Categoria">
-                              <button 
-                                onClick={() => {
-                                  setCategoriaToDelete(cat.id)
-                                  setIsDeleteDialogOpen(true)
-                                }}
-                                className="p-1.5 sm:p-2 text-muted-foreground hover:text-red-500 transition-colors hover:bg-red-500/10 rounded-md"
-                              >
-                                <Trash2 className="h-4 w-4" />
-                              </button>
-                            </Tooltip>
-                          </div>
-                        </td>
-                      </tr>
-                    ))
-                  )}
-                </tbody>
-              </table>
-            </div>
-          </div>
-
-          <Pagination 
-            currentPage={pagination.currentPage}
-            totalPages={pagination.totalPages}
-          />
-        </TabsContent>
-
-        <TabsContent value="form" className="animate-in slide-in-from-right-4 duration-500">
-          <div className="max-w-2xl bg-card border border-border rounded-xl shadow-sm p-8">
-             <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-                <div className="space-y-2">
-                  <label className="text-sm font-bold text-foreground flex items-center gap-2">
-                    <Tag className="w-4 h-4 text-primary" />
-                    Nome da Categoria
-                  </label>
-                  <Input 
-                    {...register("nome")}
-                    placeholder="Ex: EDUCAÇÃO, SAÚDE, etc."
-                    className="h-11 font-medium bg-muted/20"
-                  />
-                  {errors.nome && <p className="text-xs text-red-500 font-medium">{errors.nome.message}</p>}
-                </div>
-
-                <div className="space-y-2">
-                  <label className="text-sm font-bold text-foreground flex items-center gap-2">
-                    <List className="w-4 h-4 text-primary" />
-                    Descrição (Opcional)
-                  </label>
-                  <Textarea 
-                    {...register("descricao")}
-                    placeholder="Descreva a finalidade desta categoria..."
-                    className="min-h-[120px] bg-muted/20 resize-none"
-                  />
-                </div>
-
-                <div className="flex items-center gap-4 pt-4 border-t border-border">
-                   <Button 
-                    type="submit" 
-                    disabled={isPending}
-                    className="flex-1 h-11 font-bold disabled:opacity-50"
-                   >
-                     {isPending ? "Salvando..." : editingCategoria ? "Salvar Alterações" : "Criar Categoria"}
-                   </Button>
-                   <Button 
-                    type="button" 
-                    variant="outline" 
-                    onClick={() => setActiveTab("list")}
-                    className="h-11 px-8 font-bold"
-                   >
-                     Cancelar
-                   </Button>
-                </div>
-             </form>
-          </div>
-        </TabsContent>
-      </Tabs>
-
-      <ConfirmDialog
-        isOpen={isDeleteDialogOpen}
-        onClose={() => setIsDeleteDialogOpen(false)}
-        onConfirm={handleDelete}
-        title="Excluir Categoria"
-        description="Tem certeza que deseja excluir esta categoria? Esta ação não poderá ser desfeita se não houver matérias vinculadas."
+      <Pagination 
+        currentPage={pagination.currentPage}
+        totalPages={pagination.totalPages}
       />
     </div>
   )

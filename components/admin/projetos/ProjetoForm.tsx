@@ -22,6 +22,7 @@ const materiaSchema = z.object({
   status: z.string().optional(),
   categoria_id: z.string().uuid("Categoria selecionada inválida").optional().or(z.literal("")),
   situacao_id: z.string().uuid("Situação selecionada inválida").optional().or(z.literal("")),
+  tipo_materia_id: z.string().uuid("Tipo de matéria selecionado inválido").optional().or(z.literal("")),
 })
 
 export type MateriaInputs = z.infer<typeof materiaSchema>
@@ -34,9 +35,10 @@ interface MateriaFormProps {
   vereadores: { id: string, nome: string, partido: string }[]
   categorias: { id: string, nome: string }[]
   situacoes: { id: string, nome: string }[]
+  tiposMateria: { id: string, nome: string, sigla: string }[]
 }
 
-export function ProjetoForm({ defaultValues, onSubmit, onCancel, isPending, vereadores, categorias, situacoes }: MateriaFormProps) {
+export function ProjetoForm({ defaultValues, onSubmit, onCancel, isPending, vereadores, categorias, situacoes, tiposMateria }: MateriaFormProps) {
   const {
     register,
     handleSubmit,
@@ -54,6 +56,7 @@ export function ProjetoForm({ defaultValues, onSubmit, onCancel, isPending, vere
       status: defaultValues?.status || "rascunho",
       categoria_id: defaultValues?.categoria_id || "",
       situacao_id: defaultValues?.situacao_id || "",
+      tipo_materia_id: defaultValues?.tipo_materia_id || "",
     }
 })
 
@@ -146,6 +149,17 @@ export function ProjetoForm({ defaultValues, onSubmit, onCancel, isPending, vere
             />
             {errors.numero && <p className="text-xs text-red-500 mt-1">{errors.numero.message}</p>}
         </div>
+        <div className="space-y-2 col-span-1 md:col-span-1">
+            <label className="text-sm font-medium text-muted-foreground" htmlFor="titulo">Título Curto</label>
+            <input 
+              {...register("titulo")}
+              id="titulo"
+              type="text" 
+              className={`w-full bg-background border ${errors.titulo ? 'border-red-500' : 'border-border'} rounded-lg px-4 py-2 text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all`}
+              placeholder="Ex: Projeto de Lei da Saúde"
+            />
+            {errors.titulo && <p className="text-xs text-red-500 mt-1">{errors.titulo.message}</p>}
+        </div>
 
         <div className="space-y-2 col-span-1 md:col-span-1">
             <label className="text-sm font-medium text-muted-foreground" htmlFor="categoria_id">Categoria</label>
@@ -162,17 +176,22 @@ export function ProjetoForm({ defaultValues, onSubmit, onCancel, isPending, vere
             {errors.categoria_id && <p className="text-xs text-red-500 mt-1">{errors.categoria_id.message}</p>}
         </div>
 
-        <div className="space-y-2 col-span-1 md:col-span-2">
-            <label className="text-sm font-medium text-muted-foreground" htmlFor="titulo">Título Curto</label>
-            <input 
-              {...register("titulo")}
-              id="titulo"
-              type="text" 
-              className={`w-full bg-background border ${errors.titulo ? 'border-red-500' : 'border-border'} rounded-lg px-4 py-2 text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all`}
-              placeholder="Ex: Projeto de Lei da Saúde"
-            />
-            {errors.titulo && <p className="text-xs text-red-500 mt-1">{errors.titulo.message}</p>}
+        <div className="space-y-2 col-span-1 md:col-span-1">
+            <label className="text-sm font-medium text-muted-foreground" htmlFor="tipo_materia_id">Tipo de Matéria</label>
+            <select 
+              {...register("tipo_materia_id")}
+              id="tipo_materia_id"
+              className={`w-full h-11 bg-background border ${errors.tipo_materia_id ? 'border-red-500' : 'border-border'} rounded-lg px-3 py-2 text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all text-xs font-bold uppercase`}
+            >
+              <option value="">SELECIONE...</option>
+              {tiposMateria.map(tipo => (
+                <option key={tipo.id} value={tipo.id}>{tipo.sigla} - {tipo.nome}</option>
+              ))}
+            </select>
+            {errors.tipo_materia_id && <p className="text-xs text-red-500 mt-1">{errors.tipo_materia_id.message}</p>}
         </div>
+
+
       </div>
 
       <div className="space-y-2">
@@ -256,7 +275,7 @@ export function ProjetoForm({ defaultValues, onSubmit, onCancel, isPending, vere
                 disabled={isSummarizing || !watch("texto_url")}
             >
                 {isSummarizing ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
-                Resumir com IA
+                Gerar Ementa
             </Button>
         </div>
 

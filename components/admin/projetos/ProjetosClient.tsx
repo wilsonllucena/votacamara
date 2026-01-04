@@ -38,6 +38,12 @@ interface Projeto {
   } | null
   categoria_id?: string | null
   situacao_id?: string | null
+  tipo_materia_id?: string | null
+  tipos_materia?: {
+    id: string
+    nome: string
+    sigla: string
+  } | null
 }
 
 interface ProjetosClientProps {
@@ -46,13 +52,14 @@ interface ProjetosClientProps {
   vereadores: { id: string, nome: string, partido: string }[]
   categorias: { id: string, nome: string }[]
   situacoes: { id: string, nome: string }[]
+  tiposMateria: { id: string, nome: string, sigla: string }[]
   pagination: {
     currentPage: number
     totalPages: number
   }
 }
 
-export function ProjetosClient({ projetos, slug, vereadores, categorias, situacoes, pagination }: ProjetosClientProps) {
+export function ProjetosClient({ projetos, slug, vereadores, categorias, situacoes, tiposMateria, pagination }: ProjetosClientProps) {
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
   const [activeTab, setActiveTab] = useState("list")
@@ -227,8 +234,13 @@ export function ProjetosClient({ projetos, slug, vereadores, categorias, situaco
                           </Badge>
                           {projeto.projeto_categorias && (
                             <Badge variant="secondary" className="bg-primary/10 text-primary border-primary/20 shadow-none font-bold uppercase tracking-widest text-[8px] sm:text-[10px] gap-1 sm:gap-1.5 px-1.5 py-0 sm:px-2 sm:py-0.5">
-                               <Tag className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
-                               <span className="truncate max-w-[80px] sm:max-w-none">{projeto.projeto_categorias.nome}</span>
+                             <Tag className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
+                             <span className="truncate max-w-[80px] sm:max-w-none">{projeto.projeto_categorias.nome}</span>
+                            </Badge>
+                          )}
+                          {projeto.tipos_materia && (
+                            <Badge variant="outline" className="bg-indigo-500/10 text-indigo-500 border-indigo-500/20 shadow-none font-bold uppercase tracking-widest text-[8px] sm:text-[10px] px-1.5 py-0 sm:px-2 sm:py-0.5">
+                               {projeto.tipos_materia.sigla}
                             </Badge>
                           )}
                         </div>
@@ -264,7 +276,8 @@ export function ProjetosClient({ projetos, slug, vereadores, categorias, situaco
                               texto_url: projeto.texto_url || undefined,
                               status: projeto.status,
                               categoria_id: projeto.categoria_id || undefined,
-                              situacao_id: projeto.situacao_id || undefined
+                              situacao_id: projeto.situacao_id || undefined,
+                              tipo_materia_id: projeto.tipo_materia_id || undefined
                             })
                             setActiveTab("form")
                           }}
@@ -310,6 +323,7 @@ export function ProjetosClient({ projetos, slug, vereadores, categorias, situaco
                vereadores={vereadores}
                categorias={categorias}
                situacoes={situacoes}
+               tiposMateria={tiposMateria}
                onSubmit={handleCreateOrUpdate}
                onCancel={() => {
                  setEditingProjeto(null)

@@ -63,6 +63,11 @@ export function Sidebar({ slug, userProfile }: SidebarProps) {
           label: "Situação",
           href: `/admin/${slug}/projetos/situacoes`,
           active: pathname === `/admin/${slug}/projetos/situacoes`,
+        },
+        {
+          label: "Tipos de Matéria",
+          href: `/admin/${slug}/projetos/tipos`,
+          active: pathname === `/admin/${slug}/projetos/tipos`,
         }
       ]
     },
@@ -77,11 +82,11 @@ export function Sidebar({ slug, userProfile }: SidebarProps) {
           href: `/admin/${slug}/comissoes`,
           active: pathname === `/admin/${slug}/comissoes`,
         },
-        {
-          label: "Atas",
-          href: `/admin/${slug}/comissoes/atas`,
-          active: pathname === `/admin/${slug}/comissoes/atas`,
-        }
+        // {
+        //   label: "Atas",
+        //   href: `/admin/${slug}/comissoes/atas`,
+        //   active: pathname === `/admin/${slug}/comissoes/atas`,
+        // }
       ]
     },
     {

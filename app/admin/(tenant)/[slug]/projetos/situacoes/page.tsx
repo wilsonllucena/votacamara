@@ -38,11 +38,11 @@ export default async function SituacoesPage({
   const from = (currentPage - 1) * ITEMS_PER_PAGE
   const to = from + ITEMS_PER_PAGE - 1
 
-  // Buscar situações da câmara
+  // Buscar situações da câmara e globais
   let query = supabase
     .from("projeto_situacoes")
     .select("*", { count: "exact" })
-    .eq("camara_id", camara.id)
+    .or(`camara_id.is.null,camara_id.eq.${camara.id}`)
     .order("nome", { ascending: true })
 
   if (search) {

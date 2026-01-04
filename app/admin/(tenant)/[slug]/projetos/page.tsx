@@ -1,6 +1,7 @@
 import { Suspense } from "react"
 import { createClient } from "@/utils/supabase/server"
 import { ProjetosClient } from "@/components/admin/projetos/ProjetosClient"
+import { getTiposMateria } from "@/app/admin/_actions/projetos"
 
 const ITEMS_PER_PAGE = 10
 
@@ -35,19 +36,22 @@ export default async function ProjetosPage({
     .eq("ativo", true)
     .order("nome")
 
-  // 3. Fetch Categories
+  // 3. Fetch Categories (Global + Chamber)
   const { data: categorias } = await supabase
     .from("projeto_categorias")
     .select("id, nome")
-    .eq("camara_id", camara.id)
+    .or(`camara_id.is.null,camara_id.eq.${camara.id}`)
     .order("nome")
 
-  // 4. Fetch Situations
+  // 4. Fetch Situations (Global + Chamber)
   const { data: situacoes } = await supabase
     .from("projeto_situacoes")
     .select("id, nome")
-    .eq("camara_id", camara.id)
+    .or(`camara_id.is.null,camara_id.eq.${camara.id}`)
     .order("nome")
+
+  // 4.5 Fetch All Tipos de Materia
+  const tiposMateria = await getTiposMateria()
 
   // 5. Query Materias (Projetos) with authors, category and situation
   const currentPage = Number(page) || 1
@@ -72,6 +76,11 @@ export default async function ProjetosPage({
           nome,
           partido
         )
+      ),
+      tipos_materia (
+        id,
+        nome,
+        sigla
       )
     `, { count: "exact" })
     .eq("camara_id", camara.id)
@@ -94,6 +103,7 @@ export default async function ProjetosPage({
             vereadores={vereadores || []}
             categorias={categorias || []}
             situacoes={situacoes || []}
+            tiposMateria={tiposMateria || []}
             pagination={{
                 currentPage,
                 totalPages
