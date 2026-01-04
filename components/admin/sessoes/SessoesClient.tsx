@@ -6,7 +6,7 @@ import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Plus, Edit2, Calendar, Clock, FileText, Trash2, List, Search } from "lucide-react"
+import { Plus, Edit2, Calendar, Clock, FileText, Trash2, List, Search, Link as LinkIcon, Check } from "lucide-react"
 import { SessaoForm } from "./SessaoForm"
 import { createSessao, updateSessao, deleteSessao, SessaoInputs } from "@/app/admin/_actions/sessoes"
 import { format } from "date-fns"
@@ -143,6 +143,16 @@ export function SessoesClient({ sessoes, slug, availableProjects, busyProjects, 
     router.push(`?${params.toString()}`)
   }
 
+  const handleCopyPublicLink = (slug: string) => {
+    const publicUrl = `${window.location.origin}/public/${slug}`
+    navigator.clipboard.writeText(publicUrl).then(() => {
+      showAlert(
+        "Link copiado!",
+        "O link público da sessão foi copiado para a área de transferência."
+      )
+    })
+  }
+
   const getStatusBadge = (status: string) => {
     switch (status.toLowerCase()) {
       case "agendada":
@@ -273,6 +283,16 @@ export function SessoesClient({ sessoes, slug, availableProjects, busyProjects, 
                                 </button>
                               </Tooltip>
                             )}
+
+                            <Tooltip content="Copiar Link Público">
+                              <button 
+                                type="button"
+                                onClick={() => handleCopyPublicLink(slug)}
+                                className="p-1.5 sm:p-2 text-muted-foreground hover:text-green-500 transition-colors hover:bg-green-500/10 rounded-md"
+                              >
+                                <LinkIcon className="h-4 w-4" />
+                              </button>
+                            </Tooltip>
 
                             {can('delete', 'Sessao') && (
                               <Tooltip content="Excluir Sessão">
