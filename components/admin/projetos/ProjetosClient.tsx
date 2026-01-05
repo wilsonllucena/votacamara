@@ -32,12 +32,8 @@ interface Projeto {
     id: string
     nome: string
   } | null
-  projeto_situacoes?: {
-    id: string
-    nome: string
-  } | null
   categoria_id?: string | null
-  situacao_id?: string | null
+  situacao?: string | null
   tipo_materia_id?: string | null
   tipos_materia?: {
     id: string
@@ -55,7 +51,7 @@ interface ProjetosClientProps {
   slug: string
   vereadores: { id: string, nome: string, partido: string }[]
   categorias: { id: string, nome: string }[]
-  situacoes: { id: string, nome: string }[]
+  situacoes: { id: string, nome: string, label: string }[]
   tiposMateria: { id: string, nome: string, sigla: string }[]
   pagination: {
     currentPage: number
@@ -241,7 +237,7 @@ export function ProjetosClient({ projetos, slug, vereadores, categorias, situaco
                         <div className="flex items-center gap-2 mb-1 flex-wrap">
                           <h3 className="font-bold text-foreground text-base sm:text-lg shrink-0">{projeto.numero || "S/N"}</h3>
                           <Badge variant="outline" className={cn("text-[9px] sm:text-xs capitalize shadow-none px-1.5 py-0 sm:px-2 sm:py-0.5", getStatusColor(projeto.status))}>
-                            {projeto.projeto_situacoes?.nome || formatStatus(projeto.status)}
+                            {projeto.situacao || formatStatus(projeto.status)}
                           </Badge>
                           {projeto.projeto_categorias && (
                             <Badge variant="secondary" className="bg-primary/10 text-primary border-primary/20 shadow-none font-bold uppercase tracking-widest text-[8px] sm:text-[10px] gap-1 sm:gap-1.5 px-1.5 py-0 sm:px-2 sm:py-0.5">
@@ -299,7 +295,7 @@ export function ProjetosClient({ projetos, slug, vereadores, categorias, situaco
                                 texto_url: projeto.texto_url || undefined,
                                 status: projeto.status,
                               categoria_id: projeto.categoria_id || undefined,
-                              situacao_id: projeto.situacao_id || undefined,
+                              situacao: projeto.situacao || undefined,
                                 tipo_materia_id: projeto.tipo_materia_id || undefined
                               })
                               setActiveTab("form")

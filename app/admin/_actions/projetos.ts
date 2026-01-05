@@ -122,7 +122,7 @@ const projetoSchema = z.object({
   texto_url: z.string().url("URL do texto deve ser válida").optional().or(z.literal("")),
   status: z.string().optional(),
   categoria_id: z.string().uuid("Categoria selecionada inválida").optional().or(z.literal("")),
-  situacao_id: z.string().uuid("Situação selecionada inválida").optional().or(z.literal("")),
+  situacao: z.string().optional(),
   tipo_materia_id: z.string().uuid("Tipo de matéria selecionado inválido").optional().or(z.literal("")),
 })
 
@@ -151,7 +151,7 @@ export async function createProjeto(slug: string, prevState: unknown, formData: 
     texto_url: formData.get("texto_url"),
     status: formData.get("status"),
     categoria_id: formData.get("categoria_id"),
-    situacao_id: formData.get("situacao_id"),
+    situacao: formData.get("situacao"),
     tipo_materia_id: formData.get("tipo_materia_id"),
   })
 
@@ -159,7 +159,16 @@ export async function createProjeto(slug: string, prevState: unknown, formData: 
     return { errors: validatedFields.error.flatten().fieldErrors }
   }
 
-  const { numero, titulo, ementa, autores_ids: autores, texto_url, status, categoria_id, situacao_id, tipo_materia_id } = validatedFields.data
+  const { numero, titulo, ementa, autores_ids: autores, texto_url, status, categoria_id, situacao, tipo_materia_id } = validatedFields.data
+
+  let finalStatus = status ? (status === "Em Pauta" ? "em_pauta" : status.toLowerCase()) : "rascunho"
+
+  // Sincronização básica baseada no texto da situação para compatibilidade
+  if (situacao?.toUpperCase() === 'EM PAUTA') {
+      finalStatus = "em_pauta"
+  } else if (['VOTADA', 'APROVADA', 'REJEITADA'].includes(situacao?.toUpperCase() || "")) {
+      finalStatus = "votado"
+  }
 
   const { data: newProjeto, error } = await supabase.from("projetos").insert({
     camara_id: camara.id,
@@ -167,9 +176,9 @@ export async function createProjeto(slug: string, prevState: unknown, formData: 
     titulo,
     ementa,
     texto_url: texto_url || null,
-    status: status ? (status === "Em Pauta" ? "em_pauta" : status.toLowerCase()) : "rascunho",
+    status: finalStatus,
     categoria_id: categoria_id || null,
-    situacao_id: situacao_id || null,
+    situacao: situacao || null,
     tipo_materia_id: tipo_materia_id || null
   }).select("id").single()
 
@@ -209,7 +218,16 @@ export async function updateProjeto(slug: string, id: string, data: z.infer<type
         return { error: validatedFields.error.message }
     }
 
-    const { numero, titulo, ementa, autores_ids: autores, texto_url, status, categoria_id, situacao_id, tipo_materia_id } = validatedFields.data
+    const { numero, titulo, ementa, autores_ids: autores, texto_url, status, categoria_id, situacao, tipo_materia_id } = validatedFields.data
+
+    let finalStatus = status ? (status === "Em Pauta" ? "em_pauta" : status.toLowerCase()) : undefined
+
+    // Sincronização básica baseada no texto da situação para compatibilidade
+    if (situacao?.toUpperCase() === 'EM PAUTA') {
+        finalStatus = "em_pauta"
+    } else if (['VOTADA', 'APROVADA', 'REJEITADA'].includes(situacao?.toUpperCase() || "")) {
+        finalStatus = "votado"
+    }
 
     const { error } = await supabase
         .from("projetos")
@@ -218,9 +236,9 @@ export async function updateProjeto(slug: string, id: string, data: z.infer<type
             titulo,
             ementa,
             texto_url: texto_url || null,
-            status: status ? (status === "Em Pauta" ? "em_pauta" : status.toLowerCase()) : undefined,
+            status: finalStatus,
             categoria_id: categoria_id || null,
-            situacao_id: situacao_id || null,
+            situacao: situacao || null,
             tipo_materia_id: tipo_materia_id || null
         })
         .eq("id", id)

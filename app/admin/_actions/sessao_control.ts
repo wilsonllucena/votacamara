@@ -194,7 +194,10 @@ export async function closeVoting(slug: string, sessaoId: string, votacaoId: str
     if (votacao) {
         await supabase
             .from("projetos")
-            .update({ status: "votado" })
+            .update({ 
+                status: "votado",
+                situacao: "VOTADA" 
+            })
             .eq("id", votacao.projeto_id)
     }
 

@@ -52,10 +52,7 @@ export interface Projeto {
     id: string
     nome: string
   } | null
-  projeto_situacoes?: {
-    id: string
-    nome: string
-  } | null
+  situacao?: string | null
   tipos_materia?: {
     id: string
     nome: string
@@ -154,7 +151,7 @@ export function MateriaDetailClient({ projeto, slug, rules }: MateriaDetailClien
                 <div className="p-5 bg-card border border-border rounded-2xl shadow-sm">
                     <div className="flex justify-between items-start mb-4">
                         <Badge variant="outline" className={cn("px-3 py-1 font-bold", getStatusColor(projeto.status))}>
-                            {projeto.projeto_situacoes?.nome || formatStatus(projeto.status)}
+                            {projeto.situacao || formatStatus(projeto.status)}
                         </Badge>
                         <span className="text-xs text-muted-foreground flex items-center gap-1.5" suppressHydrationWarning>
                             <Calendar className="h-3.5 w-3.5" />

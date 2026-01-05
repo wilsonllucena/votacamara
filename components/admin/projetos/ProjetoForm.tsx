@@ -21,7 +21,7 @@ const materiaSchema = z.object({
   texto_url: z.string().url("URL do texto deve ser válida").optional().or(z.literal("")),
   status: z.string().optional(),
   categoria_id: z.string().uuid("Categoria selecionada inválida").optional().or(z.literal("")),
-  situacao_id: z.string().uuid("Situação selecionada inválida").optional().or(z.literal("")),
+  situacao: z.string().optional(),
   tipo_materia_id: z.string().uuid("Tipo de matéria selecionado inválido").optional().or(z.literal("")),
 })
 
@@ -34,7 +34,7 @@ interface MateriaFormProps {
   isPending?: boolean
   vereadores: { id: string, nome: string, partido: string }[]
   categorias: { id: string, nome: string }[]
-  situacoes: { id: string, nome: string }[]
+  situacoes: { id: string, nome: string, label: string }[]
   tiposMateria: { id: string, nome: string, sigla: string }[]
 }
 
@@ -55,7 +55,7 @@ export function ProjetoForm({ defaultValues, onSubmit, onCancel, isPending, vere
       texto_url: defaultValues?.texto_url || "",
       status: defaultValues?.status || "rascunho",
       categoria_id: defaultValues?.categoria_id || "",
-      situacao_id: defaultValues?.situacao_id || "",
+      situacao: defaultValues?.situacao || "",
       tipo_materia_id: defaultValues?.tipo_materia_id || "",
     }
 })
@@ -220,16 +220,16 @@ export function ProjetoForm({ defaultValues, onSubmit, onCancel, isPending, vere
       <div className="space-y-2">
           <label className="text-sm font-medium text-muted-foreground" htmlFor="situacao_id">Situação</label>
           <select 
-            {...register("situacao_id")}
+            {...register("situacao")}
             id="situacao_id"
-            className={`w-full bg-background border ${errors.situacao_id ? 'border-red-500' : 'border-border'} rounded-lg px-4 py-2 text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all text-xs font-bold uppercase`}
+            className={`w-full bg-background border ${errors.situacao ? 'border-red-500' : 'border-border'} rounded-lg px-4 py-2 text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all text-xs font-bold uppercase`}
           >
             <option value="">SELECIONE UMA SITUAÇÃO...</option>
-            {situacoes.map(sit => (
-              <option key={sit.id} value={sit.id}>{sit.nome}</option>
-            ))}
+                {situacoes.map(sit => (
+              <option key={sit.id} value={sit.label}>{sit.nome}</option>
+                ))}
           </select>
-          {errors.situacao_id && <p className="text-xs text-red-500 mt-1">{errors.situacao_id.message}</p>}
+          {errors.situacao && <p className="text-xs text-red-500 mt-1">{errors.situacao.message}</p>}
       </div>
 
       <div className="space-y-4 p-4 border border-dashed border-border rounded-xl bg-muted/30">

@@ -54,23 +54,7 @@ export default async function SessoesPage({
 
   const totalPages = count ? Math.ceil(count / ITEMS_PER_PAGE) : 1
 
-  // 4. Get projects for association (status em_pauta or votado)
-  const { data: availableProjects } = await supabase
-    .from("projetos")
-    .select("id, titulo, numero")
-    .eq("camara_id", camara.id)
-    .eq("status", "em_pauta")
-    .order("numero", { ascending: true })
-
-  // 5. Get projects already in other "active" sessions (agendada or aberta)
-  const { data: busyProjects } = await supabase
-    .from("pauta_itens")
-    .select("projeto_id, sessao_id, sessoes!inner(status)")
-    .in("sessoes.status", ["agendada", "aberta"])
-    .eq("camara_id", camara.id)
-
   const mappedSessoes = sessoes?.map(s => {
-      const d = new Date(s.iniciou_em)
       return {
           ...s,
           // Extract date and time in a way that respects the stored timestamp
@@ -79,6 +63,33 @@ export default async function SessoesPage({
           projeto_ids: s.pauta_itens?.map((p: any) => p.projeto_id) || []
       }
   })
+
+  // 4. Get projects for association (status em_pauta or situation 'Em Pauta')
+  const allProjectIdsInSessoes = mappedSessoes?.flatMap(s => s.projeto_ids) || []
+
+  let projectsQuery = supabase
+    .from("projetos")
+    .select("id, titulo, numero, situacao")
+    .eq("camara_id", camara.id)
+  
+  const filterParts = [
+    "situacao.ilike.em_pauta"
+  ]
+  
+  if (allProjectIdsInSessoes.length > 0) {
+    filterParts.push(`id.in.(${allProjectIdsInSessoes.map(id => `"${id}"`).join(",")})`)
+  }
+
+  const { data: availableProjects } = await projectsQuery
+    .or(filterParts.join(","))
+    .order("numero", { ascending: true })
+
+  // 5. Get projects already in other "active" sessions (agendada or aberta)
+  const { data: busyProjects } = await supabase
+    .from("pauta_itens")
+    .select("projeto_id, sessao_id, sessoes!inner(status)")
+    .in("sessoes.status", ["agendada", "aberta"])
+    .eq("camara_id", camara.id)
 
   // 6. Get User Role for CASL
   const { data: { user } } = await supabase.auth.getUser()

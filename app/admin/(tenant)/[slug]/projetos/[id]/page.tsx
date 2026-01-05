@@ -1,6 +1,6 @@
+import { MateriaDetailClient } from "@/components/admin/projetos/MateriaDetailClient"
 import { createClient } from "@/utils/supabase/server"
 import { notFound } from "next/navigation"
-import { MateriaDetailClient } from "@/components/admin/projetos/MateriaDetailClient"
 
 export default async function MateriaDetailPage({ 
     params 
@@ -16,7 +16,7 @@ export default async function MateriaDetailPage({
         .select(`
             *,
             projeto_categorias (id, nome),
-            projeto_situacoes (id, nome),
+            situacao,
             projeto_autores (
                 vereadores (id, nome, partido)
             ),

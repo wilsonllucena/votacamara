@@ -80,24 +80,24 @@ export function Sidebar({ slug, userProfile, rules = [] }: SidebarProps) {
         }
       ].filter(item => item.canView !== false)
     },
-     {
-      label: "Comissões",
-      icon: Users,
-      href: `/admin/${slug}/comissoes`,
-      active: pathname.startsWith(`/admin/${slug}/comissoes`),
-      subItems: [
-        {
-          label: "Listar Comissões",
-          href: `/admin/${slug}/comissoes`,
-          active: pathname === `/admin/${slug}/comissoes`,
-        },
-        // {
-        //   label: "Atas",
-        //   href: `/admin/${slug}/comissoes/atas`,
-        //   active: pathname === `/admin/${slug}/comissoes/atas`,
-        // }
-      ]
-    },
+    //  {
+    //   label: "Comissões",
+    //   icon: Users,
+    //   href: `/admin/${slug}/comissoes`,
+    //   active: pathname.startsWith(`/admin/${slug}/comissoes`),
+    //   subItems: [
+    //     {
+    //       label: "Listar Comissões",
+    //       href: `/admin/${slug}/comissoes`,
+    //       active: pathname === `/admin/${slug}/comissoes`,
+    //     },
+    //     // {
+    //     //   label: "Atas",
+    //     //   href: `/admin/${slug}/comissoes/atas`,
+    //     //   active: pathname === `/admin/${slug}/comissoes/atas`,
+    //     // }
+    //   ]
+    // },
     {
       label: "Sessões Plenárias",
       icon: Gavel,

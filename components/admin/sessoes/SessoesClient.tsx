@@ -175,7 +175,7 @@ export function SessoesClient({ sessoes, slug, availableProjects, busyProjects, 
         </div>
       </div>
 
-      <Tabs value={activeTab} onValueChange={(v) => {
+      <Tabs id="sessoes-tabs" value={activeTab} onValueChange={(v) => {
         setActiveTab(v)
         if (v === "list") setEditingSessao(null)
       }} className="w-full">

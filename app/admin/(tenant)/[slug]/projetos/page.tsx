@@ -46,7 +46,7 @@ export default async function ProjetosPage({
   // 4. Fetch Situations (Global + Chamber)
   const { data: situacoes } = await supabase
     .from("projeto_situacoes")
-    .select("id, nome")
+    .select("id, nome, label")
     .or(`camara_id.is.null,camara_id.eq.${camara.id}`)
     .order("nome")
 
@@ -66,10 +66,7 @@ export default async function ProjetosPage({
         id,
         nome
       ),
-      projeto_situacoes (
-        id,
-        nome
-      ),
+      situacao,
       projeto_autores (
         vereadores (
           id,
