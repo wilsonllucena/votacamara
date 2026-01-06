@@ -14,7 +14,7 @@ const sessaoSchema = z.object({
   status: z.enum(["agendada", "aberta", "encerrada"]),
   data: z.string().min(10, "Data é obrigatória"),
   hora: z.string().min(5, "Hora é obrigatória"),
-  projeto_ids: z.array(z.string().uuid()),
+  projeto_ids: z.array(z.string().uuid()).min(1, "A sessão deve ter pelo menos um projeto associado"),
 })
 
 interface Projeto {
@@ -28,11 +28,12 @@ interface SessaoFormProps {
   availableProjects?: Projeto[]
   busyProjects?: { projeto_id: string; sessao_id: string }[]
   onSubmit: (data: SessaoInputs) => void
+  onError?: (message: string) => void
   onCancel: () => void
   isPending?: boolean
 }
 
-export function SessaoForm({ defaultValues, availableProjects = [], busyProjects = [], onSubmit, onCancel, isPending }: SessaoFormProps) {
+export function SessaoForm({ defaultValues, availableProjects = [], busyProjects = [], onSubmit, onError, onCancel, isPending }: SessaoFormProps) {
   const {
     register,
     handleSubmit,
@@ -80,8 +81,14 @@ export function SessaoForm({ defaultValues, availableProjects = [], busyProjects
       }
   }
 
+  const onInvalid = (errors: any) => {
+      if (errors.projeto_ids) {
+          onError?.(errors.projeto_ids.message)
+      }
+  }
+
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+    <form onSubmit={handleSubmit(onSubmit, onInvalid)} className="space-y-6">
       <div className="space-y-4">
         <div className="space-y-2">
             <Label htmlFor="titulo" className="text-muted-foreground">Título da Sessão</Label>
