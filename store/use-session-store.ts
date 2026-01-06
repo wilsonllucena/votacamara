@@ -7,20 +7,23 @@ import { RealtimeChannel } from "@supabase/supabase-js"
 interface SessionState {
     votes: any[]
     activeVoting: any | null
+    sessao: any | null,
     sessaoStatus: string
     channels: RealtimeChannel[]
     currentSessaoId: string | null
     currentCamaraId: string | null
-    initialize: (sessaoId: string, camaraId: string, initialData?: { votes?: any[], activeVoting?: any, sessaoStatus?: string }, onUpdate?: () => void) => void
+    initialize: (sessaoId: string | null, camaraId: string, initialData?: { sessao?: any, votes?: any[], activeVoting?: any, sessaoStatus?: string }, onUpdate?: () => void) => void
     setVotes: (votes: any[]) => void
     setActiveVoting: (activeVoting: any) => void
     setSessaoStatus: (status: string) => void
+    setSessao: (sessao: any) => void
     cleanup: () => void
 }
 
 export const useSessionStore = create<SessionState>((set, get) => ({
     votes: [],
     activeVoting: null,
+    sessao: null,
     sessaoStatus: "agendada",
     channels: [],
 
@@ -30,6 +33,7 @@ export const useSessionStore = create<SessionState>((set, get) => ({
     setVotes: (votes) => set({ votes }),
     setActiveVoting: (activeVoting) => set({ activeVoting }),
     setSessaoStatus: (sessaoStatus) => set({ sessaoStatus }),
+    setSessao: (sessao) => set({ sessao }),
 
     initialize: (sessaoId, camaraId, initialData, onUpdate?: () => void) => {
         const state = get()
@@ -44,6 +48,7 @@ export const useSessionStore = create<SessionState>((set, get) => ({
 
         if (initialData) {
             set({
+                sessao: initialData.sessao || null,
                 votes: initialData.votes || [],
                 activeVoting: initialData.activeVoting || null,
                 sessaoStatus: initialData.sessaoStatus || "agendada"
@@ -147,8 +152,14 @@ export const useSessionStore = create<SessionState>((set, get) => ({
             }, (payload) => {
                 const updated = payload.new as any
                 if (updated && (updated.id === sessaoId || updated.status === 'aberta')) {
-                    set({ sessaoStatus: updated.status })
+                    set({ sessaoStatus: updated.status, sessao: updated })
                     if (onUpdate) onUpdate()
+                } else if (updated && updated.status === 'encerrada') {
+                    const currentSessao = get().sessao
+                    if (currentSessao && updated.id === currentSessao.id) {
+                        set({ sessaoStatus: 'encerrada', sessao: updated, activeVoting: null, votes: [] })
+                        if (onUpdate) onUpdate()
+                    }
                 }
             })
             .subscribe()

@@ -17,6 +17,7 @@ import {
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { usePresenceStore } from "@/store/use-presence-store"
+import { useSessionStore } from "@/store/use-session-store"
 
 interface PublicVotingClientProps {
     camara: any
@@ -43,9 +44,6 @@ export function PublicVotingClient({
     slug 
 }: PublicVotingClientProps) {
     const supabase = createClient()
-    const [currentVoting, setCurrentVoting] = useState(activeVoting)
-    const [currentSession, setCurrentSession] = useState(activeSession)
-    const [votes, setVotes] = useState<any[]>([])
     const [voteResults, setVoteResults] = useState<VoteResult>({
         FAVORAVEL: 0,
         CONTRA: 0,
@@ -53,116 +51,39 @@ export function PublicVotingClient({
         AUSENTE: 0
     })
     const { onlineUsers, initialize: initPresence, cleanup: cleanupPresence } = usePresenceStore()
+    const { 
+        votes, 
+        activeVoting: currentVoting, 
+        sessao: currentSession, 
+        initialize: initSession, 
+        cleanup: cleanupSession 
+    } = useSessionStore()
 
-    // Initialize Presence
+    // Initialize Presence and Session Store
     useEffect(() => {
         if (!camara?.id) return
-        // Public view doesn't "track" its own user usually, 
-        // but we can use a random or specific ID for the viewer 
-        // to just "watch" the presence channel.
-        // However, for online status of councilors, we just need to listen.
-        initPresence(camara.id, `viewer-${Math.random().toString(36).substring(7)}`)
+        
+        const viewerId = `viewer-${Math.random().toString(36).substring(7)}`
+        initPresence(camara.id, viewerId)
+        
+        initSession(activeSession?.id || null, camara.id, {
+            sessao: activeSession,
+            activeVoting: activeVoting,
+            sessaoStatus: activeSession?.status || "encerrada"
+        })
 
         return () => {
             cleanupPresence()
+            cleanupSession()
         }
-    }, [camara?.id])
+    }, [camara?.id, activeSession?.id])
 
-    // Monitor voting changes in real-time
+    // Update results when votes change
     useEffect(() => {
-        if (!camara?.id) return
-
-        // Subscribe to voting changes
-        const votingChannel = supabase
-            .channel(`public-voting-${slug}`)
-            .on('postgres_changes', { 
-                event: '*', 
-                schema: 'public', 
-                table: 'votacoes',
-                filter: `camara_id=eq.${camara.id}`
-            }, async () => {
-                const { data } = await supabase.from("votacoes")
-                    .select("*, projetos(*)")
-                    .eq("camara_id", camara.id)
-                    .eq("status", "aberta")
-                    .maybeSingle()
-                
-                setCurrentVoting(data)
-            })
-            .subscribe()
-
-        // Subscribe to session changes
-        const sessionChannel = supabase
-            .channel(`public-session-${slug}`)
-            .on('postgres_changes', {
-                event: '*', // Listen to everything (INSERT/UPDATE/DELETE)
-                schema: 'public',
-                table: 'sessoes',
-                filter: `camara_id=eq.${camara.id}`
-            }, async () => {
-                const { data } = await supabase.from("sessoes")
-                    .select("*")
-                    .eq("camara_id", camara.id)
-                    .eq("status", "aberta")
-                    .maybeSingle()
-                
-                setCurrentSession(data)
-                // If there's no active session, also clear current voting
-                if (!data) setCurrentVoting(null)
-            })
-            .subscribe()
-
-        return () => {
-            supabase.removeChannel(votingChannel)
-            supabase.removeChannel(sessionChannel)
+        if (votes) {
+            calculateResults(votes)
         }
-    }, [camara?.id, slug, supabase])
-
-    // Monitor votes for current voting
-    useEffect(() => {
-        if (!currentVoting?.id) return
-
-        // Load initial votes
-        const loadVotes = async () => {
-            const { data } = await supabase
-                .from("votos")
-                .select("*, vereadores(nome, partido, foto_url)")
-                .eq("votacao_id", currentVoting.id)
-            
-            if (data) {
-                setVotes(data)
-                calculateResults(data)
-            }
-        }
-
-        loadVotes()
-
-        // Subscribe to vote changes
-        const voteChannel = supabase
-            .channel(`public-votes-${currentVoting.id}`)
-            .on('postgres_changes', {
-                event: '*',
-                schema: 'public',
-                table: 'votos',
-                filter: `votacao_id=eq.${currentVoting.id}`
-            }, async () => {
-                // Reload all votes when any change happens
-                const { data } = await supabase
-                    .from("votos")
-                    .select("*, vereadores(nome, partido, foto_url)")
-                    .eq("votacao_id", currentVoting.id)
-                
-                if (data) {
-                    setVotes(data)
-                    calculateResults(data)
-                }
-            })
-            .subscribe()
-
-        return () => {
-            supabase.removeChannel(voteChannel)
-        }
-    }, [currentVoting?.id, supabase])
+    }, [votes])
 
     const calculateResults = (voteData: any[]) => {
         // Ensure we only count votes from councilors who are allowed to vote
@@ -341,7 +262,7 @@ export function PublicVotingClient({
                 <div className="flex-1 p-8 sm:p-12 bg-black/10">
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
                         {votingCouncilors.map((councilor) => {
-                            const vote = votes.find(v => v.vereador_id === councilor.id)
+                            const vote = votes.find((v: any) => v.vereador_id === councilor.id)
                             const voteType = vote?.valor as keyof VoteResult | undefined
                             const hasVoted = !!voteType
                             const isOnline = !!onlineUsers[councilor.user_id]

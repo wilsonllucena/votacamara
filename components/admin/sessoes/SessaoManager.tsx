@@ -94,6 +94,7 @@ export function SessaoManager({
     // Initialize Global Session Store
     useEffect(() => {
         initSession(sessao.id, sessao.camara_id, {
+            sessao: sessao,
             votes: [], 
             activeVoting: initialActiveVoting,
             sessaoStatus: sessao.status
