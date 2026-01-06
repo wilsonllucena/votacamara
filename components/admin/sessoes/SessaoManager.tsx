@@ -233,8 +233,15 @@ export function SessaoManager({
         return a.nome.localeCompare(b.nome)
     })
 
+    const totalVoters = sortedCouncilors.filter(v => {
+        const mesa = mesaDiretora.find(m => m.vereador_id === v.id)
+        const cargo = mesa?.cargos?.nome?.toLowerCase() || ""
+        const isPresidente = cargo.includes('presidente') && !cargo.includes('vice')
+        return !isPresidente
+    }).length
+
     const totalVoted = votes.length
-    const allVoted = totalVoted === sortedCouncilors.length && sortedCouncilors.length > 0
+    const allVoted = totalVoted === totalVoters && totalVoters > 0
 
     return (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -362,9 +369,9 @@ export function SessaoManager({
                                         <div className="space-y-2 mb-8">
                                             <div className="flex justify-between text-sm font-medium">
                                                 <span className="text-muted-foreground">Progresso da Votação</span>
-                                                <span className="text-primary">{totalVoted} de {sortedCouncilors.length} Votos</span>
+                                                <span className="text-primary">{totalVoted} de {totalVoters} Votos</span>
                                             </div>
-                                            <Progress value={(totalVoted / sortedCouncilors.length) * 100} className="h-2 bg-muted transition-all" />
+                                            <Progress value={(totalVoted / totalVoters) * 100} className="h-2 bg-muted transition-all" />
                                             {allVoted && (
                                                 <div className="flex items-center gap-2 text-green-500 text-xs font-bold bg-green-500/5 p-2 rounded-lg border border-green-500/20">
                                                     <CheckCircle2 className="w-4 h-4" />
@@ -456,7 +463,7 @@ export function SessaoManager({
                     <div className="flex items-center justify-between mb-6">
                         <h3 className="text-base sm:text-lg font-semibold text-foreground">Presença e Votos</h3>
                         <Badge variant="outline" className="bg-muted text-muted-foreground font-mono text-[10px] sm:text-xs">
-                        {totalVoted}/{sortedCouncilors.length}
+                        {totalVoted}/{totalVoters}
                     </Badge>
                 </div>
 
@@ -510,6 +517,10 @@ export function SessaoManager({
                                                  voto.valor === 'ABSTENCAO' ? 'ABSTENÇÃO' : 
                                                  voto.valor}
                                             </Badge>
+                                        ) : mesaMember?.cargos?.nome?.toLowerCase().includes('presidente') && !mesaMember?.cargos?.nome?.toLowerCase().includes('vice') ? (
+                                            <div className="flex items-center gap-1 sm:gap-1.5 text-[9px] sm:text-[10px] text-primary/50 font-bold italic px-1 sm:px-2 whitespace-nowrap">
+                                                <span className="">PRESIDE</span>
+                                            </div>
                                         ) : (
                                             <div className="flex items-center gap-1 sm:gap-1.5 text-[9px] sm:text-[10px] text-muted-foreground font-bold italic px-1 sm:px-2 whitespace-nowrap">
                                                 <Clock className="w-2.5 h-2.5 sm:w-3 sm:h-3" /> 
