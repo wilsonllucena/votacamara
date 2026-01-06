@@ -151,14 +151,26 @@ export const useSessionStore = create<SessionState>((set, get) => ({
                 filter: `camara_id=eq.${camaraId}`
             }, (payload) => {
                 const updated = payload.new as any
-                if (updated && (updated.id === sessaoId || updated.status === 'aberta')) {
-                    set({ sessaoStatus: updated.status, sessao: updated })
-                    if (onUpdate) onUpdate()
-                } else if (updated && updated.status === 'encerrada') {
+                const deleted = payload.old as any
+                const event = payload.eventType
+
+                if (event === 'DELETE') {
                     const currentSessao = get().sessao
-                    if (currentSessao && updated.id === currentSessao.id) {
-                        set({ sessaoStatus: 'encerrada', sessao: updated, activeVoting: null, votes: [] })
+                    if (currentSessao && deleted && deleted.id === currentSessao.id) {
+                        set({ sessaoStatus: 'encerrada', sessao: null, activeVoting: null, votes: [] })
                         if (onUpdate) onUpdate()
+                    }
+                } else if (updated) {
+                    // If this specific session was updated OR if a session just opened
+                    if (updated.id === sessaoId || updated.status === 'aberta') {
+                        set({ sessaoStatus: updated.status, sessao: updated })
+                        if (onUpdate) onUpdate()
+                    } else if (updated.status === 'encerrada') {
+                        const currentSessao = get().sessao
+                        if (currentSessao && updated.id === currentSessao.id) {
+                            set({ sessaoStatus: 'encerrada', sessao: updated, activeVoting: null, votes: [] })
+                            if (onUpdate) onUpdate()
+                        }
                     }
                 }
             })
