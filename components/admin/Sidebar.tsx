@@ -119,6 +119,12 @@ export function Sidebar({ slug, userProfile, rules = [] }: SidebarProps) {
             href: `/admin/${slug}/sessoes/presencas`,
             active: pathname === `/admin/${slug}/sessoes/presencas`,
             canView: can('manage', 'Sessao'),
+        },
+        {
+            label: "Relatórios",
+            href: `/admin/${slug}/sessoes/relatorios`,
+            active: pathname === `/admin/${slug}/sessoes/relatorios`,
+            canView: can('manage', 'Sessao'),
         }
       ].filter(item => item.canView !== false)
     },
