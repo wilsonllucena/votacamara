@@ -2,6 +2,8 @@ import { createClient } from "@/utils/supabase/server"
 import { notFound } from "next/navigation"
 import { PublicVotingClient } from "@/components/public/PublicVotingClient"
 
+export const dynamic = 'force-dynamic'
+
 interface PublicVotingPageProps {
     params: Promise<{ slug: string }>
 }
