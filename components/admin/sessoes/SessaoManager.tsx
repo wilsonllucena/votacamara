@@ -332,7 +332,7 @@ export function SessaoManager({
                                                 }
                                             </select>
                                         </div>
-                                        <div className="space-y-2">
+                                        {/* <div className="space-y-2">
                                             <label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Cronometragem</label>
                                             <div className="flex items-center gap-4 h-[45px]">
                                                 <div className="flex items-center gap-2">
@@ -357,7 +357,7 @@ export function SessaoManager({
                                                     </div>
                                                 )}
                                             </div>
-                                        </div>
+                                        </div> */}
                                     </div>
                                     <Button 
                                         onClick={handleOpenVoting} 
@@ -488,6 +488,25 @@ export function SessaoManager({
                 </div>
 
                 <div className="space-y-3">
+                    {activeVoting && (
+                        <div className="mt-8 p-4 bg-primary/5 border border-primary/20 rounded-xl space-y-4">
+                            <h4 className="text-xs font-bold text-primary uppercase tracking-widest text-center">Apuração Parcial</h4>
+                            <div className="grid grid-cols-3 gap-2">
+                                <div className="text-center">
+                                    <p className="text-lg font-black text-green-500">{votes.filter(v => v.valor === 'FAVORAVEL').length}</p>
+                                    <p className="text-[10px] font-bold text-muted-foreground uppercase">FAVORÁVEL</p>
+                                </div>
+                                <div className="text-center border-x border-primary/10">
+                                    <p className="text-lg font-black text-red-500">{votes.filter(v => v.valor === 'CONTRA').length}</p>
+                                    <p className="text-[10px] font-bold text-muted-foreground uppercase">CONTRA</p>
+                                </div>
+                                <div className="text-center">
+                                    <p className="text-lg font-black text-zinc-400">{votes.filter(v => v.valor === 'ABSTENCAO').length}</p>
+                                    <p className="text-[10px] font-bold text-muted-foreground uppercase">ABSTENÇÃO</p>
+                                </div>
+                            </div>
+                        </div>
+                    )}
                     {sortedCouncilors.map((vereador) => {
                         const voto = votes.find(v => v.vereador_id === vereador.id)
                         const isOnline = !!onlineUsers[vereador.user_id]
@@ -553,26 +572,6 @@ export function SessaoManager({
                             )
                         })}
                     </div>
-
-                    {activeVoting && (
-                        <div className="mt-8 p-4 bg-primary/5 border border-primary/20 rounded-xl space-y-4">
-                            <h4 className="text-xs font-bold text-primary uppercase tracking-widest text-center">Apuração Parcial</h4>
-                            <div className="grid grid-cols-3 gap-2">
-                                <div className="text-center">
-                                    <p className="text-lg font-black text-green-500">{votes.filter(v => v.valor === 'FAVORAVEL').length}</p>
-                                    <p className="text-[10px] font-bold text-muted-foreground uppercase">FAVORÁVEL</p>
-                                </div>
-                                <div className="text-center border-x border-primary/10">
-                                    <p className="text-lg font-black text-red-500">{votes.filter(v => v.valor === 'CONTRA').length}</p>
-                                    <p className="text-[10px] font-bold text-muted-foreground uppercase">CONTRA</p>
-                                </div>
-                                <div className="text-center">
-                                    <p className="text-lg font-black text-zinc-400">{votes.filter(v => v.valor === 'ABSTENCAO').length}</p>
-                                    <p className="text-[10px] font-bold text-muted-foreground uppercase">ABSTENÇÃO</p>
-                                </div>
-                            </div>
-                        </div>
-                    )}
                 </div>
             </div>
 
