@@ -24,11 +24,13 @@ export function defineAbilityFor(role: string, vereadorId: string | null = null)
   if (role === 'ADMIN') {
     // Admin pode fazer tudo em tudo
     can('manage', 'all');
+    can('manage', 'Vereador');
   } 
   
   else if (role === 'PRESIDENTE') {
     // Presidente pode fazer quase tudo o que o ADMIN faz
     can('manage', 'all');
+    can('manage', 'Vereador');
     
     // EXCETO:
     // 1. Excluir sessões
