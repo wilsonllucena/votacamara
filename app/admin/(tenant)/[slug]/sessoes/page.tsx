@@ -64,7 +64,7 @@ export default async function SessoesPage({
       }
   })
 
-  // 4. Get projects for association (status em_pauta or situation 'Em Pauta')
+  // 4. Get projects for association (status EM_PAUTA or already in sessions displayed)
   const allProjectIdsInSessoes = mappedSessoes?.flatMap(s => s.projeto_ids) || []
 
   let projectsQuery = supabase
@@ -72,10 +72,7 @@ export default async function SessoesPage({
     .select("id, titulo, numero, situacao")
     .eq("camara_id", camara.id)
   
-  const filterParts = [
-    "situacao.ilike.em_pauta"
-  ]
-  
+  const filterParts = ["situacao.eq.EM_PAUTA"]
   if (allProjectIdsInSessoes.length > 0) {
     filterParts.push(`id.in.(${allProjectIdsInSessoes.map(id => `"${id}"`).join(",")})`)
   }

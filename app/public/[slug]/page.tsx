@@ -44,6 +44,17 @@ export default async function PublicVotingPage({ params }: PublicVotingPageProps
         .eq("is_executivo", false)
         .order("nome")
 
+    // 5. Get Mesa Diretora for sorting and display
+    const { data: mesaDiretora } = await supabase
+        .from("mesa_diretora")
+        .select(`
+            vereador_id,
+            cargos (
+                nome
+            )
+        `)
+        .eq("camara_id", camara.id)
+
     return (
         <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
             <PublicVotingClient 
@@ -51,6 +62,7 @@ export default async function PublicVotingPage({ params }: PublicVotingPageProps
                 activeSession={activeSession}
                 activeVoting={activeVoting}
                 councilors={councilors || []}
+                mesaDiretora={mesaDiretora || []}
                 slug={slug}
             />
         </div>

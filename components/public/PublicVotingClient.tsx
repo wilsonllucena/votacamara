@@ -23,6 +23,7 @@ interface PublicVotingClientProps {
     activeSession: any
     activeVoting: any
     councilors: any[]
+    mesaDiretora: any[]
     slug: string
 }
 
@@ -38,6 +39,7 @@ export function PublicVotingClient({
     activeSession, 
     activeVoting, 
     councilors, 
+    mesaDiretora,
     slug 
 }: PublicVotingClientProps) {
     const supabase = createClient()
@@ -162,17 +164,37 @@ export function PublicVotingClient({
     }, [currentVoting?.id, supabase])
 
     const calculateResults = (voteData: any[]) => {
+        // Ensure we only count votes from councilors who are allowed to vote
+        const votingCouncilorIds = new Set(councilors
+            .filter(c => {
+                const mesa = mesaDiretora.find(m => m.vereador_id === c.id)
+                const cargo = mesa?.cargos?.nome?.toLowerCase() || ""
+                return !(cargo.includes('presidente') && !cargo.includes('vice'))
+            })
+            .map(c => c.id)
+        )
+
         const results = voteData.reduce((acc, vote) => {
-            acc[vote.valor as keyof VoteResult] = (acc[vote.valor as keyof VoteResult] || 0) + 1
+            if (votingCouncilorIds.has(vote.vereador_id)) {
+                acc[vote.valor as keyof VoteResult] = (acc[vote.valor as keyof VoteResult] || 0) + 1
+            }
             return acc
         }, { FAVORAVEL: 0, CONTRA: 0, ABSTENCAO: 0, AUSENTE: 0 })
 
         setVoteResults(results)
     }
 
+    const president = councilors.find(c => {
+        const mesa = mesaDiretora.find(m => m.vereador_id === c.id)
+        const cargo = mesa?.cargos?.nome?.toLowerCase() || ""
+        return cargo.includes('presidente') && !cargo.includes('vice')
+    })
+
+    const votingCouncilors = councilors.filter(c => c.id !== president?.id)
+
     const totalVotes = voteResults.FAVORAVEL + voteResults.CONTRA + voteResults.ABSTENCAO + voteResults.AUSENTE
-    const totalCouncilors = councilors.length
-    const participationRate = totalVotes > 0 ? Math.round((totalVotes / totalCouncilors) * 100) : 0
+    const totalVotersCount = votingCouncilors.length
+    const participationRate = totalVotes > 0 ? Math.round((totalVotes / totalVotersCount) * 100) : 0
 
     // Helper function to get first and second name
     const getShortName = (fullName: string) => {
@@ -271,6 +293,14 @@ export function PublicVotingClient({
                                 <span className="text-zinc-500 font-bold tracking-widest text-xs uppercase">
                                     {currentVoting.projetos?.numero || "PL 000/2024"}
                                 </span>
+                                {president && (
+                                    <div className="flex items-center gap-2 bg-white/5 px-3 py-1 rounded-full border border-white/10">
+                                        <User className="w-3 h-3 text-primary" />
+                                        <span className="text-[10px] font-black text-zinc-400 uppercase tracking-wider">
+                                            PRESIDENTE: <span className="text-zinc-100">{president.nome}</span>
+                                        </span>
+                                    </div>
+                                )}
                             </div>
                             <div className="space-y-5">
                                 <h1 className="text-xl sm:text-2xl lg:text-3xl font-black tracking-tight leading-[1.2] text-zinc-100 max-w-4xl">
@@ -309,7 +339,7 @@ export function PublicVotingClient({
                 {/* Grid Section */}
                 <div className="flex-1 p-8 sm:p-12 bg-black/10">
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
-                        {councilors.map((councilor) => {
+                        {votingCouncilors.map((councilor) => {
                             const vote = votes.find(v => v.vereador_id === councilor.id)
                             const voteType = vote?.valor as keyof VoteResult | undefined
                             const hasVoted = !!voteType
@@ -399,7 +429,7 @@ export function PublicVotingClient({
                             </div>
                             <div>
                                 <p className="text-[10px] font-black text-zinc-500 uppercase tracking-widest">Quórum</p>
-                                <p className="text-sm font-bold text-zinc-300">{totalVotes}/{totalCouncilors}</p>
+                                <p className="text-sm font-bold text-zinc-300">{totalVotes}/{totalVotersCount}</p>
                             </div>
                         </div>
                     </div>

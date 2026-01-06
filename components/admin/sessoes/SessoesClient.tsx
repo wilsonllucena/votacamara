@@ -329,7 +329,10 @@ export function SessoesClient({ sessoes, slug, availableProjects, busyProjects, 
              <SessaoForm 
                defaultValues={editingSessao || undefined}
                isPending={isPending}
-               availableProjects={availableProjects}
+               availableProjects={availableProjects.filter(p => 
+                    p.situacao === "EM_PAUTA" || 
+                    editingSessao?.projeto_ids?.includes(p.id)
+                )}
                busyProjects={busyProjects}
                onSubmit={handleCreateOrUpdate}
                onCancel={() => {
