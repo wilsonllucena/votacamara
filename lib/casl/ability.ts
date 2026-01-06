@@ -25,12 +25,14 @@ export function defineAbilityFor(role: string, vereadorId: string | null = null)
     // Admin pode fazer tudo em tudo
     can('manage', 'all');
     can('manage', 'Vereador');
+    can('manage', 'Materia');
   } 
   
   else if (role === 'PRESIDENTE') {
     // Presidente pode fazer quase tudo o que o ADMIN faz
     can('manage', 'all');
     can('manage', 'Vereador');
+    can('manage', 'Materia');
     
     // EXCETO:
     // 1. Excluir sessões
@@ -55,7 +57,7 @@ export function defineAbilityFor(role: string, vereadorId: string | null = null)
 
     // Pode editar matérias que ele é autor
     if (vereadorId) {
-      can('update', 'Materia', { autores_ids: { $in: [vereadorId] } } as any);
+      can('update', 'Materia', { autores_ids: vereadorId } as any);
     } else {
       // Se não tiver ID de vereador vinculado, não pode editar (segurança)
       cannot('update', 'Materia');

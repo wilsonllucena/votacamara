@@ -207,13 +207,27 @@ export function SessaoManager({
         })
     }
 
-    // Sort councilors to put Mesa Diretora first
+    // Sort councilors to put Mesa Diretora first in specific order
     const sortedCouncilors = [...councilors].sort((a, b) => {
-        const aMesa = mesaDiretora.some(m => m.vereador_id === a.id)
-        const bMesa = mesaDiretora.some(m => m.vereador_id === b.id)
+        const aMesa = mesaDiretora.find(m => m.vereador_id === a.id)
+        const bMesa = mesaDiretora.find(m => m.vereador_id === b.id)
         
-        if (aMesa && !bMesa) return -1
-        if (!aMesa && bMesa) return 1
+        const getPriority = (mesaMember: any) => {
+            if (!mesaMember) return 99
+            const nome = mesaMember.cargos?.nome?.toLowerCase() || ""
+            if (nome.includes('presidente') && !nome.includes('vice')) return 1
+            if (nome.includes('vice-presidente')) return 2
+            if (nome.includes('1') || nome.includes('primeiro')) return 3
+            if (nome.includes('2') || nome.includes('segundo')) return 4
+            return 5
+        }
+
+        const aPriority = getPriority(aMesa)
+        const bPriority = getPriority(bMesa)
+
+        if (aPriority !== bPriority) {
+            return aPriority - bPriority
+        }
         
         // Secondary sort by name
         return a.nome.localeCompare(b.nome)
@@ -438,10 +452,10 @@ export function SessaoManager({
 
             {/* Right Column: Councilors Status */}
             <div className="space-y-6">
-                <div className="bg-card border border-border rounded-xl p-6 shadow-sm sticky top-6">
+                <div className="bg-card border border-border rounded-xl p-4 sm:p-6 shadow-sm sticky top-6">
                     <div className="flex items-center justify-between mb-6">
-                        <h3 className="text-lg font-semibold text-foreground">Presença e Votos</h3>
-                        <Badge variant="outline" className="bg-muted text-muted-foreground font-mono">
+                        <h3 className="text-base sm:text-lg font-semibold text-foreground">Presença e Votos</h3>
+                        <Badge variant="outline" className="bg-muted text-muted-foreground font-mono text-[10px] sm:text-xs">
                         {totalVoted}/{sortedCouncilors.length}
                     </Badge>
                 </div>
@@ -454,35 +468,35 @@ export function SessaoManager({
                         
                         return (
                             <div key={vereador.id} className={cn(
-                                "flex items-center justify-between p-3 rounded-xl transition-colors",
+                                "flex items-center justify-between p-2.5 sm:p-3 rounded-xl transition-colors gap-2 min-w-0",
                                 mesaMember ? "bg-primary/5 border-primary/20 shadow-sm" : "bg-muted/30 border-border hover:bg-muted/50"
                             )}>
-                                <div className="flex items-center gap-3">
+                                <div className="flex items-center gap-2 sm:gap-3 flex-1 min-w-0">
                                     <div className="relative">
                                         <div className={cn(
-                                            "w-8 h-8 rounded-full border flex items-center justify-center font-bold text-[10px]",
+                                            "w-7 h-7 sm:w-8 sm:h-8 rounded-full border flex flex-shrink-0 items-center justify-center font-bold text-[10px]",
                                             mesaMember ? "bg-primary/10 border-primary/30 text-primary" : "bg-indigo-500/10 border-indigo-500/20 text-indigo-500"
                                         )}>
                                             {vereador.nome.substring(0, 2).toUpperCase()}
                                         </div>
                                         <div className={cn(
-                                            "absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full border-2 border-background",
+                                            "absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full border-2 border-background",
                                             isOnline ? "bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.5)]" : "bg-red-500"
                                         )} />
                                     </div>
-                                    <div>
-                                        <p className="text-sm font-bold text-foreground line-clamp-1 leading-none mb-1">
+                                    <div className="flex-1 min-w-0 overflow-hidden">
+                                        <p className="text-xs sm:text-sm font-bold text-foreground line-clamp-1 leading-none mb-1">
                                             {vereador.nome}
-                                            {mesaMember && (
-                                                <span className="ml-2 text-[8px] px-1.5 py-0.5 bg-primary text-primary-foreground rounded uppercase font-black">
-                                                    {mesaMember.cargos?.nome}
-                                                </span>
-                                            )}
                                         </p>
-                                        <p className="text-[10px] text-muted-foreground uppercase font-semibold">{vereador.partido}</p>
+                                        <p className="text-[10px] text-muted-foreground uppercase font-semibold">
+                                            {mesaMember && (
+                                                <span className="text-primary font-black mr-1">{mesaMember.cargos?.nome} —</span>
+                                            )}
+                                            {vereador.partido}
+                                        </p>
                                     </div>
                                 </div>
-                                    <div>
+                                <div className="flex-shrink-0">
                                         {voto ? (
                                             <Badge className={cn(
                                                 "w-20 justify-center font-bold text-[10px] tracking-wider",
@@ -497,8 +511,10 @@ export function SessaoManager({
                                                  voto.valor}
                                             </Badge>
                                         ) : (
-                                            <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground font-bold italic px-2">
-                                                <Clock className="w-3 h-3" /> AGUARDANDO
+                                            <div className="flex items-center gap-1 sm:gap-1.5 text-[9px] sm:text-[10px] text-muted-foreground font-bold italic px-1 sm:px-2 whitespace-nowrap">
+                                                <Clock className="w-2.5 h-2.5 sm:w-3 sm:h-3" /> 
+                                                <span className="hidden xs:inline">AGUARDANDO</span>
+                                                <span className="xs:hidden">AGUARD.</span>
                                             </div>
                                         )}
                                     </div>

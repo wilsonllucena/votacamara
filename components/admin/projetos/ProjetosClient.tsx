@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useTransition } from "react"
+import { useState, useTransition, useEffect } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -42,7 +42,7 @@ interface Projeto {
   } | null
 }
 
-import { createMongoAbility, RawRuleOf, MongoAbility } from "@casl/ability"
+import { createMongoAbility, RawRuleOf, MongoAbility, subject } from "@casl/ability"
 import { Action, Subject } from "@/lib/casl/ability"
 import { useMemo } from "react"
 
@@ -67,10 +67,15 @@ export function ProjetosClient({ projetos, slug, vereadores, categorias, situaco
   const [editingProjeto, setEditingProjeto] = useState<(MateriaInputs & { id: string }) | null>(null)
   const searchParams = useSearchParams()
   const [searchTerm, setSearchTerm] = useState(searchParams.get("search") || "")
+  const [isMounted, setIsMounted] = useState(false)
+
+  useEffect(() => {
+    setIsMounted(true)
+  }, [])
 
   // Reconstruir abilidade no cliente de forma estável
   const ability = useMemo(() => createMongoAbility<[Action, Subject]>(rules), [rules])
-  const can = (action: Action, subject: Subject) => ability.can(action, subject)
+  const can = (action: Action, subjectInput: Subject | any) => ability.can(action, subjectInput)
 
   // ConfirmDialog State
   const [confirmConfig, setConfirmConfig] = useState<{
@@ -174,6 +179,20 @@ export function ProjetosClient({ projetos, slug, vereadores, categorias, situaco
       case "rejeitado": return "bg-red-500/10 text-red-500 border-red-500/20"
       default: return "bg-muted text-muted-foreground border-border"
     }
+  }
+
+  if (!isMounted) {
+    return (
+      <div className="space-y-6">
+        <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
+          <div className="space-y-1">
+            <h1 className="text-3xl font-extrabold text-foreground tracking-tight">Materias Legislativas</h1>
+            <p className="text-muted-foreground text-sm">Gerencie as proposituras legislativas da Câmara.</p>
+          </div>
+        </div>
+        <div className="h-[400px] w-full bg-card/50 border border-border border-dashed rounded-xl animate-pulse" />
+      </div>
+    )
   }
 
   return (
@@ -282,7 +301,7 @@ export function ProjetosClient({ projetos, slug, vereadores, categorias, situaco
                         </Button>
                       </Tooltip>
 
-                      {can('update', { ...projeto, autores_ids: authorsIds } as any) && (
+                      {can('update', subject('Materia', { ...projeto, autores_ids: authorsIds })) && (
                         <Tooltip content="Editar Matéria">
                           <Button 
                             onClick={() => {
