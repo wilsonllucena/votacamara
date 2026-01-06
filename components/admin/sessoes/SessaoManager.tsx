@@ -244,6 +244,9 @@ export function SessaoManager({
     const totalVoted = votes.length
     const allVoted = totalVoted === totalVoters && totalVoters > 0
 
+    // Check if all pauta items are voted
+    const allPautaItemsVoted = pautaItems.length > 0 ? pautaItems.every(item => item.projeto.status === 'votado') : true
+
     return (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             {/* Left Column: Flow Control */}
@@ -274,9 +277,25 @@ export function SessaoManager({
                                 </Button>
                             )}
                             {sessaoStatus === 'aberta' && (
-                                <Button onClick={handleEndSession} disabled={isPending} variant="outline" className="border-red-500/50 text-red-500 hover:bg-red-500/10">
-                                    <Square className="w-4 h-4 mr-2" /> Finalizar Sessão
-                                </Button>
+                                <div className="flex flex-col items-end gap-1">
+                                    <Button 
+                                        onClick={handleEndSession} 
+                                        disabled={isPending || !allPautaItemsVoted || !!activeVoting} 
+                                        variant="outline" 
+                                        className={cn(
+                                            "border-red-500/50 text-red-500 hover:bg-red-500/10",
+                                            (!allPautaItemsVoted || !!activeVoting) && "opacity-50 cursor-not-allowed grayscale"
+                                        )}
+                                        title={!allPautaItemsVoted ? "Todos os projetos da pauta devem ser votados antes de encerrar a sessão." : !!activeVoting ? "Encerre a votação atual antes de finalizar a sessão." : ""}
+                                    >
+                                        <Square className="w-4 h-4 mr-2" /> Finalizar Sessão
+                                    </Button>
+                                    {!allPautaItemsVoted && !activeVoting && (
+                                        <span className="text-[10px] font-bold text-amber-600 bg-amber-500/5 px-2 py-0.5 rounded border border-amber-500/10 animate-pulse">
+                                            Aguardando votação de todos os itens da pauta
+                                        </span>
+                                    )}
+                                </div>
                             )}
                         </div>
                     </div>
