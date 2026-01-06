@@ -80,17 +80,14 @@ export function PublicVotingClient({
                 schema: 'public', 
                 table: 'votacoes',
                 filter: `camara_id=eq.${camara.id}`
-            }, (payload) => {
-                const updated = payload.new as any
-                if (updated && updated.status === 'aberta') {
-                    supabase.from("votacoes")
-                        .select("*, projetos(*)")
-                        .eq("id", updated.id)
-                        .single()
-                        .then(({ data }) => setCurrentVoting(data))
-                } else {
-                    setCurrentVoting(null)
-                }
+            }, async () => {
+                const { data } = await supabase.from("votacoes")
+                    .select("*, projetos(*)")
+                    .eq("camara_id", camara.id)
+                    .eq("status", "aberta")
+                    .maybeSingle()
+                
+                setCurrentVoting(data)
             })
             .subscribe()
 
@@ -98,16 +95,20 @@ export function PublicVotingClient({
         const sessionChannel = supabase
             .channel(`public-session-${slug}`)
             .on('postgres_changes', {
-                event: 'UPDATE',
+                event: '*', // Listen to everything (INSERT/UPDATE/DELETE)
                 schema: 'public',
                 table: 'sessoes',
                 filter: `camara_id=eq.${camara.id}`
-            }, (payload) => {
-                const updated = payload.new as any
-                setCurrentSession(updated)
-                if (updated.status === 'encerrada') {
-                    setCurrentVoting(null)
-                }
+            }, async () => {
+                const { data } = await supabase.from("sessoes")
+                    .select("*")
+                    .eq("camara_id", camara.id)
+                    .eq("status", "aberta")
+                    .maybeSingle()
+                
+                setCurrentSession(data)
+                // If there's no active session, also clear current voting
+                if (!data) setCurrentVoting(null)
             })
             .subscribe()
 
