@@ -109,11 +109,11 @@ export function Sidebar({ slug, userProfile, rules = [] }: SidebarProps) {
             href: `/admin/${slug}/sessoes`,
             active: pathname === `/admin/${slug}/sessoes`,
         },
-        {
-            label: "Atas",
-            href: `/admin/${slug}/sessoes/atas`,
-            active: pathname === `/admin/${slug}/sessoes/atas`,
-        },
+        // {
+        //     label: "Atas",
+        //     href: `/admin/${slug}/sessoes/atas`,
+        //     active: pathname === `/admin/${slug}/sessoes/atas`,
+        // },
         {
             label: "Lista de Presença",
             href: `/admin/${slug}/sessoes/presencas`,

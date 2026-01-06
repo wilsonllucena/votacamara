@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useMemo } from "react"
+import { useState, useMemo, useEffect } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 import { 
     Search, 
@@ -96,13 +96,18 @@ export function PresencasClient({
     
     // Filters State
     const [searchTerm, setSearchTerm] = useState(searchParams.get("search") || "")
-    const [selectedYear, setSelectedYear] = useState(searchParams.get("year") || "2025")
+    const [selectedYear, setSelectedYear] = useState(searchParams.get("year") || "2026")
     const [selectedType, setSelectedType] = useState(searchParams.get("type") || "")
 
     const currentPage = parseInt(searchParams.get("page") || "1")
 
     // Visualization Tab
     const [activeTab, setActiveTab] = useState("overview")
+    const [mounted, setMounted] = useState(false)
+
+    useEffect(() => {
+        setMounted(true)
+    }, [])
 
     // Charts Data
     const pieData = useMemo(() => [
@@ -197,8 +202,6 @@ export function PresencasClient({
                     className="bg-muted/50 border border-transparent rounded-xl px-4 py-2 text-sm outline-none focus:bg-background focus:border-primary/50"
                 >
                     <option value="2026">2026</option>
-                    <option value="2025">2025</option>
-                    <option value="2024">2024</option>
                 </select>
 
                 <select 
@@ -215,21 +218,23 @@ export function PresencasClient({
                     Filtrar
                 </Button>
 
-                <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                        <Button variant="outline" className="rounded-xl border-dashed border-primary/30 text-primary font-bold uppercase tracking-widest text-[10px] ml-auto">
-                            <Download className="w-3.5 h-3.5 mr-2" /> Exportar Relatório
-                        </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end" className="rounded-xl border-border bg-card">
-                        <DropdownMenuItem onClick={() => handleExport('pdf')} className="gap-2 font-bold text-[10px] uppercase tracking-wider cursor-pointer">
-                            <FileDown className="w-4 h-4 text-red-500" /> Baixar em PDF
-                        </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => handleExport('excel')} className="gap-2 font-bold text-[10px] uppercase tracking-wider cursor-pointer">
-                            <FileSpreadsheet className="w-4 h-4 text-green-500" /> Baixar em Excel
-                        </DropdownMenuItem>
-                    </DropdownMenuContent>
-                </DropdownMenu>
+                {mounted && (
+                    <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                            <Button variant="outline" className="rounded-xl border-dashed border-primary/30 text-primary font-bold uppercase tracking-widest text-[10px] ml-auto">
+                                <Download className="w-3.5 h-3.5 mr-2" /> Exportar Relatório
+                            </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end" className="rounded-xl border-border bg-card">
+                            <DropdownMenuItem onClick={() => handleExport('pdf')} className="gap-2 font-bold text-[10px] uppercase tracking-wider cursor-pointer">
+                                <FileDown className="w-4 h-4 text-red-500" /> Baixar em PDF
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => handleExport('excel')} className="gap-2 font-bold text-[10px] uppercase tracking-wider cursor-pointer">
+                                <FileSpreadsheet className="w-4 h-4 text-green-500" /> Baixar em Excel
+                            </DropdownMenuItem>
+                        </DropdownMenuContent>
+                    </DropdownMenu>
+                )}
             </form>
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -282,76 +287,78 @@ export function PresencasClient({
                 {/* Right Side: Charts & Stats */}
                 <div className="space-y-6">
                     <div className="bg-card border border-border rounded-2xl shadow-sm overflow-hidden sticky top-6">
-                        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-                            <TabsList className="w-full grid grid-cols-2 h-14 bg-muted/30 rounded-none border-b border-border p-1">
-                                <TabsTrigger value="overview" className="rounded-xl data-[state=active]:bg-background data-[state=active]:shadow-sm">
-                                    <PieChartIcon className="w-4 h-4 mr-2" /> Geral
-                                </TabsTrigger>
-                                <TabsTrigger value="councilors" className="rounded-xl data-[state=active]:bg-background data-[state=active]:shadow-sm">
-                                    <Users className="w-4 h-4 mr-2" /> Por Nome
-                                </TabsTrigger>
-                            </TabsList>
+                        {mounted && (
+                            <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+                                <TabsList className="w-full grid grid-cols-2 h-14 bg-muted/30 rounded-none border-b border-border p-1">
+                                    <TabsTrigger value="overview" className="rounded-xl data-[state=active]:bg-background data-[state=active]:shadow-sm">
+                                        <PieChartIcon className="w-4 h-4 mr-2" /> Geral
+                                    </TabsTrigger>
+                                    <TabsTrigger value="councilors" className="rounded-xl data-[state=active]:bg-background data-[state=active]:shadow-sm">
+                                        <Users className="w-4 h-4 mr-2" /> Por Nome
+                                    </TabsTrigger>
+                                </TabsList>
 
-                            <TabsContent value="overview" className="p-8 space-y-8 animate-in slide-in-from-right-4 duration-500">
-                                <div className="h-[250px] w-full">
-                                    <ResponsiveContainer width="100%" height="100%">
-                                        <PieChart>
-                                            <Pie
-                                                data={pieData}
-                                                innerRadius={60}
-                                                outerRadius={100}
-                                                paddingAngle={5}
-                                                dataKey="value"
-                                            >
-                                                {pieData.map((entry, index) => (
-                                                    <Cell key={`cell-${index}`} fill={entry.color} stroke="none" />
-                                                ))}
-                                            </Pie>
-                                            <RechartsTooltip 
-                                                contentStyle={{ backgroundColor: '#1f2937', borderRadius: '12px', border: 'none', color: '#fff' }}
-                                                itemStyle={{ color: '#fff' }}
-                                            />
-                                            <Legend verticalAlign="bottom" height={36} />
-                                        </PieChart>
-                                    </ResponsiveContainer>
-                                </div>
-                                
-                                <div className="space-y-3">
-                                    {pieData.map(d => (
-                                        <div key={d.name} className="flex items-center justify-between text-sm font-bold">
-                                            <span className="flex items-center gap-2 text-muted-foreground">
-                                                <div className="w-2 h-2 rounded-full" style={{ backgroundColor: d.color }} />
-                                                {d.name}
-                                            </span>
-                                            <span>{formatRate(d.value, globalStats.overview.presente + globalStats.overview.ausente + globalStats.overview.justificado)}%</span>
-                                        </div>
-                                    ))}
-                                </div>
-                            </TabsContent>
-
-                            <TabsContent value="councilors" className="p-6 space-y-6 max-h-[500px] overflow-y-auto animate-in slide-in-from-left-4 duration-500">
-                                {globalStats.byCouncilor.map((councilor) => {
-                                    const pRate = formatRate(councilor.presente, councilor.total)
-                                    const aRate = formatRate(councilor.ausente, councilor.total)
-                                    const jRate = formatRate(councilor.justificado, councilor.total)
+                                <TabsContent value="overview" className="p-8 space-y-8 animate-in slide-in-from-right-4 duration-500">
+                                    <div className="h-[250px] w-full">
+                                        <ResponsiveContainer width="100%" height="100%">
+                                            <PieChart>
+                                                <Pie
+                                                    data={pieData}
+                                                    innerRadius={60}
+                                                    outerRadius={100}
+                                                    paddingAngle={5}
+                                                    dataKey="value"
+                                                >
+                                                    {pieData.map((entry, index) => (
+                                                        <Cell key={`cell-${index}`} fill={entry.color} stroke="none" />
+                                                    ))}
+                                                </Pie>
+                                                <RechartsTooltip 
+                                                    contentStyle={{ backgroundColor: '#1f2937', borderRadius: '12px', border: 'none', color: '#fff' }}
+                                                    itemStyle={{ color: '#fff' }}
+                                                />
+                                                <Legend verticalAlign="bottom" height={36} />
+                                            </PieChart>
+                                        </ResponsiveContainer>
+                                    </div>
                                     
-                                    return (
-                                        <div key={councilor.nome} className="space-y-2">
-                                            <div className="flex justify-between text-xs font-bold uppercase tracking-tighter">
-                                                <span>{councilor.nome}</span>
-                                                <span className="text-primary">{pRate}%</span>
+                                    <div className="space-y-3">
+                                        {pieData.map(d => (
+                                            <div key={d.name} className="flex items-center justify-between text-sm font-bold">
+                                                <span className="flex items-center gap-2 text-muted-foreground">
+                                                    <div className="w-2 h-2 rounded-full" style={{ backgroundColor: d.color }} />
+                                                    {d.name}
+                                                </span>
+                                                <span>{formatRate(d.value, globalStats.overview.presente + globalStats.overview.ausente + globalStats.overview.justificado)}%</span>
                                             </div>
-                                            {/* Stacked Multi-color Progress bar */}
-                                            <div className="h-2 w-full bg-muted/50 rounded-full overflow-hidden flex">
-                                                {pRate > 0 && <div className="h-full bg-green-500 transition-all" style={{ width: `${pRate}%` }} title={`Presente: ${pRate}%`} />}
-                                                {aRate > 0 && <div className="h-full bg-red-500 transition-all" style={{ width: `${aRate}%` }} title={`Ausente: ${aRate}%`} />}
-                                                {jRate > 0 && <div className="h-full bg-amber-500 transition-all" style={{ width: `${jRate}%` }} title={`Justificado: ${jRate}%`} />}
+                                        ))}
+                                    </div>
+                                </TabsContent>
+
+                                <TabsContent value="councilors" className="p-6 space-y-6 max-h-[500px] overflow-y-auto animate-in slide-in-from-left-4 duration-500">
+                                    {globalStats.byCouncilor.map((councilor) => {
+                                        const pRate = formatRate(councilor.presente, councilor.total)
+                                        const aRate = formatRate(councilor.ausente, councilor.total)
+                                        const jRate = formatRate(councilor.justificado, councilor.total)
+                                        
+                                        return (
+                                            <div key={councilor.nome} className="space-y-2">
+                                                <div className="flex justify-between text-xs font-bold uppercase tracking-tighter">
+                                                    <span>{councilor.nome}</span>
+                                                    <span className="text-primary">{pRate}%</span>
+                                                </div>
+                                                {/* Stacked Multi-color Progress bar */}
+                                                <div className="h-2 w-full bg-muted/50 rounded-full overflow-hidden flex">
+                                                    {pRate > 0 && <div className="h-full bg-green-500 transition-all" style={{ width: `${pRate}%` }} title={`Presente: ${pRate}%`} />}
+                                                    {aRate > 0 && <div className="h-full bg-red-500 transition-all" style={{ width: `${aRate}%` }} title={`Ausente: ${aRate}%`} />}
+                                                    {jRate > 0 && <div className="h-full bg-amber-500 transition-all" style={{ width: `${jRate}%` }} title={`Justificado: ${jRate}%`} />}
+                                                </div>
                                             </div>
-                                        </div>
-                                    )
-                                })}
-                            </TabsContent>
-                        </Tabs>
+                                        )
+                                    })}
+                                </TabsContent>
+                            </Tabs>
+                        )}
                     </div>
                 </div>
             </div>
