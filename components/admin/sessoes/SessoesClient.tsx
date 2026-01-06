@@ -335,6 +335,7 @@ export function SessoesClient({ sessoes, slug, availableProjects, busyProjects, 
                 )}
                busyProjects={busyProjects}
                onSubmit={handleCreateOrUpdate}
+               onError={(message) => showAlert("Atenção", message)}
                onCancel={() => {
                  setEditingSessao(null)
                  setActiveTab("list")
