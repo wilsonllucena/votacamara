@@ -6,7 +6,7 @@ import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Plus, Edit2, Calendar, Clock, FileText, Trash2, List, Search, Link as LinkIcon, Check } from "lucide-react"
+import { Plus, Edit2, Calendar, Clock, FileText, Trash2, List, Search, Link as LinkIcon, Check, X } from "lucide-react"
 import { SessaoForm } from "./SessaoForm"
 import { createSessao, updateSessao, deleteSessao, SessaoInputs } from "@/app/admin/_actions/sessoes"
 import { format } from "date-fns"
@@ -14,6 +14,7 @@ import { ptBR } from "date-fns/locale"
 import { ConfirmDialog } from "@/components/ui/confirm-dialog"
 import { Pagination } from "@/components/admin/Pagination"
 import { Tooltip } from "@/components/ui/tooltip"
+import { cn } from "@/lib/utils"
 
 import { createMongoAbility, RawRuleOf, MongoAbility } from "@casl/ability"
 import { Action, Subject } from "@/lib/casl/ability"
@@ -168,18 +169,20 @@ export function SessoesClient({ sessoes, slug, availableProjects, busyProjects, 
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
-        <div className="space-y-1">
-          <h1 className="text-3xl font-extrabold text-foreground tracking-tight">Sessões Legislativas</h1>
-          <p className="text-muted-foreground text-sm">Gerencie as sessões ordinárias e extraordinárias da Câmara.</p>
-        </div>
-      </div>
-
       <Tabs id="sessoes-tabs" value={activeTab} onValueChange={(v) => {
         setActiveTab(v)
         if (v === "list") setEditingSessao(null)
       }} className="w-full">
-        <TabsList className="grid w-full grid-cols-2 lg:w-[400px] mb-8">
+        {activeTab === "list" && (
+          <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
+            <div className="space-y-1">
+              <h1 className="text-3xl font-extrabold text-foreground tracking-tight">Sessões Legislativas</h1>
+              <p className="text-muted-foreground text-sm">Gerencie as sessões ordinárias e extraordinárias da Câmara.</p>
+            </div>
+          </div>
+        )}
+
+        <TabsList className={cn("grid w-full grid-cols-2 lg:w-[400px] mb-8", activeTab === "form" && "hidden")}>
           <TabsTrigger value="list" className="flex items-center gap-2">
             <List className="w-4 h-4" />
             Listar Sessões
@@ -321,11 +324,39 @@ export function SessoesClient({ sessoes, slug, availableProjects, busyProjects, 
           />
         </TabsContent>
 
-        <TabsContent value="form" className="animate-in slide-in-from-left-2 fade-in duration-500">
+        <TabsContent value="form" className="animate-in slide-in-from-left-2 fade-in duration-500 space-y-4">
+           {/* Breadcrumbs */}
+           <p className="text-sm text-muted-foreground">
+             <span className="hover:text-foreground">Legislativo</span>
+             <span className="mx-1">/</span>
+             <span className="hover:text-foreground">Sessões Plenárias</span>
+             <span className="mx-1">/</span>
+             <span className="text-foreground font-medium">Nova Sessão</span>
+           </p>
+           <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
+             <div className="space-y-1">
+               <h1 className="text-3xl font-extrabold text-foreground tracking-tight">
+                 {editingSessao ? "Editar Sessão" : "Cadastrar Nova Sessão"}
+               </h1>
+               <p className="text-muted-foreground text-sm">
+                 Configure os detalhes da próxima atividade em plenário.
+               </p>
+             </div>
+             <Button
+               type="button"
+               variant="ghost"
+               size="sm"
+               onClick={() => {
+                 setEditingSessao(null)
+                 setActiveTab("list")
+               }}
+               className="shrink-0 text-muted-foreground hover:text-foreground"
+             >
+               <X className="w-4 h-4 mr-1" />
+               Cancelar
+             </Button>
+           </div>
            <div className="bg-card border border-border rounded-xl p-6 shadow-sm">
-             <h2 className="text-xl font-bold text-foreground mb-6">
-               {editingSessao ? "Editar Sessão" : "Cadastrar Nova Sessão Legislativa"}
-             </h2>
              <SessaoForm 
                defaultValues={editingSessao || undefined}
                isPending={isPending}

@@ -5,7 +5,6 @@ import { Button } from "@/components/ui/button"
 import { MobileSidebar } from "./MobileSidebar"
 import { useSidebar } from "./SidebarProvider"
 import { cn } from "@/lib/utils"
-import { ThemeToggle } from "./ThemeToggle"
 import { Tooltip } from "@/components/ui/tooltip"
 import { RawRuleOf, MongoAbility } from "@casl/ability"
 import { Action, Subject } from "@/lib/casl/ability"
@@ -39,16 +38,6 @@ export function Header({ slug, userProfile, camaraNome, rules = [] }: HeaderProp
     )}>
         <div className="flex items-center gap-4">
             <MobileSidebar slug={slug} userProfile={userProfile} rules={rules} />
-            
-            {/* Camera Info */}
-            <div className="hidden md:flex flex-col h-8 justify-center">
-                <span className="text-sm font-bold text-white tracking-tight leading-none">
-                    {camaraNome || "Câmara Municipal"}
-                </span>
-                <span className="text-[10px] font-medium text-slate-400 uppercase tracking-widest leading-none mt-1">
-                    Painel Administrativo
-                </span>
-            </div>
         </div>
         
         {/* Search Bar */}
@@ -65,7 +54,6 @@ export function Header({ slug, userProfile, camaraNome, rules = [] }: HeaderProp
         
         <div className="flex items-center gap-x-3">
              <div className="flex items-center gap-x-1 pr-3 border-r border-slate-800 mr-1">
-                <ThemeToggle />
                 <Tooltip content="Notificações">
                   <Button variant="ghost" size="icon" className="relative text-slate-400 hover:text-white hover:bg-slate-800 transition-colors rounded-full">
                        <Bell className="h-5 w-5" />
@@ -75,7 +63,7 @@ export function Header({ slug, userProfile, camaraNome, rules = [] }: HeaderProp
              </div>
 
              <div className="flex items-center gap-3 pl-2 py-1 hover:bg-slate-800 rounded-full cursor-pointer transition-colors pr-2 group">
-                 <div className="flex flex-col items-end hidden sm:flex">
+                 <div className="hidden sm:flex sm:flex-col items-end">
                      <span className="text-sm font-bold text-white leading-none">{userProfile?.name?.split(' ')[0] || 'Usuário'}</span>
                      <span className="text-[10px] text-slate-400 font-medium uppercase tracking-wider">{userProfile?.role || 'Membro'}</span>
                  </div>

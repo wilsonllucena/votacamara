@@ -57,7 +57,7 @@ export default async function DashboardLayout({
       <SidebarProvider>
         <GlobalPresence userId={user.id} camaraId={camaraId} />
         <AdminLayoutWrapper
-          sidebar={<Sidebar slug={slug} userProfile={userProfile} rules={rules as any} />}
+          sidebar={<Sidebar slug={slug} camaraNome={camaraNome} userProfile={userProfile} rules={rules as any} />}
           header={<Header slug={slug} userProfile={userProfile} camaraNome={camaraNome} rules={rules as any} />}
         >
           {children}

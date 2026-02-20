@@ -14,6 +14,7 @@ import {
   LogOut,
   Menu,
   ChevronLeft,
+  ChevronRight,
   ChevronDown,
   Briefcase,
   Table,
@@ -26,6 +27,7 @@ import { Action, Subject } from "@/lib/casl/ability"
 
 interface SidebarProps {
   slug: string
+  camaraNome?: string
   userProfile?: {
       name: string
       role: string
@@ -54,7 +56,7 @@ interface SidebarGroup {
     items: SidebarItem[]
 }
 
-export function Sidebar({ slug, rules = [] }: SidebarProps) {
+export function Sidebar({ slug, camaraNome, rules = [] }: SidebarProps) {
   const pathname = usePathname()
   const { isCollapsed, toggleSidebar } = useSidebar()
   const [expandedMenus, setExpandedMenus] = useState<string[]>([])
@@ -214,9 +216,9 @@ export function Sidebar({ slug, rules = [] }: SidebarProps) {
                 🏛️
             </div>
             {!isCollapsed && (
-                <div className="flex flex-col">
-                    <span className="text-sm font-bold text-white tracking-tight leading-none">CÂMARA</span>
-                    <span className="text-[10px] font-medium text-slate-400 leading-none">MUNICIPAL</span>
+                <div className="flex flex-col min-w-0">
+                    <span className="text-sm font-bold text-white tracking-tight leading-none">CÂMARA MUNICIPAL</span>
+                    <span className="text-[10px] font-medium text-slate-400 leading-none truncate">{camaraNome ? `${camaraNome}` : "Câmara"}</span>
                 </div>
             )}
         </div>
@@ -268,7 +270,7 @@ export function Sidebar({ slug, rules = [] }: SidebarProps) {
                                     className={cn(
                                     "flex items-center justify-between px-3 py-2 text-sm font-medium rounded-md transition-colors cursor-pointer group",
                                     route.active 
-                                        ? "text-orange-500 bg-slate-800" 
+                                        ? "text-orange-600 bg-orange-500/20" 
                                         : "text-slate-400 hover:text-white hover:bg-slate-800/50",
                                     isCollapsed && "justify-center px-0 py-2 h-10 w-10 mx-auto gap-0"
                                     )}
@@ -278,9 +280,9 @@ export function Sidebar({ slug, rules = [] }: SidebarProps) {
                                         {!isCollapsed && <span className="truncate">{route.label}</span>}
                                     </div>
                                     {!isCollapsed && (
-                                        <ChevronDown className={cn(
+                                        <ChevronRight className={cn(
                                             "w-3.5 h-3.5 transition-transform duration-300 text-slate-500 group-hover:text-slate-300",
-                                            isExpanded ? "rotate-0" : "-rotate-90"
+                                            isExpanded ? "rotate-90" : "rotate-0"
                                         )} />
                                     )}
                                 </div>
@@ -291,7 +293,7 @@ export function Sidebar({ slug, rules = [] }: SidebarProps) {
                                     className={cn(
                                     "flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-md transition-colors",
                                     route.active 
-                                        ? "text-orange-500 bg-slate-800/50 border-l-2 border-orange-500" 
+                                        ? "text-orange-600 bg-orange-500/20 border-l-2 border-orange-500" 
                                         : "text-slate-400 hover:text-white hover:bg-slate-800/50 border-l-2 border-transparent",
                                     isCollapsed && "justify-center px-0 py-2 h-10 w-10 mx-auto gap-0 border-l-0"
                                     )}
@@ -338,7 +340,7 @@ export function Sidebar({ slug, rules = [] }: SidebarProps) {
                 title="Encerrar Sessão"
             >
                 <LogOut className="w-5 h-5 shrink-0" />
-                {!isCollapsed && <span>Encerrar Sessão</span>}
+                {!isCollapsed && <span>→ Encerrar Sessão</span>}
             </button>
          </form>
       </div>
