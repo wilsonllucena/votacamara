@@ -17,7 +17,7 @@ export function AdminLayoutWrapper({ sidebar, header, children }: AdminLayoutWra
     <div className="h-full relative bg-background">
       <aside 
         className={cn(
-          "hidden h-full md:flex md:flex-col md:fixed md:inset-y-0 z-80 bg-card border-r border-border transition-all duration-300 ease-in-out",
+          "hidden h-full md:flex md:flex-col md:fixed md:inset-y-0 z-80 bg-card transition-all duration-300 ease-in-out",
           isCollapsed ? "md:w-16" : "md:w-64"
         )}
       >
@@ -25,12 +25,12 @@ export function AdminLayoutWrapper({ sidebar, header, children }: AdminLayoutWra
       </aside>
       <main 
         className={cn(
-          "h-full transition-all duration-300 ease-in-out",
-          isCollapsed ? "md:pl-16" : "md:pl-64"
+          "h-full transition-all duration-300 ease-in-out relative flex flex-col",
+          isCollapsed ? "pl-16" : "pl-64"
         )}
       >
         {header}
-        <div className="px-4 md:px-8 pb-8 h-full bg-background min-h-[calc(100vh-56px)]">
+        <div className="flex-1 px-4 md:px-8 pb-8 pt-20 bg-slate-50/5 h-full overflow-y-auto w-full">
           {children}
         </div>
       </main>
