@@ -17,7 +17,7 @@ export function AdminLayoutWrapper({ sidebar, header, children }: AdminLayoutWra
     <div className="min-h-screen flex relative bg-background">
       <aside 
         className={cn(
-          "hidden min-h-screen md:flex md:flex-col md:fixed md:inset-y-0 z-80 bg-card transition-all duration-300 ease-in-out",
+          "hidden min-h-screen md:flex md:flex-col md:fixed md:inset-y-0 z-80 bg-card transition-all duration-300 ease-in-out border-r border-slate-900/40 shadow-lg",
           isCollapsed ? "md:w-16" : "md:w-64"
         )}
       >

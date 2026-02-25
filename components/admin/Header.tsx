@@ -1,6 +1,6 @@
 "use client"
 
-import { Bell, Search } from "lucide-react"
+import { Bell, Search, Menu } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { MobileSidebar } from "./MobileSidebar"
 import { useSidebar } from "./SidebarProvider"
@@ -20,7 +20,7 @@ interface HeaderProps {
 }
 
 export function Header({ slug, userProfile, camaraNome, rules = [] }: HeaderProps) {
-  const { isCollapsed } = useSidebar()
+  const { isCollapsed, toggleSidebar } = useSidebar()
   
   const getInitials = (name: string) => {
       return name
@@ -33,10 +33,17 @@ export function Header({ slug, userProfile, camaraNome, rules = [] }: HeaderProp
 
   return (
     <div className={cn(
-      "fixed top-0 right-0 z-50 flex items-center h-16 px-6 justify-between bg-[#1e293b] border-b border-slate-800 shadow-sm text-slate-300 transition-all duration-300",
+      "fixed top-0 right-0 z-50 flex items-center h-16 px-6 justify-between bg-primary border-b border-primary shadow-sm text-primary-foreground transition-all duration-300",
       isCollapsed ? "left-16 w-[calc(100%-4rem)]" : "left-64 w-[calc(100%-16rem)]"
     )}>
         <div className="flex items-center gap-4">
+            <button 
+              onClick={toggleSidebar}
+              className="hidden md:inline-flex items-center justify-center w-10 h-10 rounded-md bg-primary-foreground/10 hover:bg-primary-foreground/20 transition-colors"
+              title="Alternar menu"
+            >
+              <Menu className="w-5 h-5 text-primary-foreground" />
+            </button>
             <MobileSidebar slug={slug} userProfile={userProfile} rules={rules} />
         </div>
         
@@ -55,19 +62,19 @@ export function Header({ slug, userProfile, camaraNome, rules = [] }: HeaderProp
         <div className="flex items-center gap-x-3">
              <div className="flex items-center gap-x-1 pr-3 border-r border-slate-800 mr-1">
                 <Tooltip content="Notificações">
-                  <Button variant="ghost" size="icon" className="relative text-slate-400 hover:text-white hover:bg-slate-800 transition-colors rounded-full">
+                  <Button variant="ghost" size="icon" className="relative text-primary-foreground/80 hover:text-primary-foreground hover:bg-primary-foreground/10 transition-colors rounded-full">
                        <Bell className="h-5 w-5" />
-                       <span className="absolute top-2 right-2.5 h-2 w-2 bg-red-500 rounded-full border-2 border-[#1e293b]"></span>
+                       <span className="absolute top-2 right-2.5 h-2 w-2 bg-red-500 rounded-full border-2 border-primary"></span>
                   </Button>
                 </Tooltip>
              </div>
 
-             <div className="flex items-center gap-3 pl-2 py-1 hover:bg-slate-800 rounded-full cursor-pointer transition-colors pr-2 group">
+             <div className="flex items-center gap-3 pl-2 py-1 hover:bg-primary-foreground/10 rounded-full cursor-pointer transition-colors pr-2 group">
                  <div className="hidden sm:flex sm:flex-col items-end">
-                     <span className="text-sm font-bold text-white leading-none">{userProfile?.name?.split(' ')[0] || 'Usuário'}</span>
-                     <span className="text-[10px] text-slate-400 font-medium uppercase tracking-wider">{userProfile?.role || 'Membro'}</span>
+                     <span className="text-sm font-bold text-primary-foreground leading-none">{userProfile?.name?.split(' ')[0] || 'Usuário'}</span>
+                     <span className="text-[10px] text-primary-foreground/80 font-medium uppercase tracking-wider">{userProfile?.role || 'Membro'}</span>
                  </div>
-                 <div className="w-9 h-9 rounded-full bg-slate-700 flex items-center justify-center text-xs font-bold text-white shadow-sm ring-2 ring-slate-800 group-hover:ring-slate-600 transition-all">
+                 <div className="w-9 h-9 rounded-full bg-primary-foreground/20 flex items-center justify-center text-xs font-bold text-primary-foreground shadow-sm ring-2 ring-primary-foreground/30 group-hover:ring-primary-foreground/50 transition-all">
                       {userProfile ? getInitials(userProfile.name) : 'U'}
                  </div>
              </div>

@@ -6,6 +6,7 @@ import { AdminLayoutWrapper } from "@/components/admin/AdminLayoutWrapper"
 import { GlobalPresence } from "@/components/admin/GlobalPresence"
 import { createClient } from "@/utils/supabase/server"
 import { redirect } from "next/navigation"
+import { ThemeColorApplier } from "@/components/admin/ThemeColorApplier"
 
 export default async function DashboardLayout({
   children,
@@ -55,6 +56,7 @@ export default async function DashboardLayout({
   return (
     <AdminThemeProvider>
       <SidebarProvider>
+        <ThemeColorApplier />
         <GlobalPresence userId={user.id} camaraId={camaraId} />
         <AdminLayoutWrapper
           sidebar={<Sidebar slug={slug} camaraNome={camaraNome} userProfile={userProfile} rules={rules as any} />}

@@ -82,15 +82,15 @@ export function Sidebar({ slug, camaraNome, rules = [] }: SidebarProps) {
         {
           label: "Matérias",
           icon: FileText,
-          href: pathname.startsWith(`/admin/${slug}/projetos`) ? `/admin/${slug}/projetos` : '',
+          href: `/admin/${slug}/projetos`,
           active: pathname === `/admin/${slug}/projetos`,
           canView: can('manage', 'Materia'),
         },
         {
           label: "Sessões Plenárias",
           icon: Gavel,
-          href: pathname.startsWith(`/admin/${slug}/sessoes`) ? `/admin/${slug}/sessoes` : '',
-          active: pathname === `/admin/${slug}/sessoes`
+          href: `/admin/${slug}/sessoes`,
+          active: pathname === `/admin/${slug}/sessoes`,
         },
         {
           label: "Lista de Presença",
@@ -143,7 +143,7 @@ export function Sidebar({ slug, camaraNome, rules = [] }: SidebarProps) {
           label: "Tipos de Matéria",
           icon: FileText,
           href: `/admin/${slug}/projetos/tipos`,
-          active: pathname.startsWith(`/admin/${slug}/projetos/tipos`),
+          active: pathname === `/admin/${slug}/projetos/tipos`,
           canView: can('configurar', 'Materia'),
         },
         {
@@ -262,7 +262,7 @@ export function Sidebar({ slug, camaraNome, rules = [] }: SidebarProps) {
                                     className={cn(
                                     "flex items-center justify-between px-3 py-2 text-sm font-medium rounded-md transition-colors cursor-pointer group",
                                     route.active 
-                                        ? "text-orange-600 bg-orange-500/20" 
+                                        ? "text-white bg-[#323847]" 
                                         : "text-slate-400 hover:text-white hover:bg-slate-800/50",
                                     isCollapsed && "justify-center px-0 py-2 h-10 w-10 mx-auto gap-0"
                                     )}
@@ -285,7 +285,7 @@ export function Sidebar({ slug, camaraNome, rules = [] }: SidebarProps) {
                                     className={cn(
                                     "flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-md transition-colors",
                                     route.active 
-                                        ? "text-orange-600 bg-orange-500/20 border-l-2 border-orange-500" 
+                                        ? "text-white bg-[#323847] border-l-2 border-[#323847]" 
                                         : "text-slate-400 hover:text-white hover:bg-slate-800/50 border-l-2 border-transparent",
                                     isCollapsed && "justify-center px-0 py-2 h-10 w-10 mx-auto gap-0 border-l-0"
                                     )}
@@ -304,7 +304,7 @@ export function Sidebar({ slug, camaraNome, rules = [] }: SidebarProps) {
                                             className={cn(
                                                 "text-xs py-1.5 px-3 rounded-md transition-colors block",
                                                 subItem.active
-                                                    ? "text-white bg-slate-800 font-medium"
+                                                    ? "text-white bg-[#323847] font-medium"
                                                     : "text-slate-400 hover:text-white hover:bg-slate-800/30"
                                             )}
                                         >
