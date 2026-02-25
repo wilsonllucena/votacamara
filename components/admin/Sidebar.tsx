@@ -15,7 +15,6 @@ import {
   Menu,
   ChevronLeft,
   ChevronRight,
-  ChevronDown,
   Briefcase,
   Table,
   LucideIcon
@@ -70,7 +69,7 @@ export function Sidebar({ slug, camaraNome, rules = [] }: SidebarProps) {
       title: "",
       items: [
         {
-          label: "Cockpit",
+          label: "Painel",
           icon: LayoutDashboard,
           href: `/admin/${slug}/dashboard`,
           active: pathname === `/admin/${slug}/dashboard`,
@@ -83,65 +82,31 @@ export function Sidebar({ slug, camaraNome, rules = [] }: SidebarProps) {
         {
           label: "Matérias",
           icon: FileText,
-          href: '',
-          active: pathname.startsWith(`/admin/${slug}/projetos`),
-          subItems: [
-            {
-              label: "Listar Matérias",
-              href: `/admin/${slug}/projetos`,
-              active: pathname === `/admin/${slug}/projetos`,
-            },
-            {
-              label: "Categorias",
-              href: `/admin/${slug}/projetos/categorias`,
-              active: pathname === `/admin/${slug}/projetos/categorias`,
-              canView: can('configurar', 'Materia'),
-            },
-            {
-              label: "Situação",
-              href: `/admin/${slug}/projetos/situacoes`,
-              active: pathname === `/admin/${slug}/projetos/situacoes`,
-              canView: can('configurar', 'Materia'),
-            },
-            {
-              label: "Tipos de Matéria",
-              href: `/admin/${slug}/projetos/tipos`,
-              active: pathname === `/admin/${slug}/projetos/tipos`,
-              canView: can('configurar', 'Materia'),
-            }
-          ].filter(item => item.canView !== false)
+          href: pathname.startsWith(`/admin/${slug}/projetos`) ? `/admin/${slug}/projetos` : '',
+          active: pathname === `/admin/${slug}/projetos`,
+          canView: can('manage', 'Materia'),
         },
         {
           label: "Sessões Plenárias",
           icon: Gavel,
-          href: '',
-          active: pathname.startsWith(`/admin/${slug}/sessoes`),
-          subItems: [
-            {
-                label: "Listar Sessões",
-                href: `/admin/${slug}/sessoes`,
-                active: pathname === `/admin/${slug}/sessoes`,
-            },
-            {
-                label: "Lista de Presença",
-                href: `/admin/${slug}/sessoes/presencas`,
-                active: pathname === `/admin/${slug}/sessoes/presencas`,
-                canView: can('manage', 'Sessao'),
-            },
-            {
-                label: "Relatórios",
-                href: `/admin/${slug}/sessoes/relatorios`,
-                active: pathname === `/admin/${slug}/sessoes/relatorios`,
-                canView: can('manage', 'Sessao'),
-            }
-          ].filter(item => item.canView !== false)
-        }
-      ]
-    },
-    {
-      title: "ADMINISTRAÇÃO",
-      items: [
+          href: pathname.startsWith(`/admin/${slug}/sessoes`) ? `/admin/${slug}/sessoes` : '',
+          active: pathname === `/admin/${slug}/sessoes`
+        },
         {
+          label: "Lista de Presença",
+          icon: FileText,
+          href: `/admin/${slug}/sessoes/presencas`,
+          active: pathname === `/admin/${slug}/sessoes/presencas`,
+          canView: can('manage', 'Sessao'),
+      },
+      {
+          label: "Relatórios",
+          icon: Table,
+          href: `/admin/${slug}/sessoes/relatorios`,
+          active: pathname === `/admin/${slug}/sessoes/relatorios`,
+          canView: can('manage', 'Sessao'),
+      },
+      {
           label: "Vereadores",
           icon: Users,
           href: `/admin/${slug}/vereadores`,
@@ -155,11 +120,31 @@ export function Sidebar({ slug, camaraNome, rules = [] }: SidebarProps) {
           active: pathname.startsWith(`/admin/${slug}/votar`),
           canView: can('votar', 'Sessao'),
         },
+      ]
+    },
+    {
+      title: "ADMINISTRAÇÃO",
+      items: [
         {
-          label: "Configurações",
-          icon: Settings,
-          href: `/admin/${slug}/configuracoes`,
-          active: pathname.startsWith(`/admin/${slug}/configuracoes`),
+          label: "Categorias",
+          icon: Briefcase,
+          href: `/admin/${slug}/projetos/categorias`,
+          active: pathname.startsWith(`/admin/${slug}/projetos/categorias`),
+          canView: can('configurar', 'Materia'),
+        },
+        {
+          label: "Situação",
+          icon: Gavel,
+          href: `/admin/${slug}/projetos/situacoes`,
+          active: pathname.startsWith(`/admin/${slug}/projetos/situacoes`),
+          canView: can('configurar', 'Materia'),
+        },
+        {
+          label: "Tipos de Matéria",
+          icon: FileText,
+          href: `/admin/${slug}/projetos/tipos`,
+          active: pathname.startsWith(`/admin/${slug}/projetos/tipos`),
+          canView: can('configurar', 'Materia'),
         },
         {
             label: "Cargos",
@@ -174,6 +159,12 @@ export function Sidebar({ slug, camaraNome, rules = [] }: SidebarProps) {
             href: `/admin/${slug}/mesa-diretora`,
             active: pathname.startsWith(`/admin/${slug}/mesa-diretora`),
             canView: can('manage', 'MesaDiretora'),
+        },
+        {
+          label: "Configurações",
+          icon: Settings,
+          href: `/admin/${slug}/configuracoes`,
+          active: pathname.startsWith(`/admin/${slug}/configuracoes`),
         },
       ].filter(item => item.canView !== false)
     }
@@ -261,6 +252,7 @@ export function Sidebar({ slug, camaraNome, rules = [] }: SidebarProps) {
                     {group.items.map((route) => {
                         const isExpanded = expandedMenus.includes(route.label)
                         const hasSubItems = route.subItems && route.subItems.length > 0
+                        const Icon = route.icon ?? FileText
 
                         return (
                             <div key={route.label} className="space-y-1">
@@ -276,7 +268,7 @@ export function Sidebar({ slug, camaraNome, rules = [] }: SidebarProps) {
                                     )}
                                 >
                                     <div className={cn("flex items-center gap-3", isCollapsed && "justify-center")}>
-                                        <route.icon className={cn("w-5 h-5", !isCollapsed && "shrink-0")} />
+                                        <Icon className={cn("w-5 h-5", !isCollapsed && "shrink-0")} />
                                         {!isCollapsed && <span className="truncate">{route.label}</span>}
                                     </div>
                                     {!isCollapsed && (
@@ -298,7 +290,7 @@ export function Sidebar({ slug, camaraNome, rules = [] }: SidebarProps) {
                                     isCollapsed && "justify-center px-0 py-2 h-10 w-10 mx-auto gap-0 border-l-0"
                                     )}
                                 >
-                                    <route.icon className={cn("w-5 h-5", !isCollapsed && "shrink-0")} />
+                                    <Icon className={cn("w-5 h-5", !isCollapsed && "shrink-0")} />
                                     {!isCollapsed && <span className="truncate">{route.label}</span>}
                                 </Link>
                                 )}

@@ -41,7 +41,7 @@ export function Header({ slug, userProfile, camaraNome, rules = [] }: HeaderProp
         </div>
         
         {/* Search Bar */}
-        <div className="flex-1 max-w-xl mx-8 hidden md:block">
+        {/* <div className="flex-1 max-w-xl mx-8 hidden md:block">
             <div className="relative group">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 group-hover:text-white transition-colors" />
                 <input 
@@ -50,7 +50,7 @@ export function Header({ slug, userProfile, camaraNome, rules = [] }: HeaderProp
                     className="w-full h-10 pl-10 pr-4 rounded-full bg-slate-800/50 border border-slate-700/50 focus:border-slate-600 focus:bg-slate-800 focus:ring-1 focus:ring-slate-600 transition-all text-sm outline-none text-slate-200 placeholder:text-slate-500"
                 />
             </div>
-        </div>
+        </div> */}
         
         <div className="flex items-center gap-x-3">
              <div className="flex items-center gap-x-1 pr-3 border-r border-slate-800 mr-1">
