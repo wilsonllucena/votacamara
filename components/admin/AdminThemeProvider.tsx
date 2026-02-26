@@ -1,6 +1,6 @@
 "use client"
 
-import React, { createContext, useContext, useEffect, useState } from "react"
+import React, { createContext, useContext, useEffect } from "react"
 
 type Theme = "light" | "dark"
 
@@ -12,40 +12,28 @@ interface ThemeContextType {
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined)
 
 export function AdminThemeProvider({ children }: { children: React.ReactNode }) {
-  const [theme, setTheme] = useState<Theme>("dark")
-  const [mounted, setMounted] = useState(false)
-
   useEffect(() => {
-    const savedTheme = localStorage.getItem("admin-theme") as Theme
-    if (savedTheme) {
-      setTheme(savedTheme)
+    const body = document.body
+    body.classList.remove("admin-dark")
+    body.classList.add("admin-light")
+    const savedPrimary = typeof window !== "undefined" ? localStorage.getItem("theme-primary") : null
+    if (savedPrimary) {
+      document.documentElement.style.setProperty("--primary", savedPrimary)
+      document.documentElement.style.setProperty("--ring", savedPrimary)
+      const adminWrap = document.querySelector("div.admin-light") as HTMLElement | null
+      if (adminWrap) {
+        adminWrap.style.setProperty("--primary", savedPrimary)
+        adminWrap.style.setProperty("--ring", savedPrimary)
+      }
     }
-    setMounted(true)
-  }, [])
-
-  useEffect(() => {
-    if (mounted) {
-      localStorage.setItem("admin-theme", theme)
-      
-      // Apply theme class to body to ensure portals (dialogs, popovers) are themed
-      const body = document.body
-      body.classList.remove("admin-light", "admin-dark")
-      body.classList.add(theme === "light" ? "admin-light" : "admin-dark")
-    }
-
     return () => {
-      // Clean up body classes when unmounting
       document.body.classList.remove("admin-light", "admin-dark")
     }
-  }, [theme, mounted])
-
-  const toggleTheme = () => {
-    setTheme((prev) => (prev === "light" ? "dark" : "light"))
-  }
+  }, [])
 
   return (
-    <ThemeContext.Provider value={{ theme, toggleTheme }}>
-      <div className={!mounted ? "admin-dark h-full" : (theme === "light" ? "admin-light" : "admin-dark")}>
+    <ThemeContext.Provider value={{ theme: "light", toggleTheme: () => {} }}>
+      <div className="admin-light h-full">
         {children}
       </div>
     </ThemeContext.Provider>

@@ -10,7 +10,7 @@ const sessaoSchema = z.object({
   status: z.enum(["agendada", "aberta", "encerrada"]),
   data: z.string().min(10, "Data é obrigatória"), // YYYY-MM-DD
   hora: z.string().min(5, "Hora é obrigatória"), // HH:MM
-  projeto_ids: z.array(z.string().uuid()).optional().default([]),
+  projeto_ids: z.array(z.string().uuid()),
 })
 
 export type SessaoInputs = z.infer<typeof sessaoSchema>
